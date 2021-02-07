@@ -7,5 +7,5 @@ pluginManagement {
     }
 }
 
-rootProject.name = "grim_locations"
+rootProject.name = "grim-locations"
 include("editor","launcher","shared")
