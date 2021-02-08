@@ -1,9 +1,11 @@
 package io.grimlocations.shared.data.dto
 
 import io.grimlocations.shared.framework.data.dto.DTO
+import java.time.LocalDateTime
 
 data class ModDTO(
     override val id: Int,
-    val name: String,
-    val difficulties: List<DifficultyDTO>
+    override val created: LocalDateTime,
+    override val modified: LocalDateTime,
+    val name: String
 ): DTO

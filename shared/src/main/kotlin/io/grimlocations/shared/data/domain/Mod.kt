@@ -18,7 +18,7 @@ class Mod(id: EntityID<Int>) : DTOEntity<ModTable, ModDTO>(id, ModTable) {
     val locations by Location referrersOn LocationTable.mod
 
     override fun toDTO(): ModDTO {
-        TODO("Not yet implemented")
+        return ModDTO(id.value, created, modified, name)
     }
 
     companion object : IntEntityClass<Mod>(ModTable)

@@ -28,6 +28,9 @@ class Location(id: EntityID<Int>) : DTOEntity<LocationTable, LocationDTO>(id, Lo
     override fun toDTO(): LocationDTO {
         return LocationDTO(
             id.value,
+            created,
+            modified,
+            name,
             profile.toDTO(),
             mod.toDTO(),
             difficulty.toDTO(),

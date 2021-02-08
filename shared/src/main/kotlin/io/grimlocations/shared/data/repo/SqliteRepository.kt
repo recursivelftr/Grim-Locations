@@ -121,4 +121,8 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         val currentDb = File("${appDirs.glDatabaseDir + File.separator}database.db")
         currentDb.copyTo(File("$backupDirPath${File.separator}database-$date-$backupNumber.db"))
     }
+
+    fun autoDetectCharacterProfiles() {
+
+    }
 }

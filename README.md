@@ -11,7 +11,7 @@ When locations have been saved to Grim Locations they can be edited, transferred
 
 Grim Locations is built entirely in Kotlin for the JVM with the new IR backend. It uses Jetpack Compose for Desktop, Kotlin Coroutines, and Kotlin Exposed with a SQLite database.
 
-The architecture of the app is viewmodel based with a custom framework built around Compose and Exposed in the shared/src/main/kotlin/io/grimlocations/shared/framework folder. The implementations of this framework exist in the other folders on the same level as the framework folder.
+The architecture of the app is MVI based with a custom framework built around Compose and Exposed in the shared/src/main/kotlin/io/grimlocations/shared/framework folder. The implementations of this framework exist in the other folders on the same level as the framework folder.
 
 ### Building
 The project runs on Java 15 and is built using Gradle with several custom tasks defined. Currently, it has only been tested on Windows. The createProductionBundle task runs the required tasks to create a distributable a zip file. For this to work [lessmsi](https://lessmsi.activescott.com/) must be downloaded and its root directory put on the system's PATH environment variable.

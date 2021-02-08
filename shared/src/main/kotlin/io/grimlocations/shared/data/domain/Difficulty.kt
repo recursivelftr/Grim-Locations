@@ -17,7 +17,7 @@ class Difficulty(id: EntityID<Int>) : DTOEntity<DifficultyTable, DifficultyDTO>(
     val locations by Location referrersOn LocationTable.difficulty
 
     override fun toDTO(): DifficultyDTO {
-        return DifficultyDTO(id.value, name)
+        return DifficultyDTO(id.value, created, modified, name)
     }
 
     companion object : IntEntityClass<Difficulty>(DifficultyTable)

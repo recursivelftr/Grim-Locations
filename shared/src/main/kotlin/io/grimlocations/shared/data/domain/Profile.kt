@@ -18,7 +18,7 @@ class Profile(id: EntityID<Int>) : DTOEntity<ProfileTable, ProfileDTO>(id, Profi
     val locations by Location referrersOn LocationTable.profile
 
     override fun toDTO(): ProfileDTO {
-        return ProfileDTO(id.value, name)
+        return ProfileDTO(id.value, created, modified, name)
     }
 
     companion object : IntEntityClass<Profile>(ProfileTable)

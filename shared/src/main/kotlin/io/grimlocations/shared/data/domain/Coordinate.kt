@@ -25,7 +25,7 @@ class Coordinate(id: EntityID<Int>) : DTOEntity<CoordinateTable, CoordinateDTO>(
     val locations by Location referrersOn LocationTable.coordinate
 
     override fun toDTO(): CoordinateDTO {
-        return CoordinateDTO(id.value, coordinate1, coordinate2, coordinate3)
+        return CoordinateDTO(id.value, created, modified, coordinate1, coordinate2, coordinate3)
     }
 
     companion object : IntEntityClass<Coordinate>(CoordinateTable)
