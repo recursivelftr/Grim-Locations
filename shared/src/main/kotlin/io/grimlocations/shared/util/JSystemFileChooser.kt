@@ -36,7 +36,6 @@ class JSystemFileChooser : JFileChooser() {
                 UIManager.setLookAndFeel(old)
             } catch (ignored: UnsupportedLookAndFeelException) {
                 logger.error("Should not have made it here.", ignored)
-                // shouldn't get here
             }
         }
     }
@@ -72,7 +71,7 @@ class FolderFilter : FileFilter() {
     }
 
     override fun getDescription(): String {
-        return "A directory only."
+        return "Directories"
     }
 
 }

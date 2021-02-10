@@ -28,6 +28,7 @@ import io.grimlocations.shared.ui.viewmodel.event.updateInstallPath
 import io.grimlocations.shared.ui.viewmodel.event.updateSavePath
 import io.grimlocations.shared.util.JSystemFileChooser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import java.io.File
 
 @ExperimentalCoroutinesApi
 @Composable
@@ -37,9 +38,6 @@ fun PropertiesView(
     propertiesViewModel: PropertiesViewModel = LocalViewModel.current.get(),
 ) = View(propertiesViewModel) {
 
-    val installFileChooser = remember { JSystemFileChooser().applyDirectoryOnly() }
-    val saveFileChooser = remember { JSystemFileChooser().applyDirectoryOnly() }
-
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -47,7 +45,10 @@ fun PropertiesView(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
                 TextField(
 //                    textStyle = TextStyle.Default.copy(color = Color.White),
 //                    textColor = Color.White,
@@ -62,22 +63,37 @@ fun PropertiesView(
                     Icons.Default.Edit,
                     "Browse",
                     modifier = Modifier.size(30.dp).clickable {
-                        installFileChooser.showOpenDialog(null)
+                        propertiesViewModel.installFileChooser.showOpenDialog(null)
                     }
                 )
             }
 
             Spacer(Modifier.height(20.dp))
 
-            TextField(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+
+                TextField(
 //                    textStyle = TextStyle.Default.copy(color = Color.White),
 //                    textColor = Color.White,
-                value = it.savePath ?: "",
-                onValueChange = propertiesViewModel::updateSavePath,
-                label = {
-                    Text("GD Save Folder", style = TextStyle(fontSize = 15.sp))
-                }
-            )
+                    value = it.savePath ?: "",
+                    onValueChange = propertiesViewModel::updateSavePath,
+                    label = {
+                        Text("GD Save Folder", style = TextStyle(fontSize = 15.sp))
+                    }
+                )
+
+                Spacer(modifier = Modifier.width(10.dp))
+                Icon(
+                    Icons.Default.Edit,
+                    "Browse",
+                    modifier = Modifier.size(30.dp).clickable {
+                        propertiesViewModel.saveFileChooser.showOpenDialog(null)
+                    }
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
 
