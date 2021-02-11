@@ -12,7 +12,7 @@ import javax.swing.filechooser.FileFilter
 class JSystemFileChooser : JFileChooser() {
 
     fun applyDirectoryOnly(): JSystemFileChooser {
-        controlButtonsAreShown = false
+        controlButtonsAreShown = true
         fileFilter = FolderFilter()
         fileSelectionMode = DIRECTORIES_ONLY
         return this

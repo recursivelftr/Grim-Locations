@@ -13,6 +13,7 @@ import androidx.compose.runtime.Providers
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -26,9 +27,10 @@ import io.grimlocations.shared.ui.viewmodel.PropertiesViewModel
 import io.grimlocations.shared.ui.viewmodel.event.persistState
 import io.grimlocations.shared.ui.viewmodel.event.updateInstallPath
 import io.grimlocations.shared.ui.viewmodel.event.updateSavePath
-import io.grimlocations.shared.util.JSystemFileChooser
+import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateError.GRIM_INTERNALS_NOT_FOUND
+import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateWarning.NO_CHARACTERS_FOUND
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import java.io.File
+import javax.swing.JFileChooser
 
 @ExperimentalCoroutinesApi
 @Composable
@@ -52,20 +54,30 @@ fun PropertiesView(
                 TextField(
 //                    textStyle = TextStyle.Default.copy(color = Color.White),
 //                    textColor = Color.White,
+                    singleLine = true,
                     value = it.installPath ?: "",
                     onValueChange = propertiesViewModel::updateInstallPath,
                     label = {
                         Text("GD Installation Folder", style = TextStyle(fontSize = 15.sp))
-                    }
+                    },
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Icon(
                     Icons.Default.Edit,
                     "Browse",
                     modifier = Modifier.size(30.dp).clickable {
-                        propertiesViewModel.installFileChooser.showOpenDialog(null)
+                        with(propertiesViewModel.installFileChooser) {
+                            val okOrCancel = showOpenDialog(null)
+                            if (okOrCancel == JFileChooser.APPROVE_OPTION) {
+                                propertiesViewModel.updateInstallPath(selectedFile.absolutePath)
+                            }
+                        }
                     }
                 )
+            }
+
+            if (it.errors.contains(GRIM_INTERNALS_NOT_FOUND)) {
+                Text("GrimInternals64.exe not found", color = Color.Red)
             }
 
             Spacer(Modifier.height(20.dp))
@@ -90,9 +102,18 @@ fun PropertiesView(
                     Icons.Default.Edit,
                     "Browse",
                     modifier = Modifier.size(30.dp).clickable {
-                        propertiesViewModel.saveFileChooser.showOpenDialog(null)
+                        with(propertiesViewModel.saveFileChooser) {
+                            val okOrCancel = showOpenDialog(null)
+                            if (okOrCancel == JFileChooser.APPROVE_OPTION) {
+                                propertiesViewModel.updateSavePath(selectedFile.absolutePath)
+                            }
+                        }
                     }
                 )
+            }
+
+            if (it.warnings.contains(NO_CHARACTERS_FOUND)) {
+                Text("No character profiles found", color = Color.Yellow)
             }
 
             Spacer(Modifier.height(20.dp))
@@ -107,6 +128,7 @@ fun PropertiesView(
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Button(
+                    enabled = it.errors.isEmpty(),
                     onClick = {
                         propertiesViewModel.persistState()
                         onOk()
