@@ -27,17 +27,20 @@ import io.grimlocations.shared.ui.viewmodel.PropertiesViewModel
 import io.grimlocations.shared.ui.viewmodel.event.persistState
 import io.grimlocations.shared.ui.viewmodel.event.updateInstallPath
 import io.grimlocations.shared.ui.viewmodel.event.updateSavePath
+import io.grimlocations.shared.ui.viewmodel.state.PropertiesState
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateError.GRIM_INTERNALS_NOT_FOUND
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateWarning.NO_CHARACTERS_FOUND
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.swing.JFileChooser
+
+private val TEXT_FIELD_WIDTH = 400.dp
 
 @ExperimentalCoroutinesApi
 @Composable
 fun PropertiesView(
     onCancel: () -> Unit,
     onOk: () -> Unit,
-    propertiesViewModel: PropertiesViewModel = LocalViewModel.current.get(),
+    propertiesViewModel: PropertiesViewModel = LocalViewModel.current.let { remember { it.get() } },
 ) = View(propertiesViewModel) {
 
     Surface(
@@ -54,12 +57,13 @@ fun PropertiesView(
                 TextField(
 //                    textStyle = TextStyle.Default.copy(color = Color.White),
 //                    textColor = Color.White,
-                    singleLine = true,
                     value = it.installPath ?: "",
                     onValueChange = propertiesViewModel::updateInstallPath,
                     label = {
                         Text("GD Installation Folder", style = TextStyle(fontSize = 15.sp))
                     },
+                    singleLine = true,
+                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Icon(
@@ -77,14 +81,18 @@ fun PropertiesView(
             }
 
             if (it.errors.contains(GRIM_INTERNALS_NOT_FOUND)) {
-                Text("GrimInternals64.exe not found", color = Color.Red)
+                Text(
+                    "GrimInternals64.exe not found",
+                    color = Color.Red,
+                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
+                )
             }
 
             Spacer(Modifier.height(20.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Start
             ) {
 
                 TextField(
@@ -94,10 +102,13 @@ fun PropertiesView(
                     onValueChange = propertiesViewModel::updateSavePath,
                     label = {
                         Text("GD Save Folder", style = TextStyle(fontSize = 15.sp))
-                    }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
                 )
 
                 Spacer(modifier = Modifier.width(10.dp))
+
                 Icon(
                     Icons.Default.Edit,
                     "Browse",
@@ -113,7 +124,11 @@ fun PropertiesView(
             }
 
             if (it.warnings.contains(NO_CHARACTERS_FOUND)) {
-                Text("No character profiles found", color = Color.Yellow)
+                Text(
+                    "No character profiles found",
+                    color = Color.Yellow,
+                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
+                )
             }
 
             Spacer(Modifier.height(20.dp))
@@ -128,7 +143,7 @@ fun PropertiesView(
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Button(
-                    enabled = it.errors.isEmpty(),
+                    enabled = isOkEnabled(it),
                     onClick = {
                         propertiesViewModel.persistState()
                         onOk()
@@ -141,6 +156,9 @@ fun PropertiesView(
     }
 }
 
+private fun isOkEnabled(state: PropertiesState) =
+    state.installPath != null && state.installPath.isNotBlank() && state.errors.isEmpty()
+
 @ExperimentalCoroutinesApi
 fun openPropertiesView(
     vmProvider: GLViewModelProvider,
@@ -150,7 +168,7 @@ fun openPropertiesView(
 ) {
     Window(
         title = "Properties",
-        size = IntSize(500, 300),
+        size = IntSize(550, 300),
         onDismissRequest = enablePreviousWindow
     ) {
         remember { previousWindowToClose?.close() }

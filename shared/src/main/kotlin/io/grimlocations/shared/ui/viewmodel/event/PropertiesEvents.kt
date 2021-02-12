@@ -4,11 +4,12 @@ import io.grimlocations.shared.ui.viewmodel.PropertiesViewModel
 import io.grimlocations.shared.ui.viewmodel.reducer.*
 import io.grimlocations.shared.ui.viewmodel.reducer.addPropertiesStateErrors
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateError.*
+import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateWarning.*
 import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
 import java.io.File
 
-val logger = LogManager.getLogger()
+private val logger = LogManager.getLogger()
 
 fun PropertiesViewModel.persistState() {
     viewModelScope.launch {
@@ -31,6 +32,12 @@ fun PropertiesViewModel.updateInstallPath(path: String) {
 fun PropertiesViewModel.updateSavePath(path: String) {
     viewModelScope.launch {
         stateManager.updatePropertiesSavePath(path)
+
+        if(isValidSavePath(path)){
+            stateManager.removePropertiesStateWarnings(NO_CHARACTERS_FOUND)
+        } else {
+            stateManager.addPropertiesStateWarnings(NO_CHARACTERS_FOUND)
+        }
     }
 }
 
@@ -49,6 +56,15 @@ private fun isValidInstallPath(path: String): Boolean {
 }
 
 private fun isValidSavePath(path: String): Boolean {
+    try {
+        File(path).listFiles { it: File -> it.isDirectory }?.let {
+            return it.any { f -> f.name.startsWith("_") }
+        } ?: run {
+            logger.error("Path is either not a directory or an I/O error has occurred.")
+        }
+    } catch (e: SecurityException) {
+        logger.error("Read access is denied to this directory: $path", e)
+    }
 
     return false
 }

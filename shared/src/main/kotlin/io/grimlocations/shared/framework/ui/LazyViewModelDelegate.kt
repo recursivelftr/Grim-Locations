@@ -1,19 +1,12 @@
 package io.grimlocations.shared.framework.ui
 
-import io.grimlocations.shared.framework.ui.viewmodel.ViewModel
 import kotlin.reflect.KProperty
-
-private typealias ViewModelAlias = ViewModel<*, *>
 
 fun <T : ViewModelAlias> lazyViewModel(vmCreator: () -> T): LazyViewModelDelegate<T> {
     return LazyViewModelDelegate(vmCreator)
 }
 
-interface LazyViewModel<T : ViewModelAlias> {
-    val value: T
-}
-
-class LazyViewModelDelegate<T : ViewModelAlias>(vmCreator: () -> T) : LazyViewModel<T> {
+class LazyViewModelDelegate<T : ViewModelAlias>(vmCreator: () -> T) : ViewModelDelegate<T> {
     private lateinit var vm: T
     private var vmc: (() -> T)? = vmCreator
 
