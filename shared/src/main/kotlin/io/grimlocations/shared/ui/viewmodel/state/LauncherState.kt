@@ -1,5 +1,9 @@
 package io.grimlocations.shared.ui.viewmodel.state
 
-//data class LauncherState(
-//
-//): State
+import io.grimlocations.shared.data.dto.ProfileDTO
+import io.grimlocations.shared.framework.ui.State
+
+data class LauncherState(
+    val showPropertiesDialog: Boolean,
+    val profiles: List<ProfileDTO>
+): State

@@ -21,21 +21,18 @@ import io.grimlocations.shared.framework.ui.get
 import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GDLocationManagerTheme
 import io.grimlocations.shared.ui.GLViewModelProvider
-import io.grimlocations.shared.ui.viewmodel.LauncherEditorViewModel
-import io.grimlocations.shared.ui.viewmodel.event.updateShowPropertiesDialog
-import kotlinx.coroutines.Dispatchers
+import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
 @Composable
 fun LauncherView(
-    launcherEditorVm: LauncherEditorViewModel = LocalViewModel.current.get()
+    launcherVm: LauncherViewModel = LocalViewModel.current.get()
 ) {
     val disabled = remember { mutableStateOf(false) }
     val vmProvider = LocalViewModel.current as GLViewModelProvider
 
-    View(launcherEditorVm, disabled.value) { launcherEditorState ->
+    View(launcherVm, disabled.value) { launcherEditorState ->
 
         Surface(modifier = Modifier.fillMaxSize()) {
             Row(horizontalArrangement = Arrangement.End) {
