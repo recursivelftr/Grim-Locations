@@ -66,27 +66,37 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 SchemaUtils.create(ProfileModIntermTable)
                 SchemaUtils.create(ModDifficultyIntermTable)
 
-
-                Meta.new {
-                    version = 0
+                transaction {
+                    Meta.new {
+                        version = 0
+                    }
                 }
 
-                Difficulty.new {
-                    name = "Any"
+                val mod = transaction {
+                    Mod.new {
+                        name = "None"
+                    }
                 }
 
-                Difficulty.new {
-                    name = "Normal"
+                val difficulties = transaction {
+                    listOf(
+                        Difficulty.new {
+                            name = "Normal"
+                        },
+                        Difficulty.new {
+                            name = "Elite"
+                        },
+                        Difficulty.new {
+                            name = "Ultimate"
+                        }
+                    )
                 }
 
-                Difficulty.new {
-                    name = "Elite"
+                transaction {
+                    mod.difficulties = SizedCollection(difficulties)
                 }
 
-                Difficulty.new {
-                    name = "Ultimate"
-                }
-
+                logger.info("Database created")
             } else {
                 val version = MetaTable.slice(MetaTable.version).selectAll().single()[MetaTable.version]
                 logger.info("Database version: $version")

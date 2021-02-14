@@ -66,10 +66,9 @@ fun PropertiesView(
                     modifier = Modifier.width(TEXT_FIELD_WIDTH)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                Icon(
-                    Icons.Default.Edit,
-                    "Browse",
-                    modifier = Modifier.size(30.dp).clickable {
+                IconButton(
+                    modifier = Modifier.size(40.dp),
+                    onClick = {
                         with(propertiesViewModel.installFileChooser) {
                             val okOrCancel = showOpenDialog(null)
                             if (okOrCancel == JFileChooser.APPROVE_OPTION) {
@@ -77,7 +76,12 @@ fun PropertiesView(
                             }
                         }
                     }
-                )
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        "Browse",
+                    )
+                }
             }
 
             if (it.errors.contains(GRIM_INTERNALS_NOT_FOUND)) {
@@ -109,10 +113,9 @@ fun PropertiesView(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                Icon(
-                    Icons.Default.Edit,
-                    "Browse",
-                    modifier = Modifier.size(30.dp).clickable {
+                IconButton(
+                    modifier = Modifier.size(40.dp),
+                    onClick = {
                         with(propertiesViewModel.saveFileChooser) {
                             val okOrCancel = showOpenDialog(null)
                             if (okOrCancel == JFileChooser.APPROVE_OPTION) {
@@ -120,7 +123,12 @@ fun PropertiesView(
                             }
                         }
                     }
-                )
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        "Browse",
+                    )
+                }
             }
 
             if (it.warnings.contains(NO_CHARACTERS_FOUND)) {
