@@ -28,7 +28,7 @@ import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 private val items = listOf(
-    Pair(1, "One"),
+    Pair(1, "Oneaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
     Pair(2, "Two"),
     Pair(3, "Three"),
     Pair(4, "Four"),
@@ -103,9 +103,11 @@ fun LauncherView(
                         isOpen.value = false
                     }
                 ) {
-                    Text("test")
-                    Spacer(modifier = Modifier.height(100.dp))
-                    Text("test2")
+                    Column {
+                        Text("test")
+                        Spacer(modifier = Modifier.height(100.dp))
+                        Text("test2")
+                    }
                 }
             }
         }
