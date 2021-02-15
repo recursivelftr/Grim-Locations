@@ -3,13 +3,12 @@ package io.grimlocations.shared.ui.view
 import androidx.compose.desktop.AppWindow
 import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.desktop.Window
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Providers
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +20,6 @@ import androidx.compose.ui.unit.sp
 import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.get
 import io.grimlocations.shared.framework.ui.view.View
-import io.grimlocations.shared.ui.GDLocationManagerTheme
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.viewmodel.PropertiesViewModel
 import io.grimlocations.shared.ui.viewmodel.event.persistState
@@ -183,8 +181,8 @@ fun openPropertiesView(
 
         val window = LocalAppWindow.current
 
-        Providers(LocalViewModel provides vmProvider) {
-            GDLocationManagerTheme {
+        CompositionLocalProvider(LocalViewModel provides vmProvider) {
+            GrimLocationsTheme {
                 PropertiesView(
                     {
                         window.close()

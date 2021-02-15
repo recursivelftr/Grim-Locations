@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import io.grimlocations.shared.ui.GDLocationManagerTheme
+import io.grimlocations.shared.ui.view.GrimLocationsTheme
 import io.grimlocations.shared.util.getResolution
 import org.apache.logging.log4j.LogManager
 
@@ -23,7 +23,7 @@ fun main() = Window(
     logger.debug("test")
     var text by remember { mutableStateOf("Hello, World!") }
 
-    GDLocationManagerTheme {
+    GrimLocationsTheme {
         Surface(color = Color.Black) {
             Button(onClick = {
                 text = "Hello, Desktop!"

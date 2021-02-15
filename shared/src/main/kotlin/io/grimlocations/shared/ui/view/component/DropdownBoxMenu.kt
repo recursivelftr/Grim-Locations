@@ -23,7 +23,7 @@
 //
 //@ExperimentalFoundationApi
 //@Composable
-//fun <K> DropdownBox(
+//fun <K> DropdownBoxMenu(
 //    selected: Pair<K, String>,
 //    items: List<Pair<K, String>>,
 //    isOpen: Boolean,
@@ -61,9 +61,9 @@
 //            selected.second
 //
 //    Column(
-//        verticalArrangement = Arrangement.Top,
+////        verticalArrangement = Arrangement.Top,
 //        horizontalAlignment = Alignment.CenterHorizontally,
-//        modifier = Modifier.fillMaxSize()
+////        modifier = Modifier.fillMaxSize()
 //    ) {
 //        Row(
 //            verticalAlignment = Alignment.CenterVertically,
@@ -105,41 +105,54 @@
 //                )
 //            }
 //        }
+//        DropdownMenu(
+//            expanded = isOpen,
+//            onDismissRequest = {}
+//        ) {
+//            items.forEach {
+//                TextBox(it.second, maxWidth - 10.dp) {
+//                    onSelect(it)
+//                }
+//                Spacer(modifier = Modifier.height(dropDownSpacerHeight))
+//            }
+////                LazyColumn(state = stateVertical) {
+////                    items(items.size) { index ->
+////                        TextBox(items[index].second, maxWidth - 10.dp) {
+////                            onSelect(items[index])
+////                        }
+////                        Spacer(modifier = Modifier.height(dropDownSpacerHeight))
+////                    }
+////                }
+//        }
 //        Box(modifier = Modifier.fillMaxSize()) {
 //            contentBelow()
 //
-//            if (isOpen) {
-//                Box(
-//                    modifier = Modifier
-//                        .width(maxColumnWidth)
-//                        .align(Alignment.Center)
-//                ) {
-//                    Box(
-//                        modifier = Modifier
-//                            .width(maxWidth)
-//                            .align(Alignment.CenterStart)
-//                            .background(color = dropDownBackgroundColor)
-//                    ) {
-//                        LazyColumn(state = stateVertical) {
-//                            items(items.size) { index ->
-//                                TextBox(items[index].second, maxWidth - 10.dp) {
-//                                    onSelect(items[index])
-//                                }
-//                                Spacer(modifier = Modifier.height(dropDownSpacerHeight))
-//                            }
-//                        }
-//                        VerticalScrollbar(
-//                            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-//                            adapter = rememberScrollbarAdapter(
-//                                scrollState = stateVertical,
-//                                itemCount = items.size,
-//                                averageItemSize = dropDownAverageItemSize
-//                            ),
-//                            style = scrollBarStyle
-//                        )
-//                    }
-//                }
-//            }
+//
+////            if (isOpen) {
+////                Box(
+////                    modifier = Modifier
+////                        .width(maxColumnWidth)
+////                        .align(Alignment.Center)
+////                ) {
+////                    Box(
+////                        modifier = Modifier
+////                            .width(maxWidth)
+////                            .align(Alignment.CenterStart)
+////                            .background(color = dropDownBackgroundColor)
+////                    ) {
+////
+////                        VerticalScrollbar(
+////                            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+////                            adapter = rememberScrollbarAdapter(
+////                                scrollState = stateVertical,
+////                                itemCount = items.size,
+////                                averageItemSize = dropDownAverageItemSize
+////                            ),
+////                            style = scrollBarStyle
+////                        )
+////                    }
+////                }
+////            }
 //        }
 //    }
 //}

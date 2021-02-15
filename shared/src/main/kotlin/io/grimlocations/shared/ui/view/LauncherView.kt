@@ -7,13 +7,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Providers
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
@@ -21,10 +17,10 @@ import androidx.compose.ui.unit.dp
 import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.get
 import io.grimlocations.shared.framework.ui.view.View
-import io.grimlocations.shared.ui.GDLocationManagerTheme
 import io.grimlocations.shared.ui.GLViewModelProvider
-import io.grimlocations.shared.ui.view.component.DropdownBox
+import io.grimlocations.shared.ui.view.component.ComboPopup
 import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
+import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 private val items = listOf(
@@ -48,18 +44,18 @@ private val items = listOf(
     Pair(18, "Eighteen"),
 )
 
-private val emptyItems = emptyList<Pair<Int,String>>()
+private val emptyItems = emptyList<Pair<Int, String>>()
 
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 @Composable
 fun LauncherView(
-    launcherVm: LauncherViewModel = LocalViewModel.current.get()
+    launcherVm: LauncherViewModel = LocalViewModel.current.get(),
+    captureSubWindow: ((AppWindow?, AppWindow) -> Unit)? = null,
 ) {
+
     val disabled = remember { mutableStateOf(false) }
     val vmProvider = LocalViewModel.current as GLViewModelProvider
-
-    val isOpen = remember { mutableStateOf(false) }
     val selected = remember { mutableStateOf(items[0]) }
 
     View(launcherVm, disabled.value) { launcherEditorState ->
@@ -91,23 +87,17 @@ fun LauncherView(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                 }
-                DropdownBox(
+                ComboPopup(
+                    "Profile",
                     items = items,
-                    isOpen = isOpen.value,
+                    emptyItemsMessage = "No Profiles",
                     selected = selected.value,
-                    maxWidth = 300.dp,
-                    onOpen = { isOpen.value = true },
+                    width = 300.dp,
+                    onOpen = { p, c -> captureSubWindow?.invoke(p, c) },
                     onSelect = {
                         selected.value = it
-                        isOpen.value = false
                     }
-                ) {
-                    Column {
-                        Text("test")
-                        Spacer(modifier = Modifier.height(100.dp))
-                        Text("test2")
-                    }
-                }
+                )
             }
         }
     }
@@ -116,15 +106,24 @@ fun LauncherView(
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 fun openLauncherView(vmProvider: GLViewModelProvider, previousWindow: AppWindow) {
+    val subWindows = mutableListOf<AppWindow>()
     Window(
         title = "Launcher",
-        size = IntSize(500, 300)
+        size = IntSize(500, 300),
+        onDismissRequest = {
+            subWindows.forEach { it.closeIfOpen() }
+        }
     ) {
         remember { previousWindow.close() }
 
-        Providers(LocalViewModel provides vmProvider) {
-            GDLocationManagerTheme {
-                LauncherView()
+        CompositionLocalProvider(LocalViewModel provides vmProvider) {
+            GrimLocationsTheme {
+                LauncherView(
+                    captureSubWindow = { p, c ->
+                        subWindows.remove(p)
+                        subWindows.add(c)
+                    }
+                )
             }
         }
     }

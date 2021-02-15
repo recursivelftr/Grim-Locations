@@ -8,7 +8,7 @@ import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Providers
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -24,6 +24,7 @@ inline fun <reified S : State, VM : ViewModel<S, *>>
         View(
     viewModel: VM,
     disabled: Boolean = false,
+    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
     noinline content: @Composable (S) -> Unit
 ) {
@@ -33,7 +34,7 @@ inline fun <reified S : State, VM : ViewModel<S, *>>
         loading()
     } else {
         if(disabled){
-            Overlay { content(state) }
+            Overlay(onOverlayClick) { content(state) }
         } else {
             content(state)
         }
@@ -47,6 +48,7 @@ inline fun <reified S1 : State, reified S2 : State, VM1 : ViewModel<S1, *>, VM2 
     viewModel1: VM1,
     viewModel2: VM2,
     disabled: Boolean = false,
+    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
     noinline content: @Composable (S1, S2) -> Unit
 ) {
@@ -56,7 +58,7 @@ inline fun <reified S1 : State, reified S2 : State, VM1 : ViewModel<S1, *>, VM2 
 
     guardLet(state1, state2) { s1, s2 ->
         if(disabled){
-            Overlay { content(s1, s2) }
+            Overlay(onOverlayClick) { content(s1, s2) }
         } else {
             content(s1, s2)
         }
@@ -71,6 +73,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, VM1 : Vi
     viewModel2: VM2,
     viewModel3: VM3,
     disabled: Boolean = false,
+    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
     noinline content: @Composable (S1, S2, S3) -> Unit
 ) {
@@ -81,7 +84,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, VM1 : Vi
 
     guardLet(state1, state2, state3) { s1, s2, s3 ->
         if(disabled){
-            Overlay { content(s1, s2, s3) }
+            Overlay(onOverlayClick) { content(s1, s2, s3) }
         } else {
             content(s1, s2, s3)
         }
@@ -97,6 +100,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
     viewModel3: VM3,
     viewModel4: VM4,
     disabled: Boolean = false,
+    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
     noinline content: @Composable (S1, S2, S3, S4) -> Unit
 ) {
@@ -108,7 +112,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
 
     guardLet(state1, state2, state3, state4) { s1, s2, s3, s4 ->
         if(disabled){
-            Overlay { content(s1, s2, s3, s4) }
+            Overlay(onOverlayClick) { content(s1, s2, s3, s4) }
         } else {
             content(s1, s2, s3, s4)
         }
@@ -125,6 +129,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
     viewModel4: VM4,
     viewModel5: VM5,
     disabled: Boolean = false,
+    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
     noinline content: @Composable (S1, S2, S3, S4, S5) -> Unit
 ) {
@@ -137,7 +142,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
 
     guardLet(state1, state2, state3, state4, state5) { s1, s2, s3, s4, s5 ->
         if(disabled){
-            Overlay { content(s1, s2, s3, s4, s5) }
+            Overlay(onOverlayClick) { content(s1, s2, s3, s4, s5) }
         } else {
             content(s1, s2, s3, s4, s5)
         }
@@ -152,11 +157,11 @@ fun Spinner() {
 }
 
 @Composable
-fun Overlay(content: @Composable () -> Unit) {
-    Providers(LocalContentAlpha provides ContentAlpha.disabled) {
+fun Overlay(onClick: () -> Unit, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.disabled) {
         Box(Modifier.fillMaxSize()) {
             content()
-            Box(modifier = Modifier.matchParentSize().alpha(0f).clickable(onClick = {}))
+            Box(modifier = Modifier.matchParentSize().alpha(0f).clickable(onClick = onClick))
         }
     }
 }
