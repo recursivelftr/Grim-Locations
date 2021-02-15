@@ -95,8 +95,7 @@ fun LauncherView(
                     items = items,
                     isOpen = isOpen.value,
                     selected = selected.value,
-                    maxWidth = 200.dp,
-                    maxHeight = 200.dp,
+                    maxWidth = 300.dp,
                     onOpen = { isOpen.value = true },
                     onSelect = {
                         selected.value = it
