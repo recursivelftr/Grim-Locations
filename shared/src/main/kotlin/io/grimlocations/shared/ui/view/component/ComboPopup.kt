@@ -30,7 +30,8 @@ private val dropDownBackgroundColorLight = Color(224, 224, 224)
 private val dropDownButtonWidth = 40.dp
 private val dropDownItemHeight = 32.dp
 private val dropDownSpacerHeight = 5.dp
-private val dropDownAverageItemSize = dropDownItemHeight + dropDownSpacerHeight
+private val dropDownAverageItemHeight = dropDownItemHeight + dropDownSpacerHeight
+private val dropDownHeaderHeight = dropDownAverageItemHeight + 5.dp
 
 @ExperimentalFoundationApi
 @Composable
@@ -41,7 +42,7 @@ fun <K> ComboPopup(
     emptyItemsMessage: String = "None",
     onOpen: (previousWindow: AppWindow?, newWindow: AppWindow) -> Unit,
     width: Dp,
-    popupHeight: Dp = 250.dp,
+    popupMaxHeight: Dp = 250.dp,
     textFieldHeight: Dp = 56.dp, //Minimum height for a text field defined by compose
     onSelect: (Pair<K, String>) -> Unit
 ) {
@@ -75,11 +76,12 @@ fun <K> ComboPopup(
     val previousWindow = remember { mutableStateOf<AppWindow?>(null) }
     val openPopup = {
         if(items.isNotEmpty()) {
+            val possibleHeight = dropDownHeaderHeight + (items.size * dropDownAverageItemHeight.value).dp
             openPopupWindow(
                 title,
                 labelColor,
                 width,
-                popupHeight,
+                if(possibleHeight < popupMaxHeight) possibleHeight else popupMaxHeight,
                 items,
                 primaryColor,
                 dropDownBackgroundColor,
@@ -158,7 +160,7 @@ private fun <K> openPopupWindow(
     onSelect: (Pair<K, String>) -> Unit,
     onOpen: (AppWindow) -> Unit
 ) {
-    var onlyOnce = true
+    var isNotOpen = true
     Window(
         undecorated = true,
         size = IntSize(width.value.toInt(), height.value.toInt())
@@ -166,8 +168,8 @@ private fun <K> openPopupWindow(
         GrimLocationsTheme {
             val window = LocalAppWindow.current
             SideEffect {
-                if (onlyOnce) {
-                    onlyOnce = false
+                if (isNotOpen) {
+                    isNotOpen = false
                     onOpen(window)
                 }
             }
@@ -191,7 +193,7 @@ private fun <K> openPopupWindow(
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.height(dropDownItemHeight + 5.dp).fillMaxWidth()
+                        modifier = Modifier.height(dropDownAverageItemHeight).fillMaxWidth()
                     ) {
                         Row {
                             Spacer(modifier = Modifier.width(15.dp)) //Amount of padding between the left most bound of the text field and the first letter of text
@@ -232,7 +234,7 @@ private fun <K> openPopupWindow(
                             adapter = rememberScrollbarAdapter(
                                 scrollState = stateVertical,
                                 itemCount = items.size,
-                                averageItemSize = dropDownAverageItemSize
+                                averageItemSize = dropDownAverageItemHeight
                             ),
                             style = scrollBarStyle
                         )
