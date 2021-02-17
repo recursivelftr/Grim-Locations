@@ -54,11 +54,10 @@ fun LauncherView(
     captureSubWindow: ((AppWindow?, AppWindow) -> Unit)? = null,
 ) {
 
-    val disabled = remember { mutableStateOf(false) }
     val vmProvider = LocalViewModel.current as GLViewModelProvider
     val selected = remember { mutableStateOf(items[0]) }
 
-    View(launcherVm, disabled.value) { launcherEditorState ->
+    View(launcherVm) { launcherEditorState ->
 
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -79,9 +78,10 @@ fun LauncherView(
                             modifier = Modifier.size(40.dp).clickable {
                                 openPropertiesView(
                                     vmProvider,
-                                    { disabled.value = false }
+                                    { disabled = false }
                                 )
-                                disabled.value = true
+                                disabled = true
+                                onOverlayClick = {}
                             }
                         )
                     }
@@ -93,7 +93,15 @@ fun LauncherView(
                     emptyItemsMessage = "No Profiles",
                     selected = selected.value,
                     width = 300.dp,
-                    onOpen = { p, c -> captureSubWindow?.invoke(p, c) },
+                    onOpen = { p, c ->
+                        disabled = true
+                        onOverlayClick = {
+                            c.closeIfOpen()
+                            disabled = false
+                        }
+                        captureSubWindow?.invoke(p, c)
+                    },
+                    onClose = { disabled = false },
                     onSelect = {
                         selected.value = it
                     }

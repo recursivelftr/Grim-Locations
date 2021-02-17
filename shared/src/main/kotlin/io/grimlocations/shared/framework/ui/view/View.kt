@@ -7,9 +7,7 @@ import androidx.compose.material.ContentAlpha
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import io.grimlocations.shared.framework.ui.State
@@ -23,20 +21,19 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 inline fun <reified S : State, VM : ViewModel<S, *>>
         View(
     viewModel: VM,
-    disabled: Boolean = false,
-    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
-    noinline content: @Composable (S) -> Unit
+    noinline content: @Composable View.(S) -> Unit
 ) {
+    val viewVm = remember { ViewVm() }
     val state = viewModel.stateFlow.collectAsState().value
 
     if (state == null) {
         loading()
     } else {
-        if(disabled){
-            Overlay(onOverlayClick) { content(state) }
+        if (viewVm.disabled) {
+            Overlay(viewVm.onOverlayClick) { viewVm.content(state) }
         } else {
-            content(state)
+            viewVm.content(state)
         }
     }
 }
@@ -47,20 +44,18 @@ inline fun <reified S1 : State, reified S2 : State, VM1 : ViewModel<S1, *>, VM2 
         View(
     viewModel1: VM1,
     viewModel2: VM2,
-    disabled: Boolean = false,
-    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
-    noinline content: @Composable (S1, S2) -> Unit
+    noinline content: @Composable View.(S1, S2) -> Unit
 ) {
-
+    val viewVm = remember { ViewVm() }
     val state1 = viewModel1.stateFlow.collectAsState().value
     val state2 = viewModel2.stateFlow.collectAsState().value
 
     guardLet(state1, state2) { s1, s2 ->
-        if(disabled){
-            Overlay(onOverlayClick) { content(s1, s2) }
+        if (viewVm.disabled) {
+            Overlay(viewVm.onOverlayClick) { viewVm.content(s1, s2) }
         } else {
-            content(s1, s2)
+            viewVm.content(s1, s2)
         }
     } ?: loading()
 }
@@ -72,21 +67,19 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, VM1 : Vi
     viewModel1: VM1,
     viewModel2: VM2,
     viewModel3: VM3,
-    disabled: Boolean = false,
-    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
-    noinline content: @Composable (S1, S2, S3) -> Unit
+    noinline content: @Composable View.(S1, S2, S3) -> Unit
 ) {
-
+    val viewVm = remember { ViewVm() }
     val state1 = viewModel1.stateFlow.collectAsState().value
     val state2 = viewModel2.stateFlow.collectAsState().value
     val state3 = viewModel3.stateFlow.collectAsState().value
 
     guardLet(state1, state2, state3) { s1, s2, s3 ->
-        if(disabled){
-            Overlay(onOverlayClick) { content(s1, s2, s3) }
+        if (viewVm.disabled) {
+            Overlay(viewVm.onOverlayClick) { viewVm.content(s1, s2, s3) }
         } else {
-            content(s1, s2, s3)
+            viewVm.content(s1, s2, s3)
         }
     } ?: loading()
 }
@@ -99,22 +92,20 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
     viewModel2: VM2,
     viewModel3: VM3,
     viewModel4: VM4,
-    disabled: Boolean = false,
-    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
-    noinline content: @Composable (S1, S2, S3, S4) -> Unit
+    noinline content: @Composable View.(S1, S2, S3, S4) -> Unit
 ) {
-
+    val viewVm = remember { ViewVm() }
     val state1 = viewModel1.stateFlow.collectAsState().value
     val state2 = viewModel2.stateFlow.collectAsState().value
     val state3 = viewModel3.stateFlow.collectAsState().value
     val state4 = viewModel4.stateFlow.collectAsState().value
 
     guardLet(state1, state2, state3, state4) { s1, s2, s3, s4 ->
-        if(disabled){
-            Overlay(onOverlayClick) { content(s1, s2, s3, s4) }
+        if (viewVm.disabled) {
+            Overlay(viewVm.onOverlayClick) { viewVm.content(s1, s2, s3, s4) }
         } else {
-            content(s1, s2, s3, s4)
+            viewVm.content(s1, s2, s3, s4)
         }
     } ?: loading()
 }
@@ -128,12 +119,10 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
     viewModel3: VM3,
     viewModel4: VM4,
     viewModel5: VM5,
-    disabled: Boolean = false,
-    noinline onOverlayClick: () -> Unit = {},
     loading: @Composable () -> Unit = { Spinner() },
-    noinline content: @Composable (S1, S2, S3, S4, S5) -> Unit
+    noinline content: @Composable View.(S1, S2, S3, S4, S5) -> Unit
 ) {
-
+    val viewVm = remember { ViewVm() }
     val state1 = viewModel1.stateFlow.collectAsState().value
     val state2 = viewModel2.stateFlow.collectAsState().value
     val state3 = viewModel3.stateFlow.collectAsState().value
@@ -141,10 +130,10 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
     val state5 = viewModel5.stateFlow.collectAsState().value
 
     guardLet(state1, state2, state3, state4, state5) { s1, s2, s3, s4, s5 ->
-        if(disabled){
-            Overlay(onOverlayClick) { content(s1, s2, s3, s4, s5) }
+        if (viewVm.disabled) {
+            Overlay(viewVm.onOverlayClick) { viewVm.content(s1, s2, s3, s4, s5) }
         } else {
-            content(s1, s2, s3, s4, s5)
+            viewVm.content(s1, s2, s3, s4, s5)
         }
     } ?: loading()
 }
@@ -164,4 +153,25 @@ fun Overlay(onClick: () -> Unit, content: @Composable () -> Unit) {
             Box(modifier = Modifier.matchParentSize().alpha(0f).clickable(onClick = onClick))
         }
     }
+}
+
+interface View {
+    var disabled: Boolean
+    var onOverlayClick: () -> Unit
+}
+
+class ViewVm : View {
+    private val _disabled = mutableStateOf(false)
+    private val _onOverlayClick = mutableStateOf<() -> Unit>({})
+
+    override var disabled: Boolean
+        get() = _disabled.value
+        set(value) {
+            _disabled.value = value
+        }
+    override var onOverlayClick: () -> Unit
+        get() = _onOverlayClick.value
+        set(value) {
+            _onOverlayClick.value = value
+        }
 }

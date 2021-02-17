@@ -4,7 +4,7 @@ import androidx.compose.runtime.compositionLocalOf
 import io.grimlocations.shared.framework.ui.viewmodel.ViewModel
 import kotlin.reflect.KClass
 
-val LocalViewModel = compositionLocalOf<ViewModelProvider>()
+val LocalViewModel = compositionLocalOf<ViewModelProvider>(defaultFactory = { error("No default provided for the LocalViewModel composition local.") })
 
 interface ViewModelProvider {
     val viewModelMap: Map<KClass<out ViewModel<*, *>>, ViewModelDelegate<*>>

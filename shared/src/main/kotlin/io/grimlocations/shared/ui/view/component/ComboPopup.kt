@@ -41,6 +41,7 @@ fun <K> ComboPopup(
     items: List<Pair<K, String>>,
     emptyItemsMessage: String = "None",
     onOpen: (previousWindow: AppWindow?, newWindow: AppWindow) -> Unit,
+    onClose: (() -> Unit)? = null,
     width: Dp,
     popupMaxHeight: Dp = 250.dp,
     textFieldHeight: Dp = 56.dp, //Minimum height for a text field defined by compose
@@ -94,7 +95,8 @@ fun <K> ComboPopup(
                     previousWindow.value?.closeIfOpen()
                     onOpen(previousWindow.value, it)
                     previousWindow.value = it
-                }
+                },
+                onClose
             )
         }
     }
@@ -158,12 +160,14 @@ private fun <K> openPopupWindow(
     dropDownBackgroundColor: Color,
     textColor: Color,
     onSelect: (Pair<K, String>) -> Unit,
-    onOpen: (AppWindow) -> Unit
+    onOpen: (AppWindow) -> Unit,
+    onClose: (() -> Unit)?
 ) {
     var isNotOpen = true
     Window(
         undecorated = true,
-        size = IntSize(width.value.toInt(), height.value.toInt())
+        size = IntSize(width.value.toInt(), height.value.toInt()),
+        onDismissRequest = onClose
     ) {
         GrimLocationsTheme {
             val window = LocalAppWindow.current

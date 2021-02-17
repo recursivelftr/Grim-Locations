@@ -6,7 +6,7 @@ plugins {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.30")
-    implementation("org.jetbrains.compose:compose-gradle-plugin:0.3.0-build152")
+    implementation("org.jetbrains.compose:compose-gradle-plugin:0.3.0-build154")
     implementation("app.cash.exhaustive:exhaustive-gradle:0.1.1")
 }
 
