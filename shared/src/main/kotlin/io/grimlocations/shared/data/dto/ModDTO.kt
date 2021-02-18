@@ -1,7 +1,11 @@
 package io.grimlocations.shared.data.dto
 
 import io.grimlocations.shared.framework.data.dto.DTO
+import io.grimlocations.shared.util.assignOnce
 import java.time.LocalDateTime
+
+const val RESERVED_NO_MODS_INDICATOR_NAME = "__RESERVED_NO_MODS__"
+var RESERVED_NO_MODS_INDICATOR: ModDTO by assignOnce()
 
 data class ModDTO(
     override val id: Int,

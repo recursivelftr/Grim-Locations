@@ -1,7 +1,12 @@
 package io.grimlocations.shared.data.repo
 
 import io.grimlocations.shared.data.domain.*
+import io.grimlocations.shared.data.dto.RESERVED_NO_DIFFICULTIES_INDICATOR_NAME
+import io.grimlocations.shared.data.dto.RESERVED_NO_MODS_INDICATOR_NAME
+import io.grimlocations.shared.data.dto.RESERVED_PROFILE_GI_LOCATIONS_NAME
+import io.grimlocations.shared.data.dto.RESERVED_PROFILE_REDDIT_LOCATIONS_NAME
 import io.grimlocations.shared.framework.data.repo.Repository
+import io.grimlocations.shared.util.Quadruple
 import io.grimlocations.shared.util.extension.glDatabaseBackupDir
 import io.grimlocations.shared.util.extension.glDatabaseDir
 import kotlinx.coroutines.Deferred
@@ -132,7 +137,81 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         currentDb.copyTo(File("$backupDirPath${File.separator}database-$date-$backupNumber.db"))
     }
 
-    fun autoDetectCharacterProfiles() {
+    fun createDefaultEntities() {
+        val diffList = transaction {
+            listOf(
+                Difficulty.new {
+                    name = "Normal"
+                },
+                Difficulty.new {
+                    name = "Veteran"
+                },
+                Difficulty.new {
+                    name = "Elite"
+                },
+                Difficulty.new {
+                    name = "Ultimate"
+                }
+            )
+        }
+
+        transaction {
+            Mod.new {
+                name = "None"
+                difficulties = SizedCollection(diffList)
+            }
+        }
+    }
+
+    fun createReservedEntities(): Quadruple<Profile, Profile, Mod, Difficulty> {
+        val difficulty = transaction {
+            Difficulty.new {
+                name = RESERVED_NO_DIFFICULTIES_INDICATOR_NAME
+            }
+        }
+        val mod = transaction {
+            Mod.new {
+                name = RESERVED_NO_MODS_INDICATOR_NAME
+                difficulties = SizedCollection(listOf(difficulty))
+            }
+        }
+        val profile1 = transaction {
+            Profile.new {
+                name = RESERVED_PROFILE_GI_LOCATIONS_NAME
+                mods = SizedCollection(listOf(mod))
+            }
+        }
+        val profile2 = transaction {
+            Profile.new {
+                name = RESERVED_PROFILE_REDDIT_LOCATIONS_NAME
+                mods = SizedCollection(listOf(mod))
+            }
+        }
+
+        return Quadruple(
+            profile1,
+            profile2,
+            mod,
+            difficulty
+        )
+    }
+
+    fun loadReservedEntities(): Quadruple<Profile, Profile, Mod, Difficulty> = transaction {
+        Quadruple(
+            Profile.find { ProfileTable.name eq RESERVED_PROFILE_GI_LOCATIONS_NAME }.single(),
+            Profile.find { ProfileTable.name eq RESERVED_PROFILE_REDDIT_LOCATIONS_NAME }.single(),
+            Mod.find { ModTable.name eq RESERVED_NO_MODS_INDICATOR_NAME }.single(),
+            Difficulty.find { DifficultyTable.name eq RESERVED_NO_DIFFICULTIES_INDICATOR_NAME }.single()
+        )
+    }
+
+    fun loadInitialLocations(
+        initialCharacterLocProfile: Profile,
+        redditLocProfile: Profile,
+        noModsMod: Mod,
+        noDiffsDifficulty: Difficulty
+    ) {
 
     }
 }
+
