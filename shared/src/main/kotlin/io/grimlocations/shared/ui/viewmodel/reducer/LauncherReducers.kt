@@ -6,17 +6,10 @@ import io.grimlocations.shared.framework.ui.setState
 import io.grimlocations.shared.ui.GLStateManager
 import io.grimlocations.shared.ui.viewmodel.state.LauncherState
 
-suspend fun GLStateManager.loadLauncherEditorState() {
+suspend fun GLStateManager.loadLauncherState() {
     setState(
         LauncherState(
-            showPropertiesDialog = false,
             profiles = repository.loadProfilesAsync().await()
         )
-    )
-}
-
-suspend fun GLStateManager.updateShowPropertiesDialog(value: Boolean) {
-    setState(
-        getState<LauncherState>().copy(showPropertiesDialog = value)
     )
 }

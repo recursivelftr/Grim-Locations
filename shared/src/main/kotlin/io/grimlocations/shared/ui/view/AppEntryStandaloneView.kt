@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntSize
 import io.grimlocations.shared.data.repo.SqliteRepository
 import io.grimlocations.shared.data.repo.action.arePropertiesSet
 import io.grimlocations.shared.ui.GLStateManager
@@ -48,6 +49,8 @@ private suspend fun initializeApp(): StartState {
         )
     )
 }
+
+val SPLASH_SCREEN_SIZE = IntSize(500, 300)
 
 @Composable
 private fun SplashScreen() {

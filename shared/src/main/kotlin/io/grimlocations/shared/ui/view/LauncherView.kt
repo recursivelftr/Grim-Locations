@@ -116,7 +116,7 @@ fun LauncherView(
 fun openLauncherView(vmProvider: GLViewModelProvider, previousWindow: AppWindow) {
     val subWindows = mutableListOf<AppWindow>()
     Window(
-        title = "Launcher",
+        title = "Grim Locations",
         size = IntSize(500, 300),
         onDismissRequest = {
             subWindows.forEach { it.closeIfOpen() }
