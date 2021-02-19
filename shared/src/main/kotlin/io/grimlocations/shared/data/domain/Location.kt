@@ -31,9 +31,6 @@ class Location(id: EntityID<Int>) : DTOEntity<LocationTable, LocationDTO>(id, Lo
             created,
             modified,
             name,
-            profile.toDTO(),
-            mod.toDTO(),
-            difficulty.toDTO(),
             coordinate.toDTO()
         )
     }

@@ -8,8 +8,5 @@ data class LocationDTO(
     override val created: LocalDateTime,
     override val modified: LocalDateTime,
     val name: String,
-    val profile: ProfileDTO,
-    val mod: ModDTO,
-    val difficulty: DifficultyDTO,
     val coordinate: CoordinateDTO
 ) : DTO

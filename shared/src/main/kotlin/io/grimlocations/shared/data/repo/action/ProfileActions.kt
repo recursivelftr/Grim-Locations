@@ -11,11 +11,11 @@ import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionA
 
 typealias ProfileModDifficultyMap = Map<ProfileDTO, ModDifficultyMap>
 
-suspend fun SqliteRepository.loadProfilesAsync(): Deferred<List<ProfileDTO>> = suspendedTransactionAsync(Dispatchers.IO) {
+suspend fun SqliteRepository.getProfilesAsync(): Deferred<List<ProfileDTO>> = suspendedTransactionAsync(Dispatchers.IO) {
     Profile.wrapRows(ProfileTable.selectAll()).map { it.toDTO() }
 }
 
-suspend fun SqliteRepository.loadProfilesModsDifficultiesAsync(): Deferred<ProfileModDifficultyMap> = suspendedTransactionAsync(Dispatchers.IO) {
+suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(): Deferred<ProfileModDifficultyMap> = suspendedTransactionAsync(Dispatchers.IO) {
     val map: ProfileModDifficultyMap = mapOf()
     ProfileTable.selectAll().forEach {
         val p = Profile.wrapRow(it)
