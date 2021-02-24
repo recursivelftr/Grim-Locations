@@ -12,14 +12,17 @@ class AssignOnceDelegate<T> {
     operator fun getValue(thisRef: Any?, prop: KProperty<*>): T {
         value?.let {
             return it
-        } ?: error("The value of the delegate has not been set.")
+        } ?: error("The value of the delegate has not been assigned.")
     }
 
-    operator fun setValue(thisRef: Any?, prop: KProperty<*>, value: T) {
-        if(value == null)
+    operator fun setValue(thisRef: Any?, prop: KProperty<*>, item: T) {
+        if(value != null)
+            error("The value of the delegate has already been assigned.")
+
+        if(item == null)
             error("The AssignOnceDelegate does not allow null values.")
 
-        this.value = value
+        value = item
         initialized = true
     }
 }

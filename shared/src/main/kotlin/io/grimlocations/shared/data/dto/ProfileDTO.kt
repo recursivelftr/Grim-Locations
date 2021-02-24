@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 
 const val RESERVED_PROFILE_GI_LOCATIONS_NAME = "New Character Locations"
 const val RESERVED_PROFILE_REDDIT_LOCATIONS_NAME = "Additional Locations"
-val RESERVED_PROFILES: List<ProfileDTO> by assignOnce()
+var RESERVED_PROFILES: List<ProfileDTO> by assignOnce()
 
 data class ProfileDTO(
     override val id: Int,

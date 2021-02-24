@@ -1,12 +1,10 @@
 package io.grimlocations.shared.data.repo
 
 import io.grimlocations.shared.data.domain.*
-import io.grimlocations.shared.data.dto.RESERVED_NO_DIFFICULTIES_INDICATOR_NAME
-import io.grimlocations.shared.data.dto.RESERVED_NO_MODS_INDICATOR_NAME
-import io.grimlocations.shared.data.dto.RESERVED_PROFILE_GI_LOCATIONS_NAME
-import io.grimlocations.shared.data.dto.RESERVED_PROFILE_REDDIT_LOCATIONS_NAME
+import io.grimlocations.shared.data.dto.*
 import io.grimlocations.shared.framework.data.repo.Repository
-import io.grimlocations.shared.util.Quadruple
+import io.grimlocations.shared.util.FourTuple
+import io.grimlocations.shared.util.FiveTuple
 import io.grimlocations.shared.util.extension.glDatabaseBackupDir
 import io.grimlocations.shared.util.extension.glDatabaseDir
 import kotlinx.coroutines.Deferred
@@ -77,34 +75,35 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                     }
                 }
 
-                val mod = transaction {
-                    Mod.new {
-                        name = "None"
-                    }
-                }
+                val (base_game_mod, normal, veteran, elite, ultimate) = createDefaultEntities()
+                DEFAULT_GAME_MOD = base_game_mod
+                DEFAULT_GAME_NORMAL_DIFFICULTY = normal
+                DEFAULT_GAME_VETERAN_DIFFICULTY = veteran
+                DEFAULT_GAME_ELITE_DIFFICULTY = elite
+                DEFAULT_GAME_ULTIMATE_DIFFICULTY = ultimate
 
-                val difficulties = transaction {
-                    listOf(
-                        Difficulty.new {
-                            name = "Normal"
-                        },
-                        Difficulty.new {
-                            name = "Elite"
-                        },
-                        Difficulty.new {
-                            name = "Ultimate"
-                        }
-                    )
-                }
+                val (newchar_loc_profile, reddit_loc_profile, no_mods_mod, no_difficulties_difficulty) = createReservedEntities()
+                RESERVED_PROFILES = listOf(newchar_loc_profile, reddit_loc_profile)
+                RESERVED_NO_MODS_INDICATOR = no_mods_mod
+                RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
 
-                transaction {
-                    mod.difficulties = SizedCollection(difficulties)
-                }
 
                 logger.info("Database created")
             } else {
                 val version = MetaTable.slice(MetaTable.version).selectAll().single()[MetaTable.version]
                 logger.info("Database version: $version")
+
+                val (base_game_mod, normal, veteran, elite, ultimate) = getDefaultEntities()
+                DEFAULT_GAME_MOD = base_game_mod
+                DEFAULT_GAME_NORMAL_DIFFICULTY = normal
+                DEFAULT_GAME_VETERAN_DIFFICULTY = veteran
+                DEFAULT_GAME_ELITE_DIFFICULTY = elite
+                DEFAULT_GAME_ULTIMATE_DIFFICULTY = ultimate
+
+                val (newchar_loc_profile, reddit_loc_profile, no_mods_mod, no_difficulties_difficulty) = getReservedEntities()
+                RESERVED_PROFILES = listOf(newchar_loc_profile, reddit_loc_profile)
+                RESERVED_NO_MODS_INDICATOR = no_mods_mod
+                RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
             }
         }
     }
@@ -137,33 +136,44 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         currentDb.copyTo(File("$backupDirPath${File.separator}database-$date-$backupNumber.db"))
     }
 
-    fun createDefaultEntities() {
+    private fun createDefaultEntities(): FiveTuple<ModDTO, DifficultyDTO, DifficultyDTO, DifficultyDTO, DifficultyDTO> {
         val diffList = transaction {
             listOf(
                 Difficulty.new {
-                    name = "Normal"
+                    name = DEFAULT_GAME_NORMAL_DIFFICULTY_NAME
                 },
                 Difficulty.new {
-                    name = "Veteran"
+                    name = DEFAULT_GAME_VETERAN_DIFFICULTY_NAME
                 },
                 Difficulty.new {
-                    name = "Elite"
+                    name = DEFAULT_GAME_ELITE_DIFFICULTY_NAME
                 },
                 Difficulty.new {
-                    name = "Ultimate"
+                    name = DEFAULT_GAME_ULTIMATE_DIFFICULTY_NAME
                 }
             )
         }
 
-        transaction {
+        val mod = transaction {
             Mod.new {
-                name = "None"
-                difficulties = SizedCollection(diffList)
+                name = DEFAULT_GAME_MOD_NAME
             }
         }
+
+        transaction {
+            mod.difficulties = SizedCollection(diffList)
+        }
+
+        return FiveTuple(
+            mod.toDTO(),
+            diffList[0].toDTO(),
+            diffList[1].toDTO(),
+            diffList[2].toDTO(),
+            diffList[3].toDTO(),
+        )
     }
 
-    fun createReservedEntities(): Quadruple<Profile, Profile, Mod, Difficulty> {
+    private fun createReservedEntities(): FourTuple<ProfileDTO, ProfileDTO, ModDTO, DifficultyDTO> {
         val difficulty = transaction {
             Difficulty.new {
                 name = RESERVED_NO_DIFFICULTIES_INDICATOR_NAME
@@ -172,37 +182,77 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         val mod = transaction {
             Mod.new {
                 name = RESERVED_NO_MODS_INDICATOR_NAME
-                difficulties = SizedCollection(listOf(difficulty))
             }
         }
         val profile1 = transaction {
             Profile.new {
                 name = RESERVED_PROFILE_GI_LOCATIONS_NAME
-                mods = SizedCollection(listOf(mod))
             }
         }
         val profile2 = transaction {
             Profile.new {
                 name = RESERVED_PROFILE_REDDIT_LOCATIONS_NAME
-                mods = SizedCollection(listOf(mod))
             }
         }
 
-        return Quadruple(
-            profile1,
-            profile2,
-            mod,
-            difficulty
+        transaction {
+            mod.difficulties = SizedCollection(listOf(difficulty))
+            profile1.mods = SizedCollection(listOf(mod))
+            profile2.mods = SizedCollection(listOf(mod))
+        }
+
+        return FourTuple(
+            profile1.toDTO(),
+            profile2.toDTO(),
+            mod.toDTO(),
+            difficulty.toDTO()
         )
     }
 
-    fun loadReservedEntities(): Quadruple<Profile, Profile, Mod, Difficulty> = transaction {
-        Quadruple(
-            Profile.find { ProfileTable.name eq RESERVED_PROFILE_GI_LOCATIONS_NAME }.single(),
-            Profile.find { ProfileTable.name eq RESERVED_PROFILE_REDDIT_LOCATIONS_NAME }.single(),
-            Mod.find { ModTable.name eq RESERVED_NO_MODS_INDICATOR_NAME }.single(),
-            Difficulty.find { DifficultyTable.name eq RESERVED_NO_DIFFICULTIES_INDICATOR_NAME }.single()
+    private fun getDefaultEntities(): FiveTuple<ModDTO, DifficultyDTO, DifficultyDTO, DifficultyDTO, DifficultyDTO> =
+        transaction {
+            FiveTuple(
+                Mod.find { ModTable.name eq DEFAULT_GAME_MOD_NAME }.single().toDTO(),
+                Difficulty.find { DifficultyTable.name eq DEFAULT_GAME_NORMAL_DIFFICULTY_NAME }.single().toDTO(),
+                Difficulty.find { DifficultyTable.name eq DEFAULT_GAME_VETERAN_DIFFICULTY_NAME }.single().toDTO(),
+                Difficulty.find { DifficultyTable.name eq DEFAULT_GAME_ELITE_DIFFICULTY_NAME }.single().toDTO(),
+                Difficulty.find { DifficultyTable.name eq DEFAULT_GAME_ULTIMATE_DIFFICULTY_NAME }.single().toDTO()
+            )
+        }
+
+    private fun getReservedEntities(): FourTuple<ProfileDTO, ProfileDTO, ModDTO, DifficultyDTO> = transaction {
+        FourTuple(
+            Profile.find { ProfileTable.name eq RESERVED_PROFILE_GI_LOCATIONS_NAME }.single().toDTO(),
+            Profile.find { ProfileTable.name eq RESERVED_PROFILE_REDDIT_LOCATIONS_NAME }.single().toDTO(),
+            Mod.find { ModTable.name eq RESERVED_NO_MODS_INDICATOR_NAME }.single().toDTO(),
+            Difficulty.find { DifficultyTable.name eq RESERVED_NO_DIFFICULTIES_INDICATOR_NAME }.single().toDTO()
         )
+    }
+
+    private fun createLocationsFromFile(
+        filename: String,
+        profile: ProfileDTO,
+        mod: ModDTO,
+        difficulty: DifficultyDTO
+    ): List<LocationDTO> {
+        transaction {
+            File(javaClass.getResource(filename).file).forEachLine {
+                val loc = it.split(",")
+
+                val coord = Coordinate.find {
+                    (CoordinateTable.coordinate1 eq loc[1]) and
+                            (CoordinateTable.coordinate2 eq loc[2]) and
+                            (CoordinateTable.coordinate3 eq loc[3])
+                }.singleOrNull() ?: transaction {
+
+                }
+
+
+                Location.new {
+
+                }
+            }
+        }
     }
 
     fun loadInitialLocations(
