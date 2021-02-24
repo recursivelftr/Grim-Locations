@@ -17,7 +17,9 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
+import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class SqliteRepository(val appDirs: AppDirs) : Repository {
@@ -229,30 +231,90 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         )
     }
 
+    //The string returned is the error string, if everything went well then it will return null
     private fun createLocationsFromFile(
-        filename: String,
+        file: File,
         profile: ProfileDTO,
         mod: ModDTO,
         difficulty: DifficultyDTO
-    ): List<LocationDTO> {
-        transaction {
-            File(javaClass.getResource(filename).file).forEachLine {
+    ): String? {
+        val locList = mutableListOf<LocationDTO>()
+        val time = LocalDateTime.now()
+        var errorString: String? = null
+
+        file.forEachLine {
+            if (errorString != null) //lazy man's way of a break in the loop
+                return@forEachLine
+
+            if (it.isNotBlank()) {
                 val loc = it.split(",")
-
-                val coord = Coordinate.find {
-                    (CoordinateTable.coordinate1 eq loc[1]) and
-                            (CoordinateTable.coordinate2 eq loc[2]) and
-                            (CoordinateTable.coordinate3 eq loc[3])
-                }.singleOrNull() ?: transaction {
-
+                if (loc.size != 4) {
+                    errorString =
+                        "The csv file is not in the correct format. The required format for each line is Name,Coordinate1,Coordinate2,Coordinate3"
+                    logger.error(errorString)
+                    return@forEachLine
                 }
 
+                val name = loc[0].trim()
+                if (name.isBlank()) {
+                    errorString = "The name of the location cannot be blank."
+                    logger.error(errorString)
+                    return@forEachLine
+                }
 
-                Location.new {
+                val coord1 = loc[1].trim()
+                try {
+                    BigDecimal(coord1)
+                } catch (e: Exception) {
+                    errorString = "The first coordinate is not a number."
+                    logger.error(errorString, e)
+                    return@forEachLine
+                }
 
+                val coord2 = loc[2].trim()
+                try {
+                    BigDecimal(coord2)
+                } catch (e: Exception) {
+                    errorString = "The second coordinate is not a number."
+                    logger.error(errorString, e)
+                    return@forEachLine
+                }
+
+                val coord3 = loc[3].trim()
+                try {
+                    BigDecimal(coord3)
+                } catch (e: Exception) {
+                    errorString = "The third coordinate is not a number."
+                    logger.error(errorString, e)
+                    return@forEachLine
+                }
+
+                val coordDTO = CoordinateDTO(-1, time, time, coord1, coord2, coord3)
+                locList.add(LocationDTO(-1, time, time, name, coordDTO))
+            }
+        }
+
+        if (errorString != null)
+            return errorString
+
+        transaction {
+            locList.forEach {
+                Coordinate.find {
+                    (CoordinateTable.coordinate1 eq it.coordinate.coordinate1) and
+                            (CoordinateTable.coordinate2 eq it.coordinate.coordinate2) and
+                            (CoordinateTable.coordinate3 eq it.coordinate.coordinate3)
+                }.singleOrNull() ?: Coordinate.new {
+                    coordinate1 = it.coordinate.coordinate1
+                    coordinate2 = it.coordinate.coordinate2
+                    coordinate3 = it.coordinate.coordinate3
                 }
             }
         }
+        transaction {
+
+        }
+
+        return errorString
     }
 
     fun loadInitialLocations(
