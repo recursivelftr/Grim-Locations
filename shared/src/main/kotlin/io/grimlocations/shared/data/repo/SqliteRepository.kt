@@ -14,6 +14,8 @@ import net.harawata.appdirs.AppDirs
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
@@ -34,7 +36,9 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         logger.info("Loading repository with AppDirs object")
         val dbPath = appDirs.glDatabaseDir
         File(dbPath).mkdirs()
-        database = initDb("$dbPath${File.separator}database.db")
+        database = Database.connect("jdbc:sqlite:$dbPath${File.separator}database.db", "org.sqlite.JDBC").also {
+            it.useNestedTransactions = true
+        }
     }
 
     suspend fun <T> modifyDatabaseAsync(statement: suspend Transaction.() -> T): Deferred<T> {
@@ -49,10 +53,8 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         return suspendedTransactionAsync(Dispatchers.IO, statement = statement)
     }
 
-    private fun initDb(dbPath: String) = Database.connect("jdbc:sqlite:$dbPath", "org.sqlite.JDBC").also {
-        it.useNestedTransactions = true
-
-        transaction {
+    suspend fun initDb() {
+        newSuspendedTransaction {
 //            val diffTest = Difficulty.wrapRow(Difficulties.select { Difficulties.name eq "Any" }.single())
 //
 //            val profileTest = Profile.wrapRow(Profiles.select { Profiles.name eq "test" }.single())
@@ -71,7 +73,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 SchemaUtils.create(ProfileModIntermTable)
                 SchemaUtils.create(ModDifficultyIntermTable)
 
-                transaction {
+                suspendedTransaction {
                     Meta.new {
                         version = 0
                     }
@@ -89,6 +91,19 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 RESERVED_NO_MODS_INDICATOR = no_mods_mod
                 RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
 
+                createLocationsFromFile(
+                    file = File(javaClass.getResource("/new_character_locations.csv").toURI()),
+                    profileDTO = newchar_loc_profile,
+                    modDTO = no_mods_mod,
+                    difficultyDTO = no_difficulties_difficulty
+                )
+
+                createLocationsFromFile(
+                    file = File(javaClass.getResource("/reddit_locations.csv").toURI()),
+                    profileDTO = reddit_loc_profile,
+                    modDTO = no_mods_mod,
+                    difficultyDTO = no_difficulties_difficulty
+                )
 
                 logger.info("Database created")
             } else {
@@ -232,18 +247,18 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
     }
 
     //The string returned is the error string, if everything went well then it will return null
-    private fun createLocationsFromFile(
+    fun createLocationsFromFile(
         file: File,
-        profile: ProfileDTO,
-        mod: ModDTO,
-        difficulty: DifficultyDTO
+        profileDTO: ProfileDTO,
+        modDTO: ModDTO,
+        difficultyDTO: DifficultyDTO
     ): String? {
         val locList = mutableListOf<LocationDTO>()
         val time = LocalDateTime.now()
         var errorString: String? = null
 
         file.forEachLine {
-            if (errorString != null) //lazy man's way of a break in the loop
+            if (errorString != null) //lazy man's way of breaking from the loop (performs a continue on every item when theres an error)
                 return@forEachLine
 
             if (it.isNotBlank()) {
@@ -297,21 +312,62 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         if (errorString != null)
             return errorString
 
-        transaction {
-            locList.forEach {
-                Coordinate.find {
-                    (CoordinateTable.coordinate1 eq it.coordinate.coordinate1) and
-                            (CoordinateTable.coordinate2 eq it.coordinate.coordinate2) and
-                            (CoordinateTable.coordinate3 eq it.coordinate.coordinate3)
-                }.singleOrNull() ?: Coordinate.new {
-                    coordinate1 = it.coordinate.coordinate1
-                    coordinate2 = it.coordinate.coordinate2
-                    coordinate3 = it.coordinate.coordinate3
+        //create the coordinate if it doesn't exist
+        try {
+            transaction {
+                locList.forEach {
+
+                    Coordinate.find {
+                        (CoordinateTable.coordinate1 eq it.coordinate.coordinate1) and
+                                (CoordinateTable.coordinate2 eq it.coordinate.coordinate2) and
+                                (CoordinateTable.coordinate3 eq it.coordinate.coordinate3)
+                    }.singleOrNull() ?: Coordinate.new {
+                        coordinate1 = it.coordinate.coordinate1
+                        coordinate2 = it.coordinate.coordinate2
+                        coordinate3 = it.coordinate.coordinate3
+                    }
+
                 }
             }
+        } catch (e: Exception) {
+            errorString = "Issue creating coordinates for file ${file.name}"
+            logger.error(errorString, e)
         }
-        transaction {
 
+        if (errorString != null)
+            return errorString
+
+        //create the locations (theres probably a better way to do all this)
+        try {
+            transaction {
+                val _profile = Profile.findById(profileDTO.id)!!
+                val _mod = Mod.findById(modDTO.id)!!
+                val _difficulty = Difficulty.findById(difficultyDTO.id)!!
+
+                locList.forEach {
+                    val coord = Coordinate.find {
+                        (CoordinateTable.coordinate1 eq it.coordinate.coordinate1) and
+                                (CoordinateTable.coordinate2 eq it.coordinate.coordinate2) and
+                                (CoordinateTable.coordinate3 eq it.coordinate.coordinate3)
+                    }.single()
+
+                    Location.find {
+                        (LocationTable.profile eq _profile.id) and
+                                (LocationTable.mod eq _mod.id) and
+                                (LocationTable.difficulty eq _difficulty.id) and
+                                (LocationTable.coordinate eq coord.id)
+                    }.singleOrNull() ?: Location.new {
+                        name = it.name
+                        profile = _profile
+                        mod = _mod
+                        difficulty = _difficulty
+                        coordinate = coord
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            errorString = "Issue creating locations for file ${file.name}"
+            logger.error(errorString, e)
         }
 
         return errorString

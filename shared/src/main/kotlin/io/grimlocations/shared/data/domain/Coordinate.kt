@@ -6,7 +6,7 @@ import io.grimlocations.shared.framework.data.domain.DTOEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-object CoordinateTable : BaseTable("difficulty") {
+object CoordinateTable : BaseTable("coordinate") {
     val coordinate1 = text("coordinate1")
     val coordinate2 = text("coordinate2")
     val coordinate3 = text("coordinate3")
