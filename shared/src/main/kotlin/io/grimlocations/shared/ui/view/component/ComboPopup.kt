@@ -43,7 +43,7 @@ fun <K> ComboPopup(
     onOpen: (previousWindow: AppWindow?, newWindow: AppWindow) -> Unit,
     onClose: (() -> Unit)? = null,
     width: Dp,
-    popupMaxHeight: Dp = 250.dp,
+    popupMaxHeight: Dp = 260.dp,
     textFieldHeight: Dp = 56.dp, //Minimum height for a text field defined by compose
     onSelect: (Pair<K, String>) -> Unit
 ) {
@@ -219,7 +219,7 @@ private fun <K> openPopupWindow(
                         Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(titleColor))
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(dropDownSpacerHeight))
                     Box(
                         modifier = Modifier
                             .fillMaxSize()

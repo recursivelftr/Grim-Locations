@@ -41,7 +41,7 @@ fun AppEntryStandaloneView(
 
 private suspend fun initializeApp(): StartState {
     val repository = SqliteRepository(AppDirsFactory.getInstance())
-
+    repository.initDb()
     return StartState(
         repository.arePropertiesSet().await(),
         GLViewModelProvider(
