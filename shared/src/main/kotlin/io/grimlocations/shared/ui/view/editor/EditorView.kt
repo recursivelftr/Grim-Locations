@@ -3,9 +3,15 @@ package io.grimlocations.shared.ui.view.editor
 import androidx.compose.desktop.AppWindow
 import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
 import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.get
@@ -23,7 +29,26 @@ fun EditorView(
     editorVm: EditorViewModel = LocalViewModel.current.get(),
     captureSubWindow: ((AppWindow?, AppWindow) -> Unit)? = null,
 ) = View(editorVm) {
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column {
+            Row(
+                horizontalArrangement = Arrangement.End
+            ) {
 
+            }
+            Row(
+//                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column {
+
+                }
+                Column {
+
+                }
+            }
+        }
+    }
 }
 
 @ExperimentalFoundationApi
@@ -37,7 +62,7 @@ fun openEditorView(vmProvider: GLViewModelProvider, previousWindow: AppWindow) {
             subWindows.forEach { it.closeIfOpen() }
         }
     ) {
-        remember { previousWindow.close() }
+        remember { previousWindow.closeIfOpen() }
 
         CompositionLocalProvider(LocalViewModel provides vmProvider) {
             GrimLocationsTheme {

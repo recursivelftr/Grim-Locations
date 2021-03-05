@@ -3,7 +3,7 @@ package io.grimlocations.shared.ui.viewmodel.state
 import io.grimlocations.shared.data.dto.LocationDTO
 import io.grimlocations.shared.data.repo.action.ProfileModDifficultyMap
 import io.grimlocations.shared.framework.ui.State
-import io.grimlocations.shared.ui.viewmodel.state.substate.PMDContainer
+import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 
 
 data class EditorState(

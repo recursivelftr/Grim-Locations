@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import io.grimlocations.shared.data.dto.LocationDTO
 
 @Composable
-fun EditorListComponent(
+fun LocationListComponent(
     locations: List<LocationDTO>,
     selectedLocations: List<LocationDTO>,
     onSelectLocation: (LocationDTO) -> Unit
@@ -50,6 +50,11 @@ private fun Item(location: LocationDTO, isSelected: Boolean, onClick: (LocationD
         modifier = modifier.clickable(onClick = { onClick(location) })
     ) {
         Text(location.name)
+        Spacer(modifier = Modifier.width(70.dp))
+        Text(location.coordinate.coordinate1)
         Spacer(modifier = Modifier.width(40.dp))
+        Text(location.coordinate.coordinate2)
+        Spacer(modifier = Modifier.width(40.dp))
+        Text(location.coordinate.coordinate3)
     }
 }

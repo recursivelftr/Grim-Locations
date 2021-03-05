@@ -1,6 +1,6 @@
 package io.grimlocations.shared.util
 
-data class FourTuple<A, B, C, D>(
+data class FourTuple<out A, out B, out C, out D>(
     val first: A,
     val second: B,
     val third: C,

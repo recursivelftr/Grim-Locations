@@ -1,4 +1,4 @@
-package io.grimlocations.shared.ui.viewmodel.state.substate
+package io.grimlocations.shared.ui.viewmodel.state.container
 
 import io.grimlocations.shared.data.dto.DifficultyDTO
 import io.grimlocations.shared.data.dto.ModDTO

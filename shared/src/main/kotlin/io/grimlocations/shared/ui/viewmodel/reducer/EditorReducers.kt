@@ -5,7 +5,7 @@ import io.grimlocations.shared.data.repo.action.getProfilesModsDifficultiesAsync
 import io.grimlocations.shared.framework.ui.setState
 import io.grimlocations.shared.ui.GLStateManager
 import io.grimlocations.shared.ui.viewmodel.state.EditorState
-import io.grimlocations.shared.ui.viewmodel.state.substate.PMDContainer
+import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 
 suspend fun GLStateManager.loadEditorState() {
 
