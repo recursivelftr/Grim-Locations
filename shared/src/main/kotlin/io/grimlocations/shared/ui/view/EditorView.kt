@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
 import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.get
+import io.grimlocations.shared.framework.ui.getLazyViewModel
 import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.view.GrimLocationsTheme
@@ -26,7 +27,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @ExperimentalCoroutinesApi
 @Composable
 fun EditorView(
-    editorVm: EditorViewModel = LocalViewModel.current.get(),
+    editorVm: EditorViewModel = getLazyViewModel(),
     captureSubWindow: ((AppWindow?, AppWindow) -> Unit)? = null,
 ) = View(editorVm) {
     Surface(modifier = Modifier.fillMaxSize()) {

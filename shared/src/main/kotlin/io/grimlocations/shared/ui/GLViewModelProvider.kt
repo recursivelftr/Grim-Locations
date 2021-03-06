@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 class GLViewModelProvider(stateManager: GLStateManager): ViewModelProvider {
     override val viewModelMap: Map<KClass<out ViewModel<*, *>>, ViewModelDelegate<*>> = mapOf(
         PropertiesViewModel::class to factoryViewModel { PropertiesViewModel(stateManager) },
-        LauncherViewModel::class to lazyViewModel { LauncherViewModel(stateManager) },
+        LauncherViewModel::class to factoryViewModel { LauncherViewModel(stateManager) },
         EditorViewModel::class to lazyViewModel { EditorViewModel(stateManager) }
     )
 }

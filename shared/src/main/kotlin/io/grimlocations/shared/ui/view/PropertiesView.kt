@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.get
+import io.grimlocations.shared.framework.ui.getFactoryViewModel
 import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.viewmodel.PropertiesViewModel
@@ -38,7 +39,7 @@ private val TEXT_FIELD_WIDTH = 400.dp
 fun PropertiesView(
     onCancel: () -> Unit,
     onOk: () -> Unit,
-    propertiesViewModel: PropertiesViewModel = LocalViewModel.current.let { remember { it.get() } },
+    propertiesViewModel: PropertiesViewModel = getFactoryViewModel(),
 ) = View(propertiesViewModel) {
 
     Surface(

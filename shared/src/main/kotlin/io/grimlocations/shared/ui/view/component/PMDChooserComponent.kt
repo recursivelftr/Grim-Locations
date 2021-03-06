@@ -7,7 +7,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
-import io.grimlocations.shared.data.repo.action.ProfileModDifficultyMap
+import io.grimlocations.shared.data.dto.ProfileModDifficultyMap
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.shared.util.extension.closeIfOpen
 
@@ -71,7 +71,7 @@ fun PMDChooserComponent(
         },
         onClose = onClose,
         onSelect = {
-            val mod = map[selected.profile]!!.keys.first()
+            val mod = map[selected.profile]!!.keys.find { item -> item.id == it.first }!!
             val difficulty = map[selected.profile]!![mod]!!.first()
 
             onSelect(
@@ -98,13 +98,12 @@ fun PMDChooserComponent(
         },
         onClose = onClose,
         onSelect = {
-            val mod = map[selected.profile]!!.keys.first()
-            val difficulty = map[selected.profile]!![mod]!!.first()
+            val difficulty = map[selected.profile]!![selected.mod]!!.find { item -> item.id == it.first }!!
 
             onSelect(
                 PMDContainer(
                     profile = selected.profile,
-                    mod = mod,
+                    mod = selected.mod,
                     difficulty = difficulty
                 )
             )

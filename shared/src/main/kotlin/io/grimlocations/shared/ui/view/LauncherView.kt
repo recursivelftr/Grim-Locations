@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.get
+import io.grimlocations.shared.framework.ui.getFactoryViewModel
+import io.grimlocations.shared.framework.ui.getLazyViewModel
 import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.view.component.ComboPopup
@@ -50,7 +52,7 @@ private val emptyItems = emptyList<Pair<Int, String>>()
 @ExperimentalCoroutinesApi
 @Composable
 fun LauncherView(
-    launcherVm: LauncherViewModel = LocalViewModel.current.get(),
+    launcherVm: LauncherViewModel = getFactoryViewModel(),
     captureSubWindow: ((AppWindow?, AppWindow) -> Unit)? = null,
 ) {
 

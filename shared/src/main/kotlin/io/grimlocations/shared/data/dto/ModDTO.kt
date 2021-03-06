@@ -16,3 +16,5 @@ data class ModDTO(
     override val modified: LocalDateTime,
     val name: String
 ): DTO
+
+typealias ModDifficultyMap = Map<ModDTO, List<DifficultyDTO>>
