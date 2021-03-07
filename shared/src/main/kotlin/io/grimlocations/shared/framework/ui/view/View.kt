@@ -1,5 +1,6 @@
 package io.grimlocations.shared.framework.ui.view
 
+import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +14,7 @@ import androidx.compose.ui.draw.alpha
 import io.grimlocations.shared.framework.ui.State
 import io.grimlocations.shared.framework.ui.viewmodel.ViewModel
 import io.grimlocations.shared.framework.ui.viewmodel.stateFlow
-import io.grimlocations.shared.util.guardLet
+import io.grimlocations.shared.framework.util.guardLet
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @ExperimentalCoroutinesApi
@@ -158,11 +159,14 @@ fun Overlay(onClick: () -> Unit, content: @Composable () -> Unit) {
 interface View {
     var disabled: Boolean
     var onOverlayClick: () -> Unit
+    val subWindows: MutableSet<AppWindow>
 }
 
 class ViewVm : View {
     private val _disabled = mutableStateOf(false)
     private val _onOverlayClick = mutableStateOf<() -> Unit>({})
+
+    override val subWindows = mutableSetOf<AppWindow>()
 
     override var disabled: Boolean
         get() = _disabled.value

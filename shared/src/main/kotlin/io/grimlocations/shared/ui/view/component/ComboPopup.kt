@@ -45,7 +45,8 @@ fun <K> ComboPopup(
     width: Dp,
     popupMaxHeight: Dp = 260.dp,
     textFieldHeight: Dp = 56.dp, //Minimum height for a text field defined by compose
-    onSelect: (Pair<K, String>) -> Unit
+    onSelect: (Pair<K, String>) -> Unit,
+    disabled: Boolean = false
 ) {
 
     val labelColor = MaterialTheme.colors.onSurface.let {
@@ -75,36 +76,41 @@ fun <K> ComboPopup(
 
 
     val previousWindow = remember { mutableStateOf<AppWindow?>(null) }
-    val openPopup = {
-        if(items.isNotEmpty()) {
-            val possibleHeight = dropDownHeaderHeight + (items.size * dropDownAverageItemHeight.value).dp
-            openPopupWindow(
-                title,
-                labelColor,
-                width,
-                if(possibleHeight < popupMaxHeight) possibleHeight else popupMaxHeight,
-                items,
-                primaryColor,
-                dropDownBackgroundColor,
-                textColor,
-                {
-                    previousWindow.value?.closeIfOpen()
-                    onSelect(it)
-                },
-                {
-                    previousWindow.value?.closeIfOpen()
-                    onOpen(previousWindow.value, it)
-                    previousWindow.value = it
-                },
-                onClose
-            )
+
+    val openPopup: () -> Unit
+    if (disabled) {
+        openPopup = {}
+    } else {
+        openPopup = {
+            if (items.isNotEmpty()) {
+                val possibleHeight = dropDownHeaderHeight + (items.size * dropDownAverageItemHeight.value).dp
+                openPopupWindow(
+                    title,
+                    labelColor,
+                    width,
+                    if (possibleHeight < popupMaxHeight) possibleHeight else popupMaxHeight,
+                    items,
+                    primaryColor,
+                    dropDownBackgroundColor,
+                    textColor,
+                    {
+                        previousWindow.value?.closeIfOpen()
+                        onSelect(it)
+                    },
+                    {
+                        previousWindow.value?.closeIfOpen()
+                        onOpen(previousWindow.value, it)
+                        previousWindow.value = it
+                    },
+                    onClose
+                )
+            }
         }
     }
 
     Column(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -115,6 +121,7 @@ fun <K> ComboPopup(
                 TextField(
                     value = displayValue,
                     readOnly = true,
+                    enabled = !disabled,
                     onValueChange = {},
                     singleLine = true,
                     label = {
@@ -137,8 +144,7 @@ fun <K> ComboPopup(
             IconButton(
                 modifier = Modifier.size(dropDownButtonWidth),
                 onClick = openPopup,
-
-                ) {
+            ) {
                 Icon(
                     Icons.Default.Menu,
                     "Open",

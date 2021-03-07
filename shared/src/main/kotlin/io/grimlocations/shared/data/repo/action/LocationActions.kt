@@ -6,6 +6,7 @@ import io.grimlocations.shared.data.dto.DifficultyDTO
 import io.grimlocations.shared.data.dto.ModDTO
 import io.grimlocations.shared.data.dto.ProfileDTO
 import io.grimlocations.shared.data.repo.SqliteRepository
+import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -21,3 +22,6 @@ suspend fun SqliteRepository.getLocationsAsync(profile: ProfileDTO, mod: ModDTO,
             }
         ).map { it.toDTO() }
     }
+
+suspend fun SqliteRepository.getLocationsAsync(container: PMDContainer) =
+    getLocationsAsync(container.profile, container.mod, container.difficulty)

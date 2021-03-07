@@ -1,4 +1,4 @@
-package io.grimlocations.shared.util
+package io.grimlocations.shared.framework.util
 
 import kotlin.reflect.KProperty
 

@@ -1,8 +1,8 @@
 package io.grimlocations.shared.data.dto
 
 import io.grimlocations.shared.framework.data.dto.DTO
+import io.grimlocations.shared.framework.util.assignOnce
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
-import io.grimlocations.shared.util.assignOnce
 import java.time.LocalDateTime
 
 const val RESERVED_PROFILE_GI_LOCATIONS_NAME = "New Character Locations"
@@ -17,6 +17,7 @@ data class ProfileDTO(
 ) : DTO
 
 typealias ProfileModDifficultyMap = Map<ProfileDTO, ModDifficultyMap>
+typealias MutableProfileModDifficultyMap = MutableMap<ProfileDTO, MutableModDifficultyMap>
 
 fun ProfileModDifficultyMap.firstContainer(): PMDContainer {
     this.entries.firstOrNull()?.let { (p, mdMap) ->

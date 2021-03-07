@@ -8,8 +8,8 @@ import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 
 data class EditorState(
     val profileMap: ProfileModDifficultyMap,
-    val chosenPmdLeft: PMDContainer,
-    val chosenPmdRight: PMDContainer,
+    val selectedPmdLeft: PMDContainer,
+    val selectedPmdRight: PMDContainer,
     val locationsLeft: List<LocationDTO>,
     val locationsRight: List<LocationDTO>
 ) : State

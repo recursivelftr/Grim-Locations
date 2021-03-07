@@ -1,7 +1,7 @@
 package io.grimlocations.shared.data.dto
 
 import io.grimlocations.shared.framework.data.dto.DTO
-import io.grimlocations.shared.util.assignOnce
+import io.grimlocations.shared.framework.util.assignOnce
 import java.time.LocalDateTime
 
 const val RESERVED_NO_MODS_INDICATOR_NAME = "__RESERVED_NO_MODS__"
@@ -18,3 +18,4 @@ data class ModDTO(
 ): DTO
 
 typealias ModDifficultyMap = Map<ModDTO, List<DifficultyDTO>>
+typealias MutableModDifficultyMap = MutableMap<ModDTO, MutableList<DifficultyDTO>>

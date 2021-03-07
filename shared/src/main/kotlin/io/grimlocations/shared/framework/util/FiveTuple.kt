@@ -1,4 +1,4 @@
-package io.grimlocations.shared.util
+package io.grimlocations.shared.framework.util
 
 data class FiveTuple<out A, out B, out C, out D, out E>(
     val first: A,

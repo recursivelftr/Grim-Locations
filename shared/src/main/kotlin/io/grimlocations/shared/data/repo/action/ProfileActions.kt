@@ -1,15 +1,21 @@
 package io.grimlocations.shared.data.repo.action
 
-import io.grimlocations.shared.data.domain.Profile
-import io.grimlocations.shared.data.domain.ProfileTable
-import io.grimlocations.shared.data.dto.ModDifficultyMap
-import io.grimlocations.shared.data.dto.ProfileDTO
-import io.grimlocations.shared.data.dto.ProfileModDifficultyMap
+import io.grimlocations.shared.data.domain.*
+import io.grimlocations.shared.data.dto.*
 import io.grimlocations.shared.data.repo.SqliteRepository
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.LogManager
+import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
+import java.io.File
+
+private val logger = LogManager.getLogger()
 
 suspend fun SqliteRepository.getProfilesAsync(): Deferred<List<ProfileDTO>> =
     suspendedTransactionAsync(Dispatchers.IO) {
@@ -18,15 +24,50 @@ suspend fun SqliteRepository.getProfilesAsync(): Deferred<List<ProfileDTO>> =
 
 suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(): Deferred<ProfileModDifficultyMap> =
     suspendedTransactionAsync(Dispatchers.IO) {
-        val map: ProfileModDifficultyMap = mapOf()
+        val map: MutableProfileModDifficultyMap = mutableMapOf()
         ProfileTable.selectAll().forEach {
             val p = Profile.wrapRow(it)
-            val mmap: ModDifficultyMap = mapOf()
+            val mmap: MutableModDifficultyMap = mutableMapOf()
 
             p.mods.forEach { m ->
-                mmap.toMutableMap()[m.toDTO()] = m.difficulties.map { d -> d.toDTO() }
+                mmap[m.toDTO()] = m.difficulties.map { d -> d.toDTO() } as MutableList<DifficultyDTO>
             }
-            map.toMutableMap()[p.toDTO()] = mmap
+            map[p.toDTO()] = mmap
         }
         map
+    }
+
+suspend fun SqliteRepository.detectAndCreateProfilesAsync(): Deferred<Unit> =
+    withContext(Dispatchers.IO) {
+        async<Unit> {
+            val path = newSuspendedTransaction {
+                MetaTable.slice(MetaTable.version).selectAll().single()[MetaTable.saveLocation]!!
+            }
+
+            try {
+                File(path).listFiles { it: File -> it.isDirectory }?.also {
+                    for (file in it) {
+                        val n = file.name.trim().removePrefix("_")
+                        if(n.isNotBlank()){
+                            try {
+                                newSuspendedTransaction {
+                                    val mod = Mod.findById(DEFAULT_GAME_MOD.id)!!
+
+                                    Profile.new {
+                                        name = n
+                                        mods = SizedCollection(listOf(mod))
+                                    }
+                                }
+                            } catch(e: Exception){
+                                logger.error("", e)
+                            }
+                        }
+                    }
+                } ?: run {
+                    logger.error("Path is either not a directory or an I/O error has occurred.")
+                }
+            } catch (e: SecurityException) {
+                logger.error("Read access is denied to this directory: $path", e)
+            }
+        }
     }

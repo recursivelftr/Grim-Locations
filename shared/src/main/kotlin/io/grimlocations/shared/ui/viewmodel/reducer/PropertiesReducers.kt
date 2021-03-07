@@ -4,11 +4,11 @@ import io.grimlocations.shared.data.repo.action.getMetaAsync
 import io.grimlocations.shared.data.repo.action.persistMetaInstallAndSavePathAsync
 import io.grimlocations.shared.framework.ui.getState
 import io.grimlocations.shared.framework.ui.setState
+import io.grimlocations.shared.framework.util.guardLet
 import io.grimlocations.shared.ui.GLStateManager
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesState
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateError
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateWarning
-import io.grimlocations.shared.util.guardLet
 
 suspend fun GLStateManager.loadPropertiesState() {
     val meta = repository.getMetaAsync().await()

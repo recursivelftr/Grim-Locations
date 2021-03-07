@@ -1,6 +1,7 @@
 package io.grimlocations.shared.ui.view
 
 import androidx.compose.desktop.AppWindow
+import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -15,51 +16,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import io.grimlocations.shared.framework.ui.LocalViewModel
-import io.grimlocations.shared.framework.ui.get
 import io.grimlocations.shared.framework.ui.getFactoryViewModel
-import io.grimlocations.shared.framework.ui.getLazyViewModel
 import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GLViewModelProvider
-import io.grimlocations.shared.ui.view.component.ComboPopup
+import io.grimlocations.shared.ui.view.component.PMDChooserComponent
 import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
+import io.grimlocations.shared.ui.viewmodel.event.selectPMD
 import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-
-private val items = listOf(
-    Pair(1, "Oneaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
-    Pair(2, "Two"),
-    Pair(3, "Three"),
-    Pair(4, "Four"),
-    Pair(5, "Five"),
-    Pair(6, "Six"),
-    Pair(7, "Seven"),
-    Pair(8, "Eight"),
-    Pair(9, "Nine"),
-    Pair(10, "Ten"),
-    Pair(11, "Eleven"),
-    Pair(12, "Twelve"),
-    Pair(13, "Thirteen"),
-    Pair(14, "Fourteen"),
-    Pair(15, "Fifteen"),
-    Pair(16, "Sixteen"),
-    Pair(17, "Seventeen"),
-    Pair(18, "Eighteen"),
-)
-
-private val emptyItems = emptyList<Pair<Int, String>>()
 
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 @Composable
-fun LauncherView(
-    launcherVm: LauncherViewModel = getFactoryViewModel(),
-    captureSubWindow: ((AppWindow?, AppWindow) -> Unit)? = null,
+private fun LauncherView(
+    vm: LauncherViewModel = getFactoryViewModel(),
+    captureSubWindows: ((Set<AppWindow>) -> Unit),
 ) {
 
     val vmProvider = LocalViewModel.current as GLViewModelProvider
-    val selected = remember { mutableStateOf(items[0]) }
 
-    View(launcherVm) { launcherEditorState ->
+    View(vm) { state ->
 
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -89,24 +65,18 @@ fun LauncherView(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                 }
-                ComboPopup(
-                    "Profile",
-                    items = items,
-                    emptyItemsMessage = "No Profiles",
-                    selected = selected.value,
-                    width = 300.dp,
+                PMDChooserComponent(
+                    map = state.map,
+                    selected = state.selected,
+                    onSelect = { c -> vm.selectPMD(c) },
                     onOpen = { p, c ->
                         disabled = true
-                        onOverlayClick = {
-                            c.closeIfOpen()
-                            disabled = false
-                        }
-                        captureSubWindow?.invoke(p, c)
+                        subWindows.remove(p)
+                        subWindows.add(c)
+                        captureSubWindows(subWindows.toSet())
+                        onOverlayClick = { subWindows.forEach { a -> a.closeIfOpen() } }
                     },
-                    onClose = { disabled = false },
-                    onSelect = {
-                        selected.value = it
-                    }
+                    onClose = { disabled = false }
                 )
             }
         }
@@ -115,23 +85,32 @@ fun LauncherView(
 
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
-fun openLauncherView(vmProvider: GLViewModelProvider, previousWindow: AppWindow) {
-    val subWindows = mutableListOf<AppWindow>()
+fun openLauncherView(
+    vmProvider: GLViewModelProvider,
+    previousWindow: AppWindow? = null,
+    onClose: (() -> Unit)? = null,
+    captureWindow: ((AppWindow) -> Unit)? = null,
+) {
+    var subWindows: Set<AppWindow>? = null
     Window(
         title = "Grim Locations",
-        size = IntSize(500, 300),
+        size = IntSize(500, 500),
         onDismissRequest = {
-            subWindows.forEach { it.closeIfOpen() }
+            subWindows?.forEach { it.closeIfOpen() }
+            onClose?.invoke()
         }
     ) {
-        remember { previousWindow.close() }
+        val window = LocalAppWindow.current
+        remember {
+            previousWindow?.closeIfOpen()
+            captureWindow?.invoke(window)
+        }
 
         CompositionLocalProvider(LocalViewModel provides vmProvider) {
             GrimLocationsTheme {
                 LauncherView(
-                    captureSubWindow = { p, c ->
-                        subWindows.remove(p)
-                        subWindows.add(c)
+                    captureSubWindows = { l ->
+                        subWindows = l
                     }
                 )
             }

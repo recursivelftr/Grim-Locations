@@ -9,7 +9,13 @@ fun <T : ViewModelAlias> factoryViewModel(vmCreator: () -> T): FactoryViewModelD
 }
 
 @Composable
-inline fun <reified T: ViewModelAlias> getFactoryViewModel(): T = LocalViewModel.current.let { remember { it.get() } }
+inline fun <reified T: ViewModelAlias> getFactoryViewModel(): T {
+    val vmProvider = LocalViewModel.current
+    if(vmProvider.viewModelMap.getValue(T::class) !is FactoryViewModelDelegate)
+        error("${T::class.simpleName} is not a FactoryViewModel.")
+
+    return remember { vmProvider.get() }
+}
 
 class FactoryViewModelDelegate<T : ViewModelAlias>(val vmCreator: () -> T) : ViewModelDelegate<T> {
     override val value: T

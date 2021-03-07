@@ -8,7 +8,13 @@ fun <T : ViewModelAlias> lazyViewModel(vmCreator: () -> T): LazyViewModelDelegat
 }
 
 @Composable
-inline fun <reified T: ViewModelAlias> getLazyViewModel(): T = LocalViewModel.current.get()
+inline fun <reified T: ViewModelAlias> getLazyViewModel(): T {
+    val vmProvider = LocalViewModel.current
+    if(vmProvider.viewModelMap.getValue(T::class) !is LazyViewModelDelegate)
+        error("${T::class.simpleName} is not a LazyViewModel.")
+
+    return vmProvider.get()
+}
 
 class LazyViewModelDelegate<T : ViewModelAlias>(vmCreator: () -> T) : ViewModelDelegate<T> {
     private lateinit var vm: T
