@@ -6,8 +6,10 @@ import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
@@ -21,6 +23,7 @@ import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.view.component.PMDChooserComponent
 import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
+import io.grimlocations.shared.ui.viewmodel.event.persistState
 import io.grimlocations.shared.ui.viewmodel.event.selectPMD
 import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,10 +35,11 @@ private fun LauncherView(
     vm: LauncherViewModel = getFactoryViewModel(),
     captureSubWindows: ((Set<AppWindow>) -> Unit),
 ) {
-
     val vmProvider = LocalViewModel.current as GLViewModelProvider
 
     View(vm) { state ->
+
+        remember { captureSubWindows(subWindows) }
 
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -73,11 +77,29 @@ private fun LauncherView(
                         disabled = true
                         subWindows.remove(p)
                         subWindows.add(c)
-                        captureSubWindows(subWindows.toSet())
                         onOverlayClick = { subWindows.forEach { a -> a.closeIfOpen() } }
                     },
                     onClose = { disabled = false }
                 )
+                Spacer(Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        onClick = {
+                        },
+                    ) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Button(
+                        onClick = {
+                        },
+                    ) {
+                        Text("Ok")
+                    }
+                }
             }
         }
     }
@@ -94,7 +116,7 @@ fun openLauncherView(
     var subWindows: Set<AppWindow>? = null
     Window(
         title = "Grim Locations",
-        size = IntSize(500, 500),
+        size = IntSize(500, 375),
         onDismissRequest = {
             subWindows?.forEach { it.closeIfOpen() }
             onClose?.invoke()

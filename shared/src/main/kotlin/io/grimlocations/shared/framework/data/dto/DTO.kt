@@ -7,3 +7,5 @@ interface DTO {
     val created: LocalDateTime
     val modified: LocalDateTime
 }
+
+fun List<DTO>.containsId(id: Int) = find { it.id == id } != null

@@ -36,7 +36,7 @@ private val TEXT_FIELD_WIDTH = 400.dp
 
 @ExperimentalCoroutinesApi
 @Composable
-fun PropertiesView(
+private fun PropertiesView(
     onCancel: () -> Unit,
     onOk: () -> Unit,
     propertiesViewModel: PropertiesViewModel = getFactoryViewModel(),
