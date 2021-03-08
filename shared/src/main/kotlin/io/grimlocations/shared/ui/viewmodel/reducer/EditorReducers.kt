@@ -1,31 +1,42 @@
 package io.grimlocations.shared.ui.viewmodel.reducer
 
+import io.grimlocations.shared.data.dto.MetaDTO
+import io.grimlocations.shared.data.dto.ProfileModDifficultyMap
 import io.grimlocations.shared.data.dto.firstContainer
 import io.grimlocations.shared.data.repo.action.detectAndCreateProfilesAsync
 import io.grimlocations.shared.data.repo.action.getLocationsAsync
+import io.grimlocations.shared.data.repo.action.getMetaAsync
 import io.grimlocations.shared.data.repo.action.getProfilesModsDifficultiesAsync
+import io.grimlocations.shared.framework.ui.getState
 import io.grimlocations.shared.framework.ui.setState
 import io.grimlocations.shared.ui.GLStateManager
 import io.grimlocations.shared.ui.viewmodel.state.EditorState
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.awaitAll
 
+@Suppress("UNCHECKED_CAST")
 suspend fun GLStateManager.loadEditorState(
     selected: Pair<PMDContainer, PMDContainer>? = null,
 ) {
-    val pmdMap = repository.getProfilesModsDifficultiesAsync().await()
+    val list = awaitAll(
+        repository.getProfilesModsDifficultiesAsync(),
+        repository.getMetaAsync()
+    )
+    val pmdMap = list[0] as ProfileModDifficultyMap
+    val meta = list[1] as MetaDTO
 
-    if(selected == null) {
+    if (selected == null) {
         val container = pmdMap.firstContainer()
         val locList = repository.getLocationsAsync(container).await()
 
         setState(
             EditorState(
                 profileMap = pmdMap,
-                selectedPmdLeft = container,
-                selectedPmdRight = container.copy(),
+                selectedPMDLeft = container,
+                selectedPMDRight = container.copy(),
                 locationsLeft = locList,
-                locationsRight = locList.toList() //copies the list
+                locationsRight = locList.toList(), //copies the list,
+                activePMD = meta.activePMD
             )
         )
     } else {
@@ -37,18 +48,22 @@ suspend fun GLStateManager.loadEditorState(
         setState(
             EditorState(
                 profileMap = pmdMap,
-                selectedPmdLeft = selected.first,
-                selectedPmdRight = selected.second,
+                selectedPMDLeft = selected.first,
+                selectedPMDRight = selected.second,
                 locationsLeft = locList1,
-                locationsRight = locList2
+                locationsRight = locList2,
+                activePMD = meta.activePMD
             )
         )
     }
 }
 
-suspend fun GLStateManager.loadCharacterProfiles(
-    selected: Pair<PMDContainer, PMDContainer>,
-) {
+suspend fun GLStateManager.loadCharacterProfiles() {
     repository.detectAndCreateProfilesAsync().await()
-    loadEditorState(selected)
+    reloadEditorState()
+}
+
+suspend fun GLStateManager.reloadEditorState() {
+    val s = getState<EditorState>()
+    loadEditorState(Pair(s.selectedPMDLeft, s.selectedPMDRight))
 }

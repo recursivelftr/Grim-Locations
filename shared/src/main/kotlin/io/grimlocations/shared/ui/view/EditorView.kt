@@ -18,9 +18,9 @@ import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.getLazyViewModel
 import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GLViewModelProvider
-import io.grimlocations.shared.ui.view.GrimLocationsTheme
-import io.grimlocations.shared.ui.view.openLauncherView
 import io.grimlocations.shared.ui.viewmodel.EditorViewModel
+import io.grimlocations.shared.ui.viewmodel.event.loadCharacterProfiles
+import io.grimlocations.shared.ui.viewmodel.event.reloadState
 import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -28,11 +28,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @ExperimentalCoroutinesApi
 @Composable
 private fun EditorView(
-    editorVm: EditorViewModel = getLazyViewModel(),
+    vm: EditorViewModel = getLazyViewModel(),
     captureSubWindows: ((Set<AppWindow>) -> Unit),
-) = View(editorVm) {
+) = View(vm) {
     val vmProv = LocalViewModel.current as GLViewModelProvider
     val previousLauncherWindow = remember { mutableStateOf<AppWindow?>(null) }
+
+    remember { captureSubWindows(subWindows) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column {
@@ -41,7 +43,7 @@ private fun EditorView(
             ) {
                 Button(
                     onClick = {
-
+                        vm.loadCharacterProfiles()
                     },
                 ) {
                     Text("Load Character Profiles")
@@ -55,12 +57,12 @@ private fun EditorView(
                             vmProvider = vmProv,
                             onClose = {
                                 subWindows.remove(previousLauncherWindow.value)
+                                vm.reloadState()
                                 disabled = false
                             },
                             captureWindow = { w ->
                                 subWindows.remove(previousLauncherWindow.value)
                                 subWindows.add(w)
-                                captureSubWindows(subWindows)
                                 previousLauncherWindow.value = w
                             }
                         )

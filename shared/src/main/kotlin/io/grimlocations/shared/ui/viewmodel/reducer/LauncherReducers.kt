@@ -7,7 +7,10 @@ import io.grimlocations.shared.ui.GLStateManager
 import io.grimlocations.shared.ui.viewmodel.state.LauncherState
 
 suspend fun GLStateManager.loadLauncherState() {
-    val map = repository.getProfilesModsDifficultiesAsync().await()
+    val map = repository.getProfilesModsDifficultiesAsync(
+        includeReservedProfiles = false
+    ).await()
+
     setState(
         LauncherState(
             map = map,

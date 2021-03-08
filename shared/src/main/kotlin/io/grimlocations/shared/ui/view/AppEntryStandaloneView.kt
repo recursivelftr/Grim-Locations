@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
 import io.grimlocations.shared.data.repo.SqliteRepository
-import io.grimlocations.shared.data.repo.action.arePropertiesSet
+import io.grimlocations.shared.data.repo.action.arePropertiesSetAsync
 import io.grimlocations.shared.ui.GLStateManager
 import io.grimlocations.shared.ui.GLViewModelProvider
 import kotlinx.coroutines.*
@@ -43,7 +43,7 @@ private suspend fun initializeApp(): StartState {
     val repository = SqliteRepository(AppDirsFactory.getInstance())
     repository.initDb()
     return StartState(
-        repository.arePropertiesSet().await(),
+        repository.arePropertiesSetAsync().await(),
         GLViewModelProvider(
             GLStateManager(repository)
         )

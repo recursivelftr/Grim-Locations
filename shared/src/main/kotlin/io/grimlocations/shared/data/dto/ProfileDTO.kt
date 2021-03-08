@@ -9,6 +9,8 @@ const val RESERVED_PROFILE_GI_LOCATIONS_NAME = "New Character Locations"
 const val RESERVED_PROFILE_REDDIT_LOCATIONS_NAME = "Additional Locations"
 var RESERVED_PROFILES: List<ProfileDTO> by assignOnce()
 
+fun List<ProfileDTO>.containsId(id: Int) = find { it.id == id } != null
+
 data class ProfileDTO(
     override val id: Int,
     override val created: LocalDateTime,

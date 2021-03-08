@@ -22,17 +22,21 @@ suspend fun SqliteRepository.getProfilesAsync(): Deferred<List<ProfileDTO>> =
         Profile.wrapRows(ProfileTable.selectAll()).map { it.toDTO() }
     }
 
-suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(): Deferred<ProfileModDifficultyMap> =
+suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(
+    includeReservedProfiles: Boolean = true
+): Deferred<ProfileModDifficultyMap> =
     suspendedTransactionAsync(Dispatchers.IO) {
         val map: MutableProfileModDifficultyMap = mutableMapOf()
         ProfileTable.selectAll().forEach {
             val p = Profile.wrapRow(it)
-            val mmap: MutableModDifficultyMap = mutableMapOf()
+            if(includeReservedProfiles || (!RESERVED_PROFILES.containsId(p.id.value))) {
+                val mmap: MutableModDifficultyMap = mutableMapOf()
 
-            p.mods.forEach { m ->
-                mmap[m.toDTO()] = m.difficulties.map { d -> d.toDTO() } as MutableList<DifficultyDTO>
+                p.mods.forEach { m ->
+                    mmap[m.toDTO()] = m.difficulties.map { d -> d.toDTO() } as MutableList<DifficultyDTO>
+                }
+                map[p.toDTO()] = mmap
             }
-            map[p.toDTO()] = mmap
         }
         map
     }
@@ -41,24 +45,25 @@ suspend fun SqliteRepository.detectAndCreateProfilesAsync(): Deferred<Unit> =
     withContext(Dispatchers.IO) {
         async<Unit> {
             val path = newSuspendedTransaction {
-                MetaTable.slice(MetaTable.version).selectAll().single()[MetaTable.saveLocation]!!
+                MetaTable.slice(MetaTable.saveLocation).selectAll().single()[MetaTable.saveLocation]
             }
 
             try {
                 File(path).listFiles { it: File -> it.isDirectory }?.also {
                     for (file in it) {
                         val n = file.name.trim().removePrefix("_")
-                        if(n.isNotBlank()){
+                        if (n.isNotBlank()) {
                             try {
-                                newSuspendedTransaction {
-                                    val mod = Mod.findById(DEFAULT_GAME_MOD.id)!!
-
+                                val p = newSuspendedTransaction {
                                     Profile.new {
                                         name = n
-                                        mods = SizedCollection(listOf(mod))
                                     }
                                 }
-                            } catch(e: Exception){
+                                newSuspendedTransaction {
+                                    val mod = Mod.findById(DEFAULT_GAME_MOD.id)!!
+                                    p.mods = SizedCollection(listOf(mod))
+                                }
+                            } catch (e: Exception) {
                                 logger.error("", e)
                             }
                         }
