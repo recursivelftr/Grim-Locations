@@ -1,9 +1,9 @@
 package io.grimlocations.shared.data.repo.action
 
-import io.grimlocations.shared.data.domain.Meta
-import io.grimlocations.shared.data.domain.MetaTable
+import io.grimlocations.shared.data.domain.*
 import io.grimlocations.shared.data.dto.MetaDTO
 import io.grimlocations.shared.data.repo.SqliteRepository
+import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.selectAll
@@ -24,3 +24,11 @@ suspend fun SqliteRepository.arePropertiesSetAsync(): Deferred<Boolean> = suspen
     val meta = Meta.wrapRow(MetaTable.selectAll().single())
     meta.installLocation != null && meta.saveLocation != null
 }
+
+suspend fun SqliteRepository.persistActivePMDAsync(pmd: PMDContainer) =
+    modifyDatabaseAsync {
+        val meta = Meta.wrapRow(MetaTable.selectAll().single())
+        meta.activeProfile = Profile.findById(pmd.profile.id)
+        meta.activeMod = Mod.findById(pmd.mod.id)
+        meta.activeDifficulty = Difficulty.findById(pmd.difficulty.id)
+    }

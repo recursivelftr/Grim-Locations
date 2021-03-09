@@ -21,10 +21,9 @@ fun AppEntryStandaloneView(
     newWindow: (Boolean, GLViewModelProvider) -> Unit
 ) {
     val state = remember { mutableStateOf<StartState?>(null) }
-    val scope = remember { CoroutineScope(Dispatchers.IO + Job()) }
 
     remember {
-        scope.launch {
+        CoroutineScope(Dispatchers.IO + Job()).launch {
             val s = initializeApp()
             withContext(Dispatchers.Main) {
                 state.value = s
@@ -32,11 +31,9 @@ fun AppEntryStandaloneView(
         }
     }
 
-    state.value?.let {
+    state.value?.also {
         newWindow(it.arePropertiesSet, it.viewModelProvider)
-    } ?: run {
-        SplashScreen()
-    }
+    } ?: SplashScreen()
 }
 
 private suspend fun initializeApp(): StartState {

@@ -23,6 +23,7 @@ import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.view.component.PMDChooserComponent
 import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
+import io.grimlocations.shared.ui.viewmodel.event.persistPMD
 import io.grimlocations.shared.ui.viewmodel.event.persistState
 import io.grimlocations.shared.ui.viewmodel.event.selectPMD
 import io.grimlocations.shared.util.extension.closeIfOpen
@@ -39,6 +40,7 @@ private fun LauncherView(
 
     View(vm) { state ->
 
+        val window = LocalAppWindow.current
         remember { captureSubWindows(subWindows) }
 
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -88,6 +90,7 @@ private fun LauncherView(
                 ) {
                     Button(
                         onClick = {
+                            window.closeIfOpen()
                         },
                     ) {
                         Text("Cancel")
@@ -95,6 +98,7 @@ private fun LauncherView(
                     Spacer(modifier = Modifier.width(10.dp))
                     Button(
                         onClick = {
+                            vm.persistPMD(window)
                         },
                     ) {
                         Text("Ok")
