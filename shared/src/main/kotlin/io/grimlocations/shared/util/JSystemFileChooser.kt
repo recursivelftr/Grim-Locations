@@ -1,5 +1,6 @@
 package io.grimlocations.shared.util
 
+import io.grimlocations.shared.framework.util.extension.endsWithOne
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.io.File
@@ -15,6 +16,13 @@ class JSystemFileChooser : JFileChooser() {
         controlButtonsAreShown = true
         fileFilter = FolderFilter()
         fileSelectionMode = DIRECTORIES_ONLY
+        return this
+    }
+
+    fun applyCsvTextFilesOnly(): JSystemFileChooser {
+        controlButtonsAreShown = true
+        fileFilter = CsvTxtFilter()
+        fileSelectionMode = FILES_ONLY
         return this
     }
 
@@ -72,6 +80,20 @@ class FolderFilter : FileFilter() {
 
     override fun getDescription(): String {
         return "Directories"
+    }
+
+}
+
+class CsvTxtFilter : FileFilter() {
+    override fun accept(f: File?): Boolean {
+        if(f == null)
+            return false
+
+        return f.isFile && f.name.endsWithOne("csv", "txt", ignoreCase = true)
+    }
+
+    override fun getDescription(): String {
+        return "CSV, TXT"
     }
 
 }

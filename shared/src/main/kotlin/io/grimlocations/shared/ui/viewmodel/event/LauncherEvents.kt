@@ -2,7 +2,9 @@ package io.grimlocations.shared.ui.viewmodel.event
 
 import androidx.compose.desktop.AppWindow
 import io.grimlocations.shared.framework.ui.viewmodel.stateFlow
+import io.grimlocations.shared.ui.view.component.openOkCancelPopup
 import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
+import io.grimlocations.shared.ui.viewmodel.reducer.loadLocationsIntoSelectedProfile
 import io.grimlocations.shared.ui.viewmodel.reducer.persistActivePMD
 import io.grimlocations.shared.ui.viewmodel.reducer.reloadEditorState
 import io.grimlocations.shared.ui.viewmodel.reducer.updateLauncherState
@@ -11,6 +13,11 @@ import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
+import java.io.File
+
+private val logger: Logger = LogManager.getLogger()
 
 fun LauncherViewModel.selectPMD(selected: PMDContainer) {
     stateFlow.value?.let {
@@ -26,6 +33,26 @@ fun LauncherViewModel.persistPMD(window: AppWindow) {
         withContext(Dispatchers.Main) {
             window.closeIfOpen()
             stateManager.reloadEditorState()
+        }
+    }
+}
+
+fun LauncherViewModel.loadLocationsIntoSelectedProfile(
+    filePath: String,
+    onOpenPopup: (AppWindow) -> Unit,
+    onClosePopup: (AppWindow) -> Unit,
+) {
+    viewModelScope.launch {
+        val msg = stateManager.loadLocationsIntoSelectedProfile(filePath)
+        withContext(Dispatchers.Main) {
+            openOkCancelPopup(
+                message = msg,
+                onOpen = onOpenPopup,
+                onOkClicked = {
+                    onClosePopup(it)
+                    it.closeIfOpen()
+                },
+            )
         }
     }
 }

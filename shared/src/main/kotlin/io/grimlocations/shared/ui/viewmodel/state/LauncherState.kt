@@ -6,5 +6,6 @@ import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 
 data class LauncherState(
     val map: ProfileModDifficultyMap,
-    val selected: PMDContainer
+    val selected: PMDContainer,
+    val locationsFilePath: String?,
 ): State

@@ -21,6 +21,7 @@ import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.get
 import io.grimlocations.shared.framework.ui.getFactoryViewModel
 import io.grimlocations.shared.framework.ui.view.View
+import io.grimlocations.shared.framework.util.assignOnce
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.viewmodel.PropertiesViewModel
 import io.grimlocations.shared.ui.viewmodel.event.persistState
@@ -29,6 +30,7 @@ import io.grimlocations.shared.ui.viewmodel.event.updateSavePath
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesState
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateError.GRIM_INTERNALS_NOT_FOUND
 import io.grimlocations.shared.ui.viewmodel.state.PropertiesStateWarning.NO_CHARACTERS_FOUND
+import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.swing.JFileChooser
 
@@ -169,18 +171,27 @@ private fun isOkEnabled(state: PropertiesState) =
 @ExperimentalCoroutinesApi
 fun openPropertiesView(
     vmProvider: GLViewModelProvider,
-    enablePreviousWindow: (() -> Unit)? = null,
     nextWindow: ((GLViewModelProvider, AppWindow) -> Unit)? = null,
-    previousWindowToClose: AppWindow? = null
+    previousWindowToClose: AppWindow? = null,
+    onClose: ((AppWindow) -> Unit)? = null,
+    captureWindow: ((AppWindow) -> Unit)? = null,
 ) {
+    lateinit var window: AppWindow
+
     Window(
         title = "Properties",
         size = IntSize(550, 300),
-        onDismissRequest = enablePreviousWindow
+        onDismissRequest = {
+            onClose?.invoke(window)
+        }
     ) {
-        remember { previousWindowToClose?.close() }
 
-        val window = LocalAppWindow.current
+        window = LocalAppWindow.current
+
+        remember {
+            captureWindow?.invoke(window)
+            previousWindowToClose?.closeIfOpen()
+        }
 
         CompositionLocalProvider(LocalViewModel provides vmProvider) {
             GrimLocationsTheme {

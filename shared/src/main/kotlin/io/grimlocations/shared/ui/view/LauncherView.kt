@@ -4,15 +4,13 @@ import androidx.compose.desktop.AppWindow
 import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
-import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
@@ -23,11 +21,12 @@ import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.view.component.PMDChooserComponent
 import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
+import io.grimlocations.shared.ui.viewmodel.event.loadLocationsIntoSelectedProfile
 import io.grimlocations.shared.ui.viewmodel.event.persistPMD
-import io.grimlocations.shared.ui.viewmodel.event.persistState
 import io.grimlocations.shared.ui.viewmodel.event.selectPMD
 import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import javax.swing.JFileChooser
 
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
@@ -36,8 +35,6 @@ private fun LauncherView(
     vm: LauncherViewModel = getFactoryViewModel(),
     captureSubWindows: ((Set<AppWindow>) -> Unit),
 ) {
-    val vmProvider = LocalViewModel.current as GLViewModelProvider
-
     View(vm) { state ->
 
         val window = LocalAppWindow.current
@@ -46,31 +43,9 @@ private fun LauncherView(
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Top,
+                verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Column(modifier = Modifier.wrapContentSize()) {
-
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Icon(
-                            Icons.Default.Settings,
-                            "Settings",
-                            modifier = Modifier.size(40.dp).clickable {
-                                openPropertiesView(
-                                    vmProvider,
-                                    { disabled = false }
-                                )
-                                disabled = true
-                                onOverlayClick = {}
-                            }
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                }
                 PMDChooserComponent(
                     map = state.map,
                     selected = state.selected,
@@ -83,6 +58,38 @@ private fun LauncherView(
                     },
                     onClose = { disabled = false }
                 )
+                Spacer(Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        onClick = {
+                            with(vm.locationsFileChooser) {
+                                val okOrCancel = showOpenDialog(null)
+                                if (okOrCancel == JFileChooser.APPROVE_OPTION) {
+                                    vm.loadLocationsIntoSelectedProfile(
+                                        filePath = selectedFile.absolutePath,
+                                        onOpenPopup = {
+                                            onOverlayClick = {
+                                                it.closeIfOpen()
+                                                subWindows.remove(it)
+                                                disabled = false
+                                            }
+                                            subWindows.add(it)
+                                        },
+                                        onClosePopup = {
+                                            subWindows.remove(it)
+                                            disabled = false
+                                        }
+                                    )
+                                }
+                            }
+                        },
+                    ) {
+                        Text("Load Locations to Profile")
+                    }
+                }
                 Spacer(Modifier.height(20.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -120,7 +127,7 @@ fun openLauncherView(
     var subWindows: Set<AppWindow>? = null
     Window(
         title = "Grim Locations",
-        size = IntSize(500, 375),
+        size = IntSize(500, 400),
         onDismissRequest = {
             subWindows?.forEach { it.closeIfOpen() }
             onClose?.invoke()

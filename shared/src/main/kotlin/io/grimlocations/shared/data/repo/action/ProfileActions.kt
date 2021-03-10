@@ -57,14 +57,21 @@ suspend fun SqliteRepository.detectAndCreateProfilesAsync(): Deferred<Unit> =
                         val n = file.name.trim().removePrefix("_")
                         if (n.isNotBlank()) {
                             try {
-                                val p = newSuspendedTransaction {
-                                    Profile.new {
-                                        name = n
-                                    }
+                                var p = newSuspendedTransaction {
+                                    Profile.find { ProfileTable.name eq n }.singleOrNull()
                                 }
-                                newSuspendedTransaction {
-                                    val mod = Mod.findById(DEFAULT_GAME_MOD.id)!!
-                                    p.mods = SizedCollection(listOf(mod))
+                                if(p == null) {
+                                    p = newSuspendedTransaction {
+                                        Profile.new {
+                                            name = n
+                                        }
+                                    }
+                                    newSuspendedTransaction {
+                                        val mod = Mod.findById(DEFAULT_GAME_MOD.id)!!
+                                        p.mods = SizedCollection(listOf(mod))
+                                    }
+                                } else {
+                                    logger.info("Duplicate profile found: $n")
                                 }
                             } catch (e: Exception) {
                                 logger.error("", e)
