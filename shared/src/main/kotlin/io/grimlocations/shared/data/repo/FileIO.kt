@@ -5,6 +5,10 @@ import io.grimlocations.shared.data.dto.*
 import io.grimlocations.shared.data.repo.action.getMetaAsync
 import io.grimlocations.shared.framework.util.extension.removeAllBlank
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jetbrains.exposed.sql.and
@@ -156,7 +160,16 @@ suspend fun SqliteRepository.createLocationsFromFile(
     return errorString
 }
 
-suspend fun SqliteRepository.writeLocationsToFile(pmd: PMDContainer) {
-    val meta = getMetaAsync().await()
+suspend fun SqliteRepository.writeLocationsToFileAsync(filePath: String, pmd: PMDContainer) =
+    withContext(Dispatchers.IO) {
+            try {
+                val file = File(filePath)
+                file.createNewFile()
 
-}
+                null
+            } catch (e: Exception) {
+                val msg = "Error writing to file: $filePath"
+                logger.error(msg, e)
+                msg
+            }
+    }

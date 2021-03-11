@@ -1,7 +1,5 @@
 package io.grimlocations.shared.ui.viewmodel.reducer
 
-import io.grimlocations.shared.data.dto.MetaDTO
-import io.grimlocations.shared.data.dto.ProfileModDifficultyMap
 import io.grimlocations.shared.data.dto.firstContainer
 import io.grimlocations.shared.data.repo.action.detectAndCreateProfilesAsync
 import io.grimlocations.shared.data.repo.action.getLocationsAsync
@@ -9,21 +7,19 @@ import io.grimlocations.shared.data.repo.action.getMetaAsync
 import io.grimlocations.shared.data.repo.action.getProfilesModsDifficultiesAsync
 import io.grimlocations.shared.framework.ui.getState
 import io.grimlocations.shared.framework.ui.setState
+import io.grimlocations.shared.framework.util.awaitAll
 import io.grimlocations.shared.ui.GLStateManager
 import io.grimlocations.shared.ui.viewmodel.state.EditorState
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
-import kotlinx.coroutines.awaitAll
 
 @Suppress("UNCHECKED_CAST")
 suspend fun GLStateManager.loadEditorState(
     selected: Pair<PMDContainer, PMDContainer>? = null,
 ) {
-    val list = awaitAll(
+    val (pmdMap, meta) = awaitAll(
         repository.getProfilesModsDifficultiesAsync(),
         repository.getMetaAsync()
     )
-    val pmdMap = list[0] as ProfileModDifficultyMap
-    val meta = list[1] as MetaDTO
 
     if (selected == null) {
         val container = pmdMap.firstContainer()
