@@ -7,3 +7,11 @@ fun String.endsWithOne(vararg suffix: String, ignoreCase: Boolean = false): Bool
     }
     return false
 }
+
+fun String.startsWithOne(vararg prefix: String, ignoreCase: Boolean = false): Boolean {
+    for (p in prefix) {
+        if(this.startsWith(p, ignoreCase))
+            return true
+    }
+    return false
+}

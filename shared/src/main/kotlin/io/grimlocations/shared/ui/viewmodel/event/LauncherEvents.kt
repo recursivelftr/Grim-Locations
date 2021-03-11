@@ -4,10 +4,7 @@ import androidx.compose.desktop.AppWindow
 import io.grimlocations.shared.framework.ui.viewmodel.stateFlow
 import io.grimlocations.shared.ui.view.component.openOkCancelPopup
 import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
-import io.grimlocations.shared.ui.viewmodel.reducer.loadLocationsIntoSelectedProfile
-import io.grimlocations.shared.ui.viewmodel.reducer.persistActivePMD
-import io.grimlocations.shared.ui.viewmodel.reducer.reloadEditorState
-import io.grimlocations.shared.ui.viewmodel.reducer.updateLauncherState
+import io.grimlocations.shared.ui.viewmodel.reducer.*
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.Dispatchers
@@ -54,5 +51,11 @@ fun LauncherViewModel.loadLocationsIntoSelectedProfile(
                 },
             )
         }
+    }
+}
+
+fun LauncherViewModel.writeToLocationsFile() {
+    viewModelScope.launch {
+        stateManager.writeToLocationsFile()
     }
 }

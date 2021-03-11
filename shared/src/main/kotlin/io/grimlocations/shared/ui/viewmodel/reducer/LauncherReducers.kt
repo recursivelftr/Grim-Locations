@@ -5,6 +5,7 @@ import io.grimlocations.shared.data.repo.action.getMetaAsync
 import io.grimlocations.shared.data.repo.action.getProfilesModsDifficultiesAsync
 import io.grimlocations.shared.data.repo.action.persistActivePMDAsync
 import io.grimlocations.shared.data.repo.createLocationsFromFile
+import io.grimlocations.shared.data.repo.writeLocationsToFile
 import io.grimlocations.shared.framework.ui.getState
 import io.grimlocations.shared.framework.ui.setState
 import io.grimlocations.shared.framework.util.awaitAll
@@ -58,4 +59,17 @@ suspend fun GLStateManager.loadLocationsIntoSelectedProfile(filePath: String): S
             logger.error(it)
         } ?: "Locations successfully loaded."
     }
+}
+
+suspend fun GLStateManager.writeToLocationsFile(): String? {
+    val meta = repository.getMetaAsync().await()
+    meta.installLocation?.also {
+        val s = getState<LauncherState>()
+        return if(it.endsWithOne("/", "\\"))
+            repository.writeLocationsToFile(it+"GrimInternals_TeleportList.txt", s.selected)
+        else
+            repository.writeLocationsToFile(it+File.separator+"GrimInternals_TeleportList.txt", s.selected)
+    }
+
+    return "GD install location needs to be set."
 }

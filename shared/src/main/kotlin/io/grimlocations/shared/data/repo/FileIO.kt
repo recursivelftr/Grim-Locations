@@ -160,12 +160,30 @@ suspend fun SqliteRepository.createLocationsFromFile(
     return errorString
 }
 
-suspend fun SqliteRepository.writeLocationsToFileAsync(filePath: String, pmd: PMDContainer) =
+//returns null if no errors, string if error
+suspend fun SqliteRepository.writeLocationsToFile(filePath: String, pmd: PMDContainer) =
     withContext(Dispatchers.IO) {
             try {
                 val file = File(filePath)
                 file.createNewFile()
+                val locations = newSuspendedTransaction {
+                    Location.find {
+                        (LocationTable.profile eq pmd.profile.id) and
+                                (LocationTable.mod eq pmd.mod.id) and
+                                (LocationTable.difficulty eq pmd.difficulty.id)
+                    }.map { it.toDTO() }
+                }
 
+                file.writeText(
+                    buildString {
+                        locations.forEach {
+                            with(it) {
+                                val c = coordinate
+                                append("$name, ${c.coordinate1}, ${c.coordinate2}, ${c.coordinate3},\n")
+                            }
+                        }
+                    }
+                )
                 null
             } catch (e: Exception) {
                 val msg = "Error writing to file: $filePath"
