@@ -6,11 +6,10 @@ import io.grimlocations.shared.ui.viewmodel.EditorViewModel
 import io.grimlocations.shared.ui.viewmodel.reducer.loadCharacterProfiles
 import io.grimlocations.shared.ui.viewmodel.reducer.loadEditorState
 import io.grimlocations.shared.ui.viewmodel.reducer.reloadEditorState
+import io.grimlocations.shared.ui.viewmodel.reducer.updateIfGDRunning
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.shared.util.extension.closeIfOpen
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 fun EditorViewModel.loadCharacterProfiles(
     onOpenPopup: (AppWindow) -> Unit,
@@ -34,5 +33,16 @@ fun EditorViewModel.loadCharacterProfiles(
 fun EditorViewModel.reloadState() {
     viewModelScope.launch {
         stateManager.reloadEditorState()
+    }
+}
+
+fun EditorViewModel.startGDProcessCheckLoop() {
+    CoroutineScope(Dispatchers.Main + Job()).launch {
+        while(true) {
+            if(stateManager.updateIfGDRunning()) {
+
+            }
+            delay(1000)
+        }
     }
 }

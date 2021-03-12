@@ -12,5 +12,7 @@ data class EditorState(
     val selectedPMDRight: PMDContainer,
     val activePMD: PMDContainer?,
     val locationsLeft: List<LocationDTO>,
-    val locationsRight: List<LocationDTO>
+    val locationsRight: List<LocationDTO>,
+    val isGDRunning: Boolean,
+    val installLocation: String,
 ) : State

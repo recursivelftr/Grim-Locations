@@ -22,7 +22,7 @@ import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.view.component.PMDChooserComponent
 import io.grimlocations.shared.ui.viewmodel.LauncherViewModel
 import io.grimlocations.shared.ui.viewmodel.event.loadLocationsIntoSelectedProfile
-import io.grimlocations.shared.ui.viewmodel.event.persistPMD
+import io.grimlocations.shared.ui.viewmodel.event.persistPMDAndWriteLocations
 import io.grimlocations.shared.ui.viewmodel.event.selectPMD
 import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -105,7 +105,7 @@ private fun LauncherView(
                     Spacer(modifier = Modifier.width(10.dp))
                     Button(
                         onClick = {
-                            vm.persistPMD(window)
+                            vm.persistPMDAndWriteLocations(window)
                         },
                     ) {
                         Text("Ok")

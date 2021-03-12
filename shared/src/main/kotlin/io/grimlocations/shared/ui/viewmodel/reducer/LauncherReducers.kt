@@ -31,6 +31,7 @@ suspend fun GLStateManager.loadLauncherState() {
         LauncherState(
             map = map,
             selected = meta.activePMD ?: map.firstContainer(),
+            installPath = meta.installLocation!!,
             locationsFilePath = null,
         )
     )

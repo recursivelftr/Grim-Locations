@@ -38,3 +38,7 @@ fun ProfileModDifficultyMap.firstContainer(): PMDContainer {
         )
     } ?: error("No profiles exist.")
 }
+
+fun ProfileModDifficultyMap.hasOnlyReservedProfiles(): Boolean {
+    return this.size == 2 && this.keys.containsAll(RESERVED_PROFILES)
+}

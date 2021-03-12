@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import java.io.File
 
 private val logger: Logger = LogManager.getLogger()
 
@@ -24,9 +23,10 @@ fun LauncherViewModel.selectPMD(selected: PMDContainer) {
     }
 }
 
-fun LauncherViewModel.persistPMD(window: AppWindow) {
+fun LauncherViewModel.persistPMDAndWriteLocations(window: AppWindow) {
     viewModelScope.launch {
         stateManager.persistActivePMD()
+        stateManager.writeToLocationsFile()
         withContext(Dispatchers.Main) {
             window.closeIfOpen()
             stateManager.reloadEditorState()
@@ -56,6 +56,6 @@ fun LauncherViewModel.loadLocationsIntoSelectedProfile(
 
 fun LauncherViewModel.writeToLocationsFile() {
     viewModelScope.launch {
-        stateManager.writeToLocationsFile()
+
     }
 }

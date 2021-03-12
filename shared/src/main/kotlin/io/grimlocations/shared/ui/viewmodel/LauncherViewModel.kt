@@ -13,7 +13,11 @@ class LauncherViewModel(override val stateManager: GLStateManager) :
     ViewModel<LauncherState, GLStateManager>() {
 
     val locationsFileChooser by lazy {
-        JSystemFileChooser().applyCsvTextFilesOnly()
+        JSystemFileChooser().applyCsvTextFilesOnly().apply {
+            stateFlow.value?.installPath?.let {
+                currentDirectory = File(it)
+            }
+        }
     }
 
     override fun loadState() {

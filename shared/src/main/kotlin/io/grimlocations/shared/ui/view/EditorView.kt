@@ -16,13 +16,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import io.grimlocations.shared.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.shared.framework.ui.LocalViewModel
 import io.grimlocations.shared.framework.ui.getLazyViewModel
 import io.grimlocations.shared.framework.ui.view.View
+import io.grimlocations.shared.framework.util.LaunchedEffect
 import io.grimlocations.shared.ui.GLViewModelProvider
 import io.grimlocations.shared.ui.viewmodel.EditorViewModel
 import io.grimlocations.shared.ui.viewmodel.event.loadCharacterProfiles
 import io.grimlocations.shared.ui.viewmodel.event.reloadState
+import io.grimlocations.shared.ui.viewmodel.event.startGDProcessCheckLoop
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.shared.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,6 +39,10 @@ private fun EditorView(
 ) = View(vm) { state ->
     val vmProv = LocalViewModel.current as GLViewModelProvider
     val previousLauncherWindow = remember { mutableStateOf<AppWindow?>(null) }
+
+    LaunchedEffect {
+        vm.startGDProcessCheckLoop()
+    }
 
     remember { captureSubWindows(subWindows) }
 
@@ -94,6 +101,7 @@ private fun EditorView(
                 }
                 Spacer(modifier = Modifier.width(15.dp))
                 Button(
+                    enabled = !state.profileMap.hasOnlyReservedProfiles(),
                     onClick = {
                         disabled = true
                         onOverlayClick = {}
@@ -121,7 +129,11 @@ private fun EditorView(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text("Grim Dawn Status: ")
-                Text("Not Running", color = Color(0, 204, 0))
+                if(state.isGDRunning) {
+                    Text("Running", color = Color(0, 204, 0))
+                } else {
+                    Text("Not Running")
+                }
             }
             Spacer(Modifier.height(20.dp))
             ActiveProfileRow(state.activePMD)
@@ -169,7 +181,7 @@ fun ActiveProfileRow(pmd: PMDContainer?) {
             singleLine = true,
             label = {
                 Text(
-                    "Profile",
+                    "Active Profile",
                     color = labelColor
                 )
             },
@@ -184,7 +196,7 @@ fun ActiveProfileRow(pmd: PMDContainer?) {
             singleLine = true,
             label = {
                 Text(
-                    "Mod",
+                    "Active Mod",
                     color = labelColor
                 )
             },
@@ -199,7 +211,7 @@ fun ActiveProfileRow(pmd: PMDContainer?) {
             singleLine = true,
             label = {
                 Text(
-                    "Difficulty",
+                    "Active Difficulty",
                     color = labelColor
                 )
             },
