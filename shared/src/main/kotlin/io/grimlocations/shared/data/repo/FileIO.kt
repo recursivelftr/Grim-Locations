@@ -2,6 +2,7 @@ package io.grimlocations.shared.data.repo
 
 import io.grimlocations.shared.data.domain.*
 import io.grimlocations.shared.data.dto.*
+import io.grimlocations.shared.data.repo.action.getHighestOrder
 import io.grimlocations.shared.data.repo.action.getMetaAsync
 import io.grimlocations.shared.framework.ui.getState
 import io.grimlocations.shared.framework.util.extension.removeAllBlank
@@ -91,7 +92,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
             if (loc.size != 4) {
                 errorString =
                     "The csv file is not in the correct format. " +
-                            "The required format for each line is Name,Coordinate1,Coordinate2,Coordinate3.\n" +
+                            "The required format for each line is Name, Coordinate1, Coordinate2, Coordinate3.\n" +
                             "The line in question is: $it"
                 logger.error(errorString)
                 return@forEachLine
@@ -145,7 +146,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
 
     //create the coordinate if it doesn't exist
     try {
-        newSuspendedTransaction {
+        modifyDatabaseAsync {
             locList.forEach {
 
                 Coordinate.find {
@@ -159,7 +160,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
                 }
 
             }
-        }
+        }.await()
     } catch (e: Exception) {
         errorString = "Issue creating coordinates for file ${file.name}"
         logger.error(errorString, e)
@@ -170,10 +171,11 @@ suspend fun SqliteRepository.createLocationsFromFile(
 
     //create the locations (theres probably a better way to do all this)
     try {
-        newSuspendedTransaction {
+        modifyDatabaseAsync {
             val _profile = Profile.findById(profileDTO.id)!!
             val _mod = Mod.findById(modDTO.id)!!
             val _difficulty = Difficulty.findById(difficultyDTO.id)!!
+            var o = getHighestOrder(profileDTO, modDTO, difficultyDTO).await() ?: 0
 
             locList.forEach {
                 val coord = Coordinate.find {
@@ -188,15 +190,9 @@ suspend fun SqliteRepository.createLocationsFromFile(
                             (LocationTable.difficulty eq _difficulty.id) and
                             (LocationTable.coordinate eq coord.id)
                 }.singleOrNull() ?: run {
-                    val o = LocationTable.slice(LocationTable.order).select {
-                        (LocationTable.profile eq _profile.id) and
-                                (LocationTable.mod eq _mod.id) and
-                                (LocationTable.difficulty eq _difficulty.id)
-                    }.map { it[LocationTable.order] }.maxOrNull() ?: 0
-
                     Location.new {
                         name = it.name
-                        order = o + 1
+                        order = ++o
                         profile = _profile
                         mod = _mod
                         difficulty = _difficulty
@@ -204,7 +200,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
                     }
                 }
             }
-        }
+        }.await()
     } catch (e: Exception) {
         errorString = "Issue creating locations for file ${file.name}"
         logger.error(errorString, e)

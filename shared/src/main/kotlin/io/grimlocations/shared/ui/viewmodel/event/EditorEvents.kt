@@ -80,3 +80,15 @@ fun EditorViewModel.selectPMDRight(pmd: PMDContainer) {
         stateManager.selectPMDRight(pmd)
     }
 }
+
+fun EditorViewModel.copyLeftSelectedToRight() {
+    viewModelScope.launch {
+        stateManager.copyLeftSelectedToRight()
+    }
+}
+
+fun EditorViewModel.copyRightSelectedToLeft() {
+    viewModelScope.launch {
+        stateManager.copyLeftSelectedToRight()
+    }
+}

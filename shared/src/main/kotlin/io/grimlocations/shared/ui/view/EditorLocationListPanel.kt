@@ -20,10 +20,7 @@ import io.grimlocations.shared.data.dto.RESERVED_PROFILES
 import io.grimlocations.shared.ui.view.component.LocationListComponent
 import io.grimlocations.shared.ui.view.component.PMDChooserComponent
 import io.grimlocations.shared.ui.viewmodel.EditorViewModel
-import io.grimlocations.shared.ui.viewmodel.event.selectLocationsLeft
-import io.grimlocations.shared.ui.viewmodel.event.selectLocationsRight
-import io.grimlocations.shared.ui.viewmodel.event.selectPMDLeft
-import io.grimlocations.shared.ui.viewmodel.event.selectPMDRight
+import io.grimlocations.shared.ui.viewmodel.event.*
 import io.grimlocations.shared.ui.viewmodel.state.EditorState
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 
@@ -61,14 +58,14 @@ fun EditorLocationListPanel(
             primarySelectedLocations = selectedLocationsRight,
             otherLocations = locationsLeft,
         )
-        if(previousPMDLeft != selectedPMDLeft) {
+        if (previousPMDLeft != selectedPMDLeft) {
             stateVerticalLeft = LazyListState(
                 0,
                 0
             )
             previousPMDLeft = selectedPMDLeft
         }
-        if(previousPMDRight != selectedPMDRight) {
+        if (previousPMDRight != selectedPMDRight) {
             stateVerticalRight = LazyListState(
                 0,
                 0
@@ -111,9 +108,13 @@ fun EditorLocationListPanel(
                         stateVertical = stateVerticalLeft
                     )
                     Spacer(Modifier.width(horizontalSpacerWidth))
-                    ArrowButton(true, isLeftArrowDisabled) {
-
-                    }
+                    ArrowButton(
+                        isLeft = true,
+                        disabled = isLeftArrowDisabled,
+                        onClick = {
+                            vm.copyLeftSelectedToRight()
+                        }
+                    )
                 }
             }
 
@@ -136,9 +137,13 @@ fun EditorLocationListPanel(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.height(listHeight)
                 ) {
-                    ArrowButton(false, isRightArrowDisabled) {
-
-                    }
+                    ArrowButton(
+                        isLeft = false,
+                        disabled = isRightArrowDisabled,
+                        onClick = {
+                            vm.copyRightSelectedToLeft()
+                        }
+                    )
                     Spacer(Modifier.width(horizontalSpacerWidth))
                     LocationListComponent(
                         rowHeight = rowHeight,
@@ -187,8 +192,11 @@ private fun isArrowDisabled(
     if (RESERVED_PROFILES.contains(otherPMD.profile))
         return true
 
+    if(primarySelectedLocations.isEmpty())
+        return true
+
     primarySelectedLocations.forEach {
-        if(otherLocations.contains(it))
+        if (otherLocations.contains(it))
             return true
     }
 

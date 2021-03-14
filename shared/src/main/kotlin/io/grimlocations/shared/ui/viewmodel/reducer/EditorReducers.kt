@@ -2,10 +2,7 @@ package io.grimlocations.shared.ui.viewmodel.reducer
 
 import io.grimlocations.shared.data.dto.LocationDTO
 import io.grimlocations.shared.data.dto.firstContainer
-import io.grimlocations.shared.data.repo.action.detectAndCreateProfilesAsync
-import io.grimlocations.shared.data.repo.action.getLocationsAsync
-import io.grimlocations.shared.data.repo.action.getMetaAsync
-import io.grimlocations.shared.data.repo.action.getProfilesModsDifficultiesAsync
+import io.grimlocations.shared.data.repo.action.*
 import io.grimlocations.shared.data.repo.createLocationsFromFile
 import io.grimlocations.shared.data.repo.getFileLastModified
 import io.grimlocations.shared.data.repo.isGDRunning
@@ -166,5 +163,29 @@ suspend fun GLStateManager.selectPMDRight(pmd: PMDContainer) {
             locationsRight = locs,
             selectedLocationsRight = setOf()
         ))
+    }
+}
+
+suspend fun GLStateManager.copyLeftSelectedToRight() {
+    val s = getState<EditorState>()
+    repository.copyLocationsToPMD(
+        pmdContainer = s.selectedPMDRight,
+        selectedLocations = s.selectedLocationsLeft,
+        otherSelectedLocations = s.selectedLocationsRight
+    ).await()
+    withContext(Dispatchers.Main){
+        reloadEditorState()
+    }
+}
+
+suspend fun GLStateManager.copyRightSelectedToLeft() {
+    val s = getState<EditorState>()
+    repository.copyLocationsToPMD(
+        pmdContainer = s.selectedPMDLeft,
+        selectedLocations = s.selectedLocationsRight,
+        otherSelectedLocations = s.selectedLocationsLeft
+    ).await()
+    withContext(Dispatchers.Main){
+        reloadEditorState()
     }
 }
