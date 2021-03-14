@@ -9,6 +9,8 @@ import io.grimlocations.shared.ui.viewmodel.state.PropertiesState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.reflect.KClass
 
+typealias ViewStateManager<S> = GLStateManager
+
 class GLStateManager(override val repository: SqliteRepository) : StateManager<SqliteRepository> {
     override val mutableStateFlows: MutableMap<KClass<out State>, MutableStateFlow<out State?>> = mutableMapOf(
         PropertiesState::class to MutableStateFlow<PropertiesState?>(null),

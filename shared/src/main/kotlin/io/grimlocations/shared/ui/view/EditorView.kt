@@ -22,6 +22,7 @@ import io.grimlocations.shared.framework.ui.getLazyViewModel
 import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.framework.util.LaunchedEffect
 import io.grimlocations.shared.ui.GLViewModelProvider
+import io.grimlocations.shared.ui.view.component.LocationListPanelComponent
 import io.grimlocations.shared.ui.viewmodel.EditorViewModel
 import io.grimlocations.shared.ui.viewmodel.event.loadCharacterProfiles
 import io.grimlocations.shared.ui.viewmodel.event.reloadState
@@ -120,7 +121,7 @@ private fun EditorView(
                         )
                     },
                 ) {
-                    Text("Play Profile")
+                    Text("Select Active Profile")
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -135,19 +136,20 @@ private fun EditorView(
                     Text("Not Running")
                 }
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(30.dp))
             ActiveProfileRow(state.activePMD)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Column {
-
-                }
-                Column {
-
-                }
-            }
+            Spacer(Modifier.height(40.dp))
+            LocationListPanelComponent(
+                state = state,
+                vm = vm,
+                onOpen = { p, c ->
+                    disabled = true
+                    subWindows.remove(p)
+                    subWindows.add(c)
+                    onOverlayClick = { subWindows.forEach { a -> a.closeIfOpen() } }
+                },
+                onClose = { disabled = false }
+            )
         }
     }
 }
@@ -226,7 +228,7 @@ fun openEditorView(vmProvider: GLViewModelProvider, previousWindow: AppWindow) {
     var subWindows: Set<AppWindow>? = null
     Window(
         title = "Grim Locations",
-        size = IntSize(1024, 768),
+        size = IntSize(1500, 900),
         onDismissRequest = {
             subWindows?.forEach { it.closeIfOpen() }
         }

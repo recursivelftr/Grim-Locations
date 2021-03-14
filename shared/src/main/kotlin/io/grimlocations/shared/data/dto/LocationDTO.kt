@@ -8,5 +8,14 @@ data class LocationDTO(
     override val created: LocalDateTime,
     override val modified: LocalDateTime,
     val name: String,
+    val order: Int,
     val coordinate: CoordinateDTO
-) : DTO
+) : DTO {
+    override fun equals(other: Any?): Boolean {
+        other?.also {
+            return coordinate == it
+        }
+
+        return false
+    }
+}

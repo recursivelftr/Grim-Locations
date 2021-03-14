@@ -5,8 +5,6 @@ import io.grimlocations.shared.data.dto.*
 import io.grimlocations.shared.framework.data.repo.Repository
 import io.grimlocations.shared.framework.util.FourTuple
 import io.grimlocations.shared.framework.util.FiveTuple
-import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
-import io.grimlocations.shared.util.extension.glDatabaseBackupDir
 import io.grimlocations.shared.util.extension.glDatabaseDir
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -18,10 +16,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 import java.io.File
-import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 class SqliteRepository(val appDirs: AppDirs) : Repository {
 
@@ -48,7 +42,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         if (!wasBackupMade) {
             logger.info("Database backup started")
             wasBackupMade = true
-            withContext(Dispatchers.IO) { createRollingBackup() }
+            withContext(Dispatchers.IO) { createRollingBackup(MAX_BACKUPS) }
             logger.info("Database backup made")
         }
 
@@ -63,7 +57,9 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
 //            println("Diff Profile: ${diffTest.profiles.single().name}")
 //            println("Profile Diff: ${profileTest.difficulties.single().name}")
 
-        if (!suspendedTransactionAsync { MetaTable.exists() }.await()) {
+        val dbDoesntExist = !suspendedTransactionAsync { MetaTable.exists() }.await()
+
+        if (dbDoesntExist) {
             logger.info("Creating database tables")
             try {
                 newSuspendedTransaction {
@@ -87,18 +83,35 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 }
             }
 
-            val (base_game_mod, normal, veteran, elite, ultimate) = createDefaultEntities()
-            DEFAULT_GAME_MOD = base_game_mod
-            DEFAULT_GAME_NORMAL_DIFFICULTY = normal
-            DEFAULT_GAME_VETERAN_DIFFICULTY = veteran
-            DEFAULT_GAME_ELITE_DIFFICULTY = elite
-            DEFAULT_GAME_ULTIMATE_DIFFICULTY = ultimate
+            createDefaultEntities()
+            createReservedEntities()
 
-            val (newchar_loc_profile, reddit_loc_profile, no_mods_mod, no_difficulties_difficulty) = createReservedEntities()
-            RESERVED_PROFILES = listOf(newchar_loc_profile, reddit_loc_profile)
-            RESERVED_NO_MODS_INDICATOR = no_mods_mod
-            RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
+            logger.info("Database created")
+        }
 
+        try {
+            newSuspendedTransaction {
+                val version = MetaTable.slice(MetaTable.version).selectAll().single()[MetaTable.version]
+                logger.info("Database version: $version")
+            }
+        } catch (e: Exception) {
+            logger.error("Issue getting the Meta record.")
+            throw e
+        }
+
+        val (base_game_mod, normal, veteran, elite, ultimate) = getDefaultEntities()
+        DEFAULT_GAME_MOD = base_game_mod
+        DEFAULT_GAME_NORMAL_DIFFICULTY = normal
+        DEFAULT_GAME_VETERAN_DIFFICULTY = veteran
+        DEFAULT_GAME_ELITE_DIFFICULTY = elite
+        DEFAULT_GAME_ULTIMATE_DIFFICULTY = ultimate
+
+        val (newchar_loc_profile, reddit_loc_profile, no_mods_mod, no_difficulties_difficulty) = getReservedEntities()
+        RESERVED_PROFILES = listOf(newchar_loc_profile, reddit_loc_profile)
+        RESERVED_NO_MODS_INDICATOR = no_mods_mod
+        RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
+
+        if (dbDoesntExist) {
             createLocationsFromFile(
                 file = File(javaClass.getResource("/new_character_locations.csv").toURI()),
                 profileDTO = newchar_loc_profile,
@@ -112,67 +125,10 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 modDTO = no_mods_mod,
                 difficultyDTO = no_difficulties_difficulty,
             )?.let { error(it) }
-
-            logger.info("Database created")
-        } else {
-            try {
-                newSuspendedTransaction {
-                    val version = MetaTable.slice(MetaTable.version).selectAll().single()[MetaTable.version]
-                    logger.info("Database version: $version")
-                }
-            } catch (e: Exception) {
-                logger.error("Issue getting the Meta record.")
-                throw e
-            }
-
-            val (base_game_mod, normal, veteran, elite, ultimate) = getDefaultEntities()
-            DEFAULT_GAME_MOD = base_game_mod
-            DEFAULT_GAME_NORMAL_DIFFICULTY = normal
-            DEFAULT_GAME_VETERAN_DIFFICULTY = veteran
-            DEFAULT_GAME_ELITE_DIFFICULTY = elite
-            DEFAULT_GAME_ULTIMATE_DIFFICULTY = ultimate
-
-            val (newchar_loc_profile, reddit_loc_profile, no_mods_mod, no_difficulties_difficulty) = getReservedEntities()
-            RESERVED_PROFILES = listOf(newchar_loc_profile, reddit_loc_profile)
-            RESERVED_NO_MODS_INDICATOR = no_mods_mod
-            RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
         }
     }
 
-    private fun createRollingBackup() {
-        try {
-            var backupNumber = 1
-            val date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-            val backupDirPath = appDirs.glDatabaseBackupDir
-            val backupDir = File(backupDirPath)
-            backupDir.mkdirs()
-            val files = backupDir.listFiles { it: File -> it.isFile }!!
-
-            if (files.isNotEmpty()) {
-                val todaysFiles =
-                    files.filter { f -> f.name.contains(date) }.sortedByDescending { it.lastModified() }
-
-                if (todaysFiles.isNotEmpty()) {
-                    val name = todaysFiles[0].name
-                    val start = name.lastIndexOf("-") + 1
-                    val end = name.lastIndexOf(".")
-                    backupNumber = name.substring(start, end).toInt() + 1
-                }
-
-                if (files.size == MAX_BACKUPS) {
-                    files.sortedBy { it.lastModified() }[0].delete()
-                }
-            }
-
-            val currentDb = File("${appDirs.glDatabaseDir + File.separator}database.db")
-            currentDb.copyTo(File("$backupDirPath${File.separator}database-$date-$backupNumber.db"))
-        } catch (e: Exception) {
-            logger.error("Issue creating the rolling backup.")
-            throw e
-        }
-    }
-
-    private suspend fun createDefaultEntities(): FiveTuple<ModDTO, DifficultyDTO, DifficultyDTO, DifficultyDTO, DifficultyDTO> {
+    private suspend fun createDefaultEntities() {
         try {
             val diffList = newSuspendedTransaction {
                 listOf(
@@ -197,15 +153,8 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 }
             }
 
-            return newSuspendedTransaction {
+            newSuspendedTransaction {
                 mod.difficulties = SizedCollection(diffList)
-                FiveTuple(
-                    mod.toDTO(),
-                    diffList[0].toDTO(),
-                    diffList[1].toDTO(),
-                    diffList[2].toDTO(),
-                    diffList[3].toDTO(),
-                )
             }
         } catch (e: Exception) {
             logger.error("Issue creating the default entities.")
@@ -213,7 +162,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         }
     }
 
-    private suspend fun createReservedEntities(): FourTuple<ProfileDTO, ProfileDTO, ModDTO, DifficultyDTO> {
+    private suspend fun createReservedEntities() {
         try {
             val difficulty = newSuspendedTransaction {
                 Difficulty.new {
@@ -236,17 +185,10 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 }
             }
 
-            return newSuspendedTransaction {
+            newSuspendedTransaction {
                 mod.difficulties = SizedCollection(listOf(difficulty))
                 profile1.mods = SizedCollection(listOf(mod))
                 profile2.mods = SizedCollection(listOf(mod))
-
-                FourTuple(
-                    profile1.toDTO(),
-                    profile2.toDTO(),
-                    mod.toDTO(),
-                    difficulty.toDTO()
-                )
             }
         } catch (e: Exception) {
             logger.error("Issue creating the reserved entities.")

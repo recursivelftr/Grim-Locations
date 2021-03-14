@@ -19,8 +19,8 @@ suspend fun SqliteRepository.getLocationsAsync(profile: ProfileDTO, mod: ModDTO,
                 LocationTable.profile eq profile.id and
                         (LocationTable.mod eq mod.id) and
                         (LocationTable.difficulty eq difficulty.id)
-            }
-        ).map { it.toDTO() }
+            }.orderBy(LocationTable.order)
+        ).map { it.toDTO() }.toSet()
     }
 
 suspend fun SqliteRepository.getLocationsAsync(container: PMDContainer) =

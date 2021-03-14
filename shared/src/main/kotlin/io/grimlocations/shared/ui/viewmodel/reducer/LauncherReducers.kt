@@ -66,10 +66,10 @@ suspend fun GLStateManager.writeToLocationsFile(): String? {
     val meta = repository.getMetaAsync().await()
     meta.installLocation?.also {
         val s = getState<LauncherState>()
-        return if(it.endsWithOne("/", "\\"))
-            repository.writeLocationsToFile(it+"GrimInternals_TeleportList.txt", s.selected)
+        return if (it.endsWithOne("/", "\\"))
+            repository.writeLocationsToFile(it + "GrimInternals_TeleportList.txt", s.selected)
         else
-            repository.writeLocationsToFile(it+File.separator+"GrimInternals_TeleportList.txt", s.selected)
+            repository.writeLocationsToFile(it + File.separator + "GrimInternals_TeleportList.txt", s.selected)
     }
 
     return "GD install location needs to be set."

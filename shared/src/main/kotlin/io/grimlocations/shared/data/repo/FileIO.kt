@@ -3,8 +3,13 @@ package io.grimlocations.shared.data.repo
 import io.grimlocations.shared.data.domain.*
 import io.grimlocations.shared.data.dto.*
 import io.grimlocations.shared.data.repo.action.getMetaAsync
+import io.grimlocations.shared.framework.ui.getState
 import io.grimlocations.shared.framework.util.extension.removeAllBlank
+import io.grimlocations.shared.ui.viewmodel.reducer.loadEditorState
+import io.grimlocations.shared.ui.viewmodel.state.EditorState
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
+import io.grimlocations.shared.util.extension.glDatabaseBackupDir
+import io.grimlocations.shared.util.extension.glDatabaseDir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -12,12 +17,51 @@ import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.max
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 private val logger: Logger = LogManager.getLogger()
+
+fun SqliteRepository.createRollingBackup(maxBackups: Int) {
+    try {
+        var backupNumber = 1
+        val date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+        val backupDirPath = appDirs.glDatabaseBackupDir
+        val backupDir = File(backupDirPath)
+        backupDir.mkdirs()
+        val files = backupDir.listFiles { it: File -> it.isFile }!!
+
+        if (files.isNotEmpty()) {
+            val todaysFiles =
+                files.filter { f -> f.name.contains(date) }.sortedByDescending { it.lastModified() }
+
+            if (todaysFiles.isNotEmpty()) {
+                val name = todaysFiles[0].name
+                val start = name.lastIndexOf("-") + 1
+                val end = name.lastIndexOf(".")
+                backupNumber = name.substring(start, end).toInt() + 1
+            }
+
+            if (files.size == maxBackups) {
+                files.sortedBy { it.lastModified() }[0].delete()
+            }
+        }
+
+        val currentDb = File("${appDirs.glDatabaseDir + File.separator}database.db")
+        currentDb.copyTo(File("$backupDirPath${File.separator}database-$date-$backupNumber.db"))
+    } catch (e: Exception) {
+        logger.error("Issue creating the rolling backup.", e)
+        throw e
+    }
+}
 
 //The string returned is the error string, if everything went well then it will return null
 suspend fun SqliteRepository.createLocationsFromFile(
@@ -92,7 +136,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
             }
 
             val coordDTO = CoordinateDTO(-1, time, time, coord1, coord2, coord3)
-            locList.add(LocationDTO(-1, time, time, name, coordDTO))
+            locList.add(LocationDTO(-1, time, time, name, 0, coordDTO))
         }
     }
 
@@ -143,12 +187,21 @@ suspend fun SqliteRepository.createLocationsFromFile(
                             (LocationTable.mod eq _mod.id) and
                             (LocationTable.difficulty eq _difficulty.id) and
                             (LocationTable.coordinate eq coord.id)
-                }.singleOrNull() ?: Location.new {
-                    name = it.name
-                    profile = _profile
-                    mod = _mod
-                    difficulty = _difficulty
-                    coordinate = coord
+                }.singleOrNull() ?: run {
+                    val o = LocationTable.slice(LocationTable.order).select {
+                        (LocationTable.profile eq _profile.id) and
+                                (LocationTable.mod eq _mod.id) and
+                                (LocationTable.difficulty eq _difficulty.id)
+                    }.map { it[LocationTable.order] }.maxOrNull() ?: 0
+
+                    Location.new {
+                        name = it.name
+                        order = o + 1
+                        profile = _profile
+                        mod = _mod
+                        difficulty = _difficulty
+                        coordinate = coord
+                    }
                 }
             }
         }
@@ -163,31 +216,57 @@ suspend fun SqliteRepository.createLocationsFromFile(
 //returns null if no errors, string if error
 suspend fun SqliteRepository.writeLocationsToFile(filePath: String, pmd: PMDContainer) =
     withContext(Dispatchers.IO) {
-            try {
-                val file = File(filePath)
-                file.createNewFile()
-                val locations = newSuspendedTransaction {
-                    Location.find {
-                        (LocationTable.profile eq pmd.profile.id) and
-                                (LocationTable.mod eq pmd.mod.id) and
-                                (LocationTable.difficulty eq pmd.difficulty.id)
-                    }.map { it.toDTO() }
-                }
+        try {
+            val file = File(filePath)
+            file.createNewFile()
+            val locations = newSuspendedTransaction {
+                Location.find {
+                    (LocationTable.profile eq pmd.profile.id) and
+                            (LocationTable.mod eq pmd.mod.id) and
+                            (LocationTable.difficulty eq pmd.difficulty.id)
+                }.map { it.toDTO() }
+            }
 
-                file.writeText(
-                    buildString {
-                        locations.forEach {
-                            with(it) {
-                                val c = coordinate
-                                append("$name, ${c.coordinate1}, ${c.coordinate2}, ${c.coordinate3},\n")
-                            }
+            file.writeText(
+                buildString {
+                    locations.forEach {
+                        with(it) {
+                            val c = coordinate
+                            append("$name, ${c.coordinate1}, ${c.coordinate2}, ${c.coordinate3},\n")
                         }
                     }
-                )
-                null
-            } catch (e: Exception) {
-                val msg = "Error writing to file: $filePath"
-                logger.error(msg, e)
-                msg
-            }
+                }
+            )
+            null
+        } catch (e: Exception) {
+            val msg = "Error writing to file: $filePath"
+            logger.error(msg, e)
+            msg
+        }
     }
+
+suspend fun SqliteRepository.isGDRunning() = withContext(Dispatchers.IO) {
+    lateinit var line: String
+    var pidInfo = ""
+
+    val p = Runtime.getRuntime().exec(System.getenv("windir") + "\\system32\\" + "tasklist.exe")
+
+    val input = BufferedReader(InputStreamReader(p.inputStream))
+
+    while (input.readLine()?.also { line = it } != null) {
+        pidInfo += line
+    }
+
+    input.close()
+    pidInfo.contains("Grim Dawn.exe")
+}
+
+//returns null if problem opening file
+suspend fun SqliteRepository.getFileLastModified(path: String): Long? = withContext(Dispatchers.IO) {
+    try {
+        File(path).lastModified()
+    } catch (e: Exception) {
+        logger.error("Problem loading file: $path", e)
+        null
+    }
+}
