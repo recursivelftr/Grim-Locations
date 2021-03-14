@@ -12,10 +12,17 @@ data class LocationDTO(
     val coordinate: CoordinateDTO
 ) : DTO {
     override fun equals(other: Any?): Boolean {
-        other?.also {
-            return coordinate == it
-        }
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-        return false
+        other as LocationDTO
+
+        if (coordinate != other.coordinate) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return coordinate.hashCode()
     }
 }

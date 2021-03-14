@@ -3,6 +3,8 @@ package io.grimlocations.shared.ui.view.component
 import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -31,6 +33,12 @@ private val rowWidth = 550.dp
 private val horizontalSpacerWidth = 10.dp
 private val verticalSpacerHeight = 20.dp
 
+private var previousPMDLeft: PMDContainer? = null
+private var previousPMDRight: PMDContainer? = null
+
+private lateinit var stateVerticalLeft: LazyListState
+private lateinit var stateVerticalRight: LazyListState
+
 @ExperimentalFoundationApi
 @Composable
 fun LocationListPanelComponent(
@@ -52,6 +60,21 @@ fun LocationListPanelComponent(
             primarySelectedLocations = selectedLocationsRight,
             otherLocations = locationsLeft,
         )
+        if(previousPMDLeft != selectedPMDLeft) {
+            stateVerticalLeft = LazyListState(
+                0,
+                0
+            )
+            previousPMDLeft = selectedPMDLeft
+        }
+        if(previousPMDRight != selectedPMDRight) {
+            stateVerticalRight = LazyListState(
+                0,
+                0
+            )
+            previousPMDRight = selectedPMDRight
+        }
+
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -83,7 +106,8 @@ fun LocationListPanelComponent(
                         selectedLocations = selectedLocationsLeft,
                         onSelectLocations = { locs ->
                             vm.selectLocationsLeft(locs)
-                        }
+                        },
+                        stateVertical = stateVerticalLeft
                     )
                     Spacer(Modifier.width(horizontalSpacerWidth))
                     ArrowButton(true, isLeftArrowDisabled) {
@@ -122,7 +146,8 @@ fun LocationListPanelComponent(
                         selectedLocations = selectedLocationsRight,
                         onSelectLocations = { locs ->
                             vm.selectLocationsRight(locs)
-                        }
+                        },
+                        stateVertical = stateVerticalRight
                     )
                 }
             }

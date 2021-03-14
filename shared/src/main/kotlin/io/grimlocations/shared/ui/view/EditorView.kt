@@ -228,7 +228,7 @@ fun openEditorView(vmProvider: GLViewModelProvider, previousWindow: AppWindow) {
     var subWindows: Set<AppWindow>? = null
     Window(
         title = "Grim Locations",
-        size = IntSize(1500, 900),
+        size = IntSize(1500, 950),
         onDismissRequest = {
             subWindows?.forEach { it.closeIfOpen() }
         }

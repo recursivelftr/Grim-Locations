@@ -4,6 +4,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -31,14 +32,10 @@ fun LocationListComponent(
     onSelectLocations: (Set<LocationDTO>) -> Unit,
     rowHeight: Dp,
     rowWidth: Dp,
+    stateVertical: LazyListState,
 ) {
     val primaryColor = MaterialTheme.colors.primary
-    val stateVertical = rememberSaveable(saver = LazyListState.Saver) {
-        LazyListState(
-            0,
-            0
-        )
-    }
+
     val scrollBarStyle = ScrollbarStyleAmbient.current.let {
         remember {
             it.copy(
