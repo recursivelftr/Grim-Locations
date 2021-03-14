@@ -22,7 +22,6 @@ import io.grimlocations.shared.framework.ui.getLazyViewModel
 import io.grimlocations.shared.framework.ui.view.View
 import io.grimlocations.shared.framework.util.LaunchedEffect
 import io.grimlocations.shared.ui.GLViewModelProvider
-import io.grimlocations.shared.ui.view.component.LocationListPanelComponent
 import io.grimlocations.shared.ui.viewmodel.EditorViewModel
 import io.grimlocations.shared.ui.viewmodel.event.loadCharacterProfiles
 import io.grimlocations.shared.ui.viewmodel.event.reloadState
@@ -139,7 +138,7 @@ private fun EditorView(
             Spacer(Modifier.height(30.dp))
             ActiveProfileRow(state.activePMD)
             Spacer(Modifier.height(40.dp))
-            LocationListPanelComponent(
+            EditorLocationListPanel(
                 state = state,
                 vm = vm,
                 onOpen = { p, c ->
@@ -155,7 +154,7 @@ private fun EditorView(
 }
 
 @Composable
-fun ActiveProfileRow(pmd: PMDContainer?) {
+private fun ActiveProfileRow(pmd: PMDContainer?) {
 
     val labelColor = MaterialTheme.colors.onSurface.let {
         val isLightColors = MaterialTheme.colors.isLight

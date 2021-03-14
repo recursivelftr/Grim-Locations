@@ -1,10 +1,9 @@
-package io.grimlocations.shared.ui.view.component
+package io.grimlocations.shared.ui.view
 
 import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -18,6 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.grimlocations.shared.data.dto.LocationDTO
 import io.grimlocations.shared.data.dto.RESERVED_PROFILES
+import io.grimlocations.shared.ui.view.component.LocationListComponent
+import io.grimlocations.shared.ui.view.component.PMDChooserComponent
 import io.grimlocations.shared.ui.viewmodel.EditorViewModel
 import io.grimlocations.shared.ui.viewmodel.event.selectLocationsLeft
 import io.grimlocations.shared.ui.viewmodel.event.selectLocationsRight
@@ -41,7 +42,7 @@ private lateinit var stateVerticalRight: LazyListState
 
 @ExperimentalFoundationApi
 @Composable
-fun LocationListPanelComponent(
+fun EditorLocationListPanel(
     state: EditorState,
     vm: EditorViewModel,
     onOpen: (AppWindow?, AppWindow) -> Unit,
