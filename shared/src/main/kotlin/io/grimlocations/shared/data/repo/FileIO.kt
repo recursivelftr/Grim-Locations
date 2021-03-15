@@ -68,7 +68,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
     profileDTO: ProfileDTO,
     modDTO: ModDTO,
     difficultyDTO: DifficultyDTO
-): String? {
+): String? = withContext(Dispatchers.IO) {
     logger.info("Loading locations from ${file.name}")
 
     val locList = mutableListOf<LocationDTO>()
@@ -134,7 +134,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
     }
 
     if (errorString != null)
-        return errorString
+        return@withContext errorString
 
     //create the coordinate if it doesn't exist
     try {
@@ -159,7 +159,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
     }
 
     if (errorString != null)
-        return errorString
+        return@withContext errorString
 
     //create the locations (theres probably a better way to do all this)
     try {
@@ -198,7 +198,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
         logger.error(errorString, e)
     }
 
-    return errorString
+    errorString
 }
 
 //returns null if no errors, string if error

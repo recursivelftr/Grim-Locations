@@ -9,4 +9,8 @@ data class LauncherState(
     val selected: PMDContainer,
     val installPath: String,
     val locationsFilePath: String?,
-): State
+) : State {
+    override fun equals(other: Any?): Boolean {
+        return this === other
+    }
+}

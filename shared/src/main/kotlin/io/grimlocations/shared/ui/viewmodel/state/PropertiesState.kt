@@ -15,4 +15,8 @@ data class PropertiesState(
     val installPath: String? = null,
     val errors: Set<PropertiesStateError> = emptySet(),
     val warnings: Set<PropertiesStateWarning> = emptySet()
-): State
+) : State {
+    override fun equals(other: Any?): Boolean {
+        return this === other
+    }
+}
