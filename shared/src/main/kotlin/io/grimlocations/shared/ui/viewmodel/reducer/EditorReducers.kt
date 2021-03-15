@@ -6,6 +6,7 @@ import io.grimlocations.shared.data.repo.action.*
 import io.grimlocations.shared.data.repo.createLocationsFromFile
 import io.grimlocations.shared.data.repo.getFileLastModified
 import io.grimlocations.shared.data.repo.isGDRunning
+import io.grimlocations.shared.data.repo.writeLocationsToFile
 import io.grimlocations.shared.framework.ui.getState
 import io.grimlocations.shared.framework.ui.setState
 import io.grimlocations.shared.framework.util.awaitAll
@@ -41,7 +42,6 @@ suspend fun GLStateManager.loadEditorState(
                 locationsRight = locList.toSet(), //copies the list,
                 activePMD = meta.activePMD,
                 isGDRunning = false,
-                locationsFileLastModified = null,
                 selectedLocationsLeft = setOf(),
                 selectedLocationsRight = setOf()
             )
@@ -90,21 +90,26 @@ suspend fun GLStateManager.updateIfGDRunning(): Boolean {
     return isRunning
 }
 
+private var last_modified: Long? = null
+
 suspend fun GLStateManager.checkIfLocationsFileChangedAndLoadLocation() {
     val meta = repository.getMetaAsync().await()
     guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
-        val s = getState<EditorState>()
         val filePath = if (loc.endsWithOne("/", "\\"))
             loc + "GrimInternals_TeleportList.txt"
         else
             loc + File.separator + "GrimInternals_TeleportList.txt"
 
-        val lastModified = repository.getFileLastModified(filePath)
-        if (lastModified != null && s.locationsFileLastModified != lastModified) {
-            repository.createLocationsFromFile(File(filePath), pmd)
-            withContext(Dispatchers.Main) {
-                loadEditorState(s.copy(locationsFileLastModified = lastModified))
+        val file = File(filePath)
+        val lastModified = repository.getFileLastModified(file)
+        if (lastModified != null && last_modified != lastModified) {
+            if(repository.createLocationsFromFile(file, pmd) == null) {
+                repository.writeLocationsToFile(file, pmd)
+                withContext(Dispatchers.Main) {
+                    reloadEditorState()
+                }
             }
+            last_modified = repository.getFileLastModified(file)
         }
     }
 }

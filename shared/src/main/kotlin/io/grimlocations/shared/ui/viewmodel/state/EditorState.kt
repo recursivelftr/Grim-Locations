@@ -16,7 +16,6 @@ data class EditorState(
     val selectedLocationsLeft: Set<LocationDTO>,
     val selectedLocationsRight: Set<LocationDTO>,
     val isGDRunning: Boolean,
-    val locationsFileLastModified: Long?
 ) : State {
     override fun equals(other: Any?): Boolean {
         return this === other

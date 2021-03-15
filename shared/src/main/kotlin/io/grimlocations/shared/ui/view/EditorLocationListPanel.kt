@@ -2,6 +2,7 @@ package io.grimlocations.shared.ui.view
 
 import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.Icon
@@ -10,6 +11,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -230,7 +233,7 @@ private fun ArrowUpButton(
     ) {
         Icon(
             Icons.Default.KeyboardArrowUp,
-            "Copy",
+            "Move Up",
             tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
         )
     }
@@ -253,14 +256,74 @@ private fun ArrowDownButton(
     ) {
         Icon(
             Icons.Default.KeyboardArrowDown,
-            "Copy",
+            "Move Down",
             tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
         )
     }
 }
 
-private fun SelectRangeButton(onClick: () -> Unit) {
+@Composable
+private fun DeleteButton(
+    pmdContainer: PMDContainer,
+    locations: Set<LocationDTO>,
+    selected: Set<LocationDTO>,
+    onClick: () -> Unit
+) {
+    val disabled = selected.isEmpty() || locations.isEmpty() || RESERVED_PROFILES.contains(pmdContainer.profile)
 
+    IconButton(
+        modifier = Modifier.size(arrowButtonSize),
+        enabled = !disabled,
+        onClick = onClick,
+    ) {
+        Icon(
+            Icons.Default.Delete,
+            "Delete",
+            tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
+        )
+    }
+}
+
+@Composable
+private fun SelectRangeButton(
+    locations: Set<LocationDTO>,
+    onClick: (Boolean) -> Unit
+) {
+    val disabled = locations.isEmpty()
+    val toggled = remember { mutableStateOf(false) }
+
+    val tint: Color
+    val modifier: Modifier
+    when {
+        disabled -> {
+            tint = Color.DarkGray
+            modifier = Modifier
+        }
+        toggled.value -> {
+            tint = Color.White
+            modifier = Modifier.background(MaterialTheme.colors.primary)
+        }
+        else -> {
+            tint = MaterialTheme.colors.primary
+            modifier = Modifier
+        }
+    }
+
+    IconButton(
+        modifier = Modifier.size(arrowButtonSize),
+        enabled = !disabled,
+        onClick = {
+            onClick(!toggled.value)
+            toggled.value = !toggled.value
+        },
+    ) {
+        Icon(
+            Icons.Default.Delete,
+            "Delete",
+            tint = tint,
+            modifier = modifier
+        )
+    }
 }
 
 private fun isArrowLeftRightDisabled(
@@ -275,7 +338,7 @@ private fun isArrowLeftRightDisabled(
     if (RESERVED_PROFILES.contains(otherPMD.profile))
         return true
 
-    if(primarySelectedLocations.isEmpty())
+    if (primarySelectedLocations.isEmpty())
         return true
 
     primarySelectedLocations.forEach {

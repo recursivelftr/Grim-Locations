@@ -74,63 +74,67 @@ suspend fun SqliteRepository.createLocationsFromFile(
     val locList = mutableListOf<LocationDTO>()
     val time = LocalDateTime.now()
     var errorString: String? = null
+    try {
+        file.forEachLine {
+            if (errorString != null) //lazy man's way of breaking from the loop (performs a continue on every item when theres an error)
+                return@forEachLine
 
-    file.forEachLine {
-        if (errorString != null) //lazy man's way of breaking from the loop (performs a continue on every item when theres an error)
-            return@forEachLine
+            if (it.isNotBlank()) {
+                val loc = it.split(",").removeAllBlank()
+                if (loc.size != 4) {
+                    errorString =
+                        "The csv file is not in the correct format. " +
+                                "The required format for each line is Name, Coordinate1, Coordinate2, Coordinate3.\n" +
+                                "The line in question is: $it"
+                    logger.error(errorString)
+                    return@forEachLine
+                }
 
-        if (it.isNotBlank()) {
-            val loc = it.split(",").removeAllBlank()
-            if (loc.size != 4) {
-                errorString =
-                    "The csv file is not in the correct format. " +
-                            "The required format for each line is Name, Coordinate1, Coordinate2, Coordinate3.\n" +
+                val name = loc[0].trim()
+                if (name.isBlank()) {
+                    errorString = "The name of the location cannot be blank.\n" +
                             "The line in question is: $it"
-                logger.error(errorString)
-                return@forEachLine
-            }
+                    logger.error(errorString)
+                    return@forEachLine
+                }
 
-            val name = loc[0].trim()
-            if (name.isBlank()) {
-                errorString = "The name of the location cannot be blank.\n" +
-                        "The line in question is: $it"
-                logger.error(errorString)
-                return@forEachLine
-            }
+                val coord1 = loc[1].trim()
+                try {
+                    BigDecimal(coord1)
+                } catch (e: Exception) {
+                    errorString = "The first coordinate is not a number.\n" +
+                            "The line in question is: $it"
+                    logger.error(errorString, e)
+                    return@forEachLine
+                }
 
-            val coord1 = loc[1].trim()
-            try {
-                BigDecimal(coord1)
-            } catch (e: Exception) {
-                errorString = "The first coordinate is not a number.\n" +
-                        "The line in question is: $it"
-                logger.error(errorString, e)
-                return@forEachLine
-            }
+                val coord2 = loc[2].trim()
+                try {
+                    BigDecimal(coord2)
+                } catch (e: Exception) {
+                    errorString = "The second coordinate is not a number.\n" +
+                            "The line in question is: $it"
+                    logger.error(errorString, e)
+                    return@forEachLine
+                }
 
-            val coord2 = loc[2].trim()
-            try {
-                BigDecimal(coord2)
-            } catch (e: Exception) {
-                errorString = "The second coordinate is not a number.\n" +
-                        "The line in question is: $it"
-                logger.error(errorString, e)
-                return@forEachLine
-            }
+                val coord3 = loc[3].trim()
+                try {
+                    BigDecimal(coord3)
+                } catch (e: Exception) {
+                    errorString = "The third coordinate is not a number.\n" +
+                            "The line in question is: $it"
+                    logger.error(errorString, e)
+                    return@forEachLine
+                }
 
-            val coord3 = loc[3].trim()
-            try {
-                BigDecimal(coord3)
-            } catch (e: Exception) {
-                errorString = "The third coordinate is not a number.\n" +
-                        "The line in question is: $it"
-                logger.error(errorString, e)
-                return@forEachLine
+                val coordDTO = CoordinateDTO(-1, time, time, coord1, coord2, coord3)
+                locList.add(LocationDTO(-1, time, time, name, 0, coordDTO))
             }
-
-            val coordDTO = CoordinateDTO(-1, time, time, coord1, coord2, coord3)
-            locList.add(LocationDTO(-1, time, time, name, 0, coordDTO))
         }
+    }catch (e: Exception) {
+        errorString = "Could not read from file: $file"
+        logger.error(errorString, e)
     }
 
     if (errorString != null)
@@ -202,10 +206,9 @@ suspend fun SqliteRepository.createLocationsFromFile(
 }
 
 //returns null if no errors, string if error
-suspend fun SqliteRepository.writeLocationsToFile(filePath: String, pmd: PMDContainer) =
+suspend fun SqliteRepository.writeLocationsToFile(file: File, pmd: PMDContainer) =
     withContext(Dispatchers.IO) {
         try {
-            val file = File(filePath)
             file.createNewFile()
             val locations = newSuspendedTransaction {
                 Location.find {
@@ -227,7 +230,7 @@ suspend fun SqliteRepository.writeLocationsToFile(filePath: String, pmd: PMDCont
             )
             null
         } catch (e: Exception) {
-            val msg = "Error writing to file: $filePath"
+            val msg = "Error writing to file: ${file.absolutePath}"
             logger.error(msg, e)
             msg
         }
@@ -250,11 +253,11 @@ suspend fun SqliteRepository.isGDRunning() = withContext(Dispatchers.IO) {
 }
 
 //returns null if problem opening file
-suspend fun SqliteRepository.getFileLastModified(path: String): Long? = withContext(Dispatchers.IO) {
+suspend fun SqliteRepository.getFileLastModified(file: File): Long? = withContext(Dispatchers.IO) {
     try {
-        File(path).lastModified()
+        file.lastModified()
     } catch (e: Exception) {
-        logger.error("Problem loading file: $path", e)
+        logger.error("Problem loading file: ${file.absolutePath}", e)
         null
     }
 }
