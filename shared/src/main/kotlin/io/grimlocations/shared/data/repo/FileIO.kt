@@ -2,24 +2,16 @@ package io.grimlocations.shared.data.repo
 
 import io.grimlocations.shared.data.domain.*
 import io.grimlocations.shared.data.dto.*
-import io.grimlocations.shared.data.repo.action.getHighestOrder
-import io.grimlocations.shared.data.repo.action.getMetaAsync
-import io.grimlocations.shared.framework.ui.getState
+import io.grimlocations.shared.data.repo.action.getHighestOrderAsync
 import io.grimlocations.shared.framework.util.extension.removeAllBlank
-import io.grimlocations.shared.ui.viewmodel.reducer.loadEditorState
-import io.grimlocations.shared.ui.viewmodel.state.EditorState
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.shared.util.extension.glDatabaseBackupDir
 import io.grimlocations.shared.util.extension.glDatabaseDir
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.io.BufferedReader
 import java.io.File
@@ -175,7 +167,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
             val _profile = Profile.findById(profileDTO.id)!!
             val _mod = Mod.findById(modDTO.id)!!
             val _difficulty = Difficulty.findById(difficultyDTO.id)!!
-            var o = getHighestOrder(profileDTO, modDTO, difficultyDTO).await() ?: 0
+            var o = getHighestOrderAsync(profileDTO, modDTO, difficultyDTO).await() ?: 0
 
             locList.forEach {
                 val coord = Coordinate.find {

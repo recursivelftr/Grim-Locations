@@ -89,6 +89,30 @@ fun EditorViewModel.copyLeftSelectedToRight() {
 
 fun EditorViewModel.copyRightSelectedToLeft() {
     viewModelScope.launch {
-        stateManager.copyLeftSelectedToRight()
+        stateManager.copyRightSelectedToLeft()
+    }
+}
+
+fun EditorViewModel.moveSelectedLeftUp() {
+    viewModelScope.launch { 
+        stateManager.moveSelectedLeftUp()
+    }
+}
+
+fun EditorViewModel.moveSelectedLeftDown() {
+    viewModelScope.launch {
+        stateManager.moveSelectedLeftDown()
+    }
+}
+
+fun EditorViewModel.moveSelectedRightUp() {
+    viewModelScope.launch {
+        stateManager.moveSelectedRightUp()
+    }
+}
+
+fun EditorViewModel.moveSelectedRightDown() {
+    viewModelScope.launch {
+        stateManager.moveSelectedRightDown()
     }
 }

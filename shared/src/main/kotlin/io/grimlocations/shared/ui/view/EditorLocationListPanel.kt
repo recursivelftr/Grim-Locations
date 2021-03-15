@@ -8,8 +8,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,13 +45,13 @@ fun EditorLocationListPanel(
     onClose: (() -> Unit),
 ) {
     with(state) {
-        val isLeftArrowDisabled = isArrowDisabled(
+        val isLeftArrowDisabled = isArrowLeftRightDisabled(
             primaryPMD = selectedPMDLeft,
             otherPMD = selectedPMDRight,
             primarySelectedLocations = selectedLocationsLeft,
             otherLocations = locationsRight,
         )
-        val isRightArrowDisabled = isArrowDisabled(
+        val isRightArrowDisabled = isArrowLeftRightDisabled(
             primaryPMD = selectedPMDRight,
             otherPMD = selectedPMDLeft,
             primarySelectedLocations = selectedLocationsRight,
@@ -108,20 +107,39 @@ fun EditorLocationListPanel(
                         stateVertical = stateVerticalLeft
                     )
                     Spacer(Modifier.width(horizontalSpacerWidth))
-                    ArrowButton(
-                        isLeft = true,
-                        disabled = isLeftArrowDisabled,
-                        onClick = {
-                            vm.copyLeftSelectedToRight()
-                        }
-                    )
+                    Column {
+                        ArrowUpButton(
+                            pmdContainer = selectedPMDLeft,
+                            locations = locationsLeft,
+                            selected = selectedLocationsLeft,
+                            onClick = {
+                                vm.moveSelectedLeftUp()
+                            }
+                        )
+                        ArrowLeftRightButton(
+                            isLeft = true,
+                            disabled = isLeftArrowDisabled,
+                            onClick = {
+                                vm.copyLeftSelectedToRight()
+                            }
+                        )
+                        ArrowDownButton(
+                            pmdContainer = selectedPMDLeft,
+                            locations = locationsLeft,
+                            selected = selectedLocationsLeft,
+                            onClick = {
+                                vm.moveSelectedLeftDown()
+                            }
+                        )
+                    }
+
                 }
             }
-
+            Spacer(Modifier.width(15.dp))
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row() {
+                Row {
                     PMDChooserComponent(
                         map = profileMap,
                         selected = selectedPMDRight,
@@ -137,13 +155,32 @@ fun EditorLocationListPanel(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.height(listHeight)
                 ) {
-                    ArrowButton(
-                        isLeft = false,
-                        disabled = isRightArrowDisabled,
-                        onClick = {
-                            vm.copyRightSelectedToLeft()
-                        }
-                    )
+                    Column {
+                        ArrowUpButton(
+                            pmdContainer = selectedPMDRight,
+                            locations = locationsRight,
+                            selected = selectedLocationsRight,
+                            onClick = {
+                                vm.moveSelectedRightUp()
+                            }
+                        )
+                        ArrowLeftRightButton(
+                            isLeft = false,
+                            disabled = isRightArrowDisabled,
+                            onClick = {
+                                vm.copyRightSelectedToLeft()
+                            }
+                        )
+                        ArrowDownButton(
+                            pmdContainer = selectedPMDRight,
+                            locations = locationsRight,
+                            selected = selectedLocationsRight,
+                            onClick = {
+                                vm.moveSelectedRightDown()
+                            }
+                        )
+                    }
+
                     Spacer(Modifier.width(horizontalSpacerWidth))
                     LocationListComponent(
                         rowHeight = rowHeight,
@@ -162,14 +199,60 @@ fun EditorLocationListPanel(
 }
 
 @Composable
-private fun ArrowButton(isLeft: Boolean, disabled: Boolean, onClick: () -> Unit) {
+private fun ArrowLeftRightButton(isLeft: Boolean, disabled: Boolean, onClick: () -> Unit) {
     IconButton(
         modifier = Modifier.size(arrowButtonSize),
         enabled = !disabled,
         onClick = onClick,
     ) {
         Icon(
-            if (isLeft) Icons.Default.ArrowForward else Icons.Default.ArrowBack,
+            if (isLeft) Icons.Default.KeyboardArrowRight else Icons.Default.KeyboardArrowLeft,
+            "Copy",
+            tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
+        )
+    }
+}
+
+@Composable
+private fun ArrowUpButton(
+    pmdContainer: PMDContainer,
+    locations: Set<LocationDTO>,
+    selected: Set<LocationDTO>,
+    onClick: () -> Unit
+) {
+    val disabled = selected.isEmpty() || locations.isEmpty() ||
+            locations.first() == selected.first() || RESERVED_PROFILES.contains(pmdContainer.profile)
+
+    IconButton(
+        modifier = Modifier.size(arrowButtonSize),
+        enabled = !disabled,
+        onClick = onClick,
+    ) {
+        Icon(
+            Icons.Default.KeyboardArrowUp,
+            "Copy",
+            tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
+        )
+    }
+}
+
+@Composable
+private fun ArrowDownButton(
+    pmdContainer: PMDContainer,
+    locations: Set<LocationDTO>,
+    selected: Set<LocationDTO>,
+    onClick: () -> Unit
+) {
+    val disabled = selected.isEmpty() || locations.isEmpty() ||
+            locations.last() == selected.last() || RESERVED_PROFILES.contains(pmdContainer.profile)
+
+    IconButton(
+        modifier = Modifier.size(arrowButtonSize),
+        enabled = !disabled,
+        onClick = onClick,
+    ) {
+        Icon(
+            Icons.Default.KeyboardArrowDown,
             "Copy",
             tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
         )
@@ -180,7 +263,7 @@ private fun SelectRangeButton(onClick: () -> Unit) {
 
 }
 
-private fun isArrowDisabled(
+private fun isArrowLeftRightDisabled(
     primaryPMD: PMDContainer,
     primarySelectedLocations: Set<LocationDTO>,
     otherPMD: PMDContainer,

@@ -6,7 +6,6 @@ import io.grimlocations.shared.data.repo.action.*
 import io.grimlocations.shared.data.repo.createLocationsFromFile
 import io.grimlocations.shared.data.repo.getFileLastModified
 import io.grimlocations.shared.data.repo.isGDRunning
-import io.grimlocations.shared.data.repo.writeLocationsToFile
 import io.grimlocations.shared.framework.ui.getState
 import io.grimlocations.shared.framework.ui.setState
 import io.grimlocations.shared.framework.util.awaitAll
@@ -17,9 +16,7 @@ import io.grimlocations.shared.ui.viewmodel.state.EditorState
 import io.grimlocations.shared.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
 import java.io.File
-import java.io.InputStreamReader
 
 
 @Suppress("UNCHECKED_CAST")
@@ -59,7 +56,13 @@ suspend fun GLStateManager.loadEditorState(
             previousState.copy(
                 profileMap = pmdMap,
                 locationsLeft = locList1,
+                selectedLocationsLeft = locList1.filter {
+                    previousState.selectedLocationsLeft.find { l -> l.id == it.id } != null
+                }.toSet(),
                 locationsRight = locList2,
+                selectedLocationsRight = locList2.filter {
+                    previousState.selectedLocationsRight.find { l -> l.id == it.id } != null
+                }.toSet(),
                 activePMD = meta.activePMD,
             )
         )
@@ -109,18 +112,22 @@ suspend fun GLStateManager.checkIfLocationsFileChangedAndLoadLocation() {
 suspend fun GLStateManager.selectLocationsLeft(loc: Set<LocationDTO>) {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
-        setState(s.copy(
-            selectedLocationsLeft = loc
-        ))
+        setState(
+            s.copy(
+                selectedLocationsLeft = loc
+            )
+        )
     }
 }
 
 suspend fun GLStateManager.selectLocationsRight(loc: Set<LocationDTO>) {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
-        setState(s.copy(
-            selectedLocationsRight = loc
-        ))
+        setState(
+            s.copy(
+                selectedLocationsRight = loc
+            )
+        )
     }
 }
 
@@ -146,11 +153,13 @@ suspend fun GLStateManager.selectPMDLeft(pmd: PMDContainer) {
     val s = getState<EditorState>()
     val locs = repository.getLocationsAsync(pmd).await()
     withContext(Dispatchers.Main) {
-        setState(s.copy(
-            selectedPMDLeft = pmd,
-            locationsLeft = locs,
-            selectedLocationsLeft = setOf()
-        ))
+        setState(
+            s.copy(
+                selectedPMDLeft = pmd,
+                locationsLeft = locs,
+                selectedLocationsLeft = setOf()
+            )
+        )
     }
 }
 
@@ -158,11 +167,13 @@ suspend fun GLStateManager.selectPMDRight(pmd: PMDContainer) {
     val s = getState<EditorState>()
     val locs = repository.getLocationsAsync(pmd).await()
     withContext(Dispatchers.Main) {
-        setState(s.copy(
-            selectedPMDRight = pmd,
-            locationsRight = locs,
-            selectedLocationsRight = setOf()
-        ))
+        setState(
+            s.copy(
+                selectedPMDRight = pmd,
+                locationsRight = locs,
+                selectedLocationsRight = setOf()
+            )
+        )
     }
 }
 
@@ -173,7 +184,7 @@ suspend fun GLStateManager.copyLeftSelectedToRight() {
         selectedLocations = s.selectedLocationsLeft,
         otherSelectedLocations = s.selectedLocationsRight
     ).await()
-    withContext(Dispatchers.Main){
+    withContext(Dispatchers.Main) {
         reloadEditorState()
     }
 }
@@ -185,7 +196,51 @@ suspend fun GLStateManager.copyRightSelectedToLeft() {
         selectedLocations = s.selectedLocationsRight,
         otherSelectedLocations = s.selectedLocationsLeft
     ).await()
-    withContext(Dispatchers.Main){
+    withContext(Dispatchers.Main) {
+        reloadEditorState()
+    }
+}
+
+suspend fun GLStateManager.moveSelectedLeftUp() {
+    val s = getState<EditorState>()
+    repository.decrementLocationsOrderAsync(
+        pmdContainer = s.selectedPMDLeft,
+        locations = s.selectedLocationsLeft
+    ).await()
+    withContext(Dispatchers.Main) {
+        reloadEditorState()
+    }
+}
+
+suspend fun GLStateManager.moveSelectedLeftDown() {
+    val s = getState<EditorState>()
+    repository.incrementLocationsOrderAsync(
+        pmdContainer = s.selectedPMDLeft,
+        locations = s.selectedLocationsLeft
+    ).await()
+    withContext(Dispatchers.Main) {
+        reloadEditorState()
+    }
+}
+
+suspend fun GLStateManager.moveSelectedRightUp() {
+    val s = getState<EditorState>()
+    repository.decrementLocationsOrderAsync(
+        pmdContainer = s.selectedPMDRight,
+        locations = s.selectedLocationsRight
+    ).await()
+    withContext(Dispatchers.Main) {
+        reloadEditorState()
+    }
+}
+
+suspend fun GLStateManager.moveSelectedRightDown() {
+    val s = getState<EditorState>()
+    repository.incrementLocationsOrderAsync(
+        pmdContainer = s.selectedPMDRight,
+        locations = s.selectedLocationsRight
+    ).await()
+    withContext(Dispatchers.Main) {
         reloadEditorState()
     }
 }

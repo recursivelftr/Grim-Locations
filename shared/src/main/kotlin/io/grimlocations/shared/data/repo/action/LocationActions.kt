@@ -44,22 +44,15 @@ suspend fun SqliteRepository.copyLocationsToPMD(
             if (selectedLocations.isNotEmpty()) {
                 var o: Int
                 if (otherSelectedLocations.isEmpty()) {
-                    o = getHighestOrder(pmdContainer).await() ?: 0
+                    o = getHighestOrderAsync(pmdContainer).await() ?: 0
                 } else {
                     o = otherSelectedLocations.last().order
 
-                    val l = newSuspendedTransaction {
-                        Location.find {
-                            (LocationTable.profile eq pmdContainer.profile.id) and
-                                    (LocationTable.mod eq pmdContainer.mod.id) and
-                                    (LocationTable.difficulty eq pmdContainer.difficulty.id) and
-                                    (LocationTable.order greater o)
-                        }
-                    }
+                    val l = getLocationsAboveOrderAsync(pmdContainer, o).await()
 
-                    if (!l.empty()) {
+                    if (l.isNotEmpty()) {
                         modifyDatabaseAsync {
-                            l.forEach {
+                            l.reversed().forEach {
                                 it.order = it.order + selectedLocations.size
                             }
                         }.await()
@@ -85,6 +78,7 @@ suspend fun SqliteRepository.copyLocationsToPMD(
                     null
                 }.await()
             } else {
+                logger.info("No selected locations.")
                 null
             }
         } catch (e: Exception) {
@@ -95,14 +89,109 @@ suspend fun SqliteRepository.copyLocationsToPMD(
     }
 }
 
-suspend fun SqliteRepository.getHighestOrder(pmdContainer: PMDContainer) =
-    getHighestOrder(pmdContainer.profile, pmdContainer.mod, pmdContainer.difficulty)
+suspend fun SqliteRepository.getHighestOrderAsync(pmdContainer: PMDContainer) =
+    getHighestOrderAsync(pmdContainer.profile, pmdContainer.mod, pmdContainer.difficulty)
 
-suspend fun SqliteRepository.getHighestOrder(p: ProfileDTO, m: ModDTO, d: DifficultyDTO) =
+suspend fun SqliteRepository.getHighestOrderAsync(p: ProfileDTO, m: ModDTO, d: DifficultyDTO) =
     suspendedTransactionAsync(Dispatchers.IO) {
         LocationTable.slice(LocationTable.order).select {
             (LocationTable.profile eq p.id) and
                     (LocationTable.mod eq m.id) and
                     (LocationTable.difficulty eq d.id)
         }.map { it[LocationTable.order] }.maxOrNull()
+    }
+
+suspend fun SqliteRepository.incrementLocationsOrderAsync(
+    pmdContainer: PMDContainer,
+    locations: Set<LocationDTO>
+): Deferred<Unit> = withContext(Dispatchers.IO) {
+    async {
+        try {
+            if (locations.isNotEmpty()) {
+                val highestOrder = getHighestOrderAsync(pmdContainer).await()!!
+
+                if (locations.last().order != highestOrder) {
+                    val loc = modifyDatabaseAsync {
+                        Location.find {
+                            (LocationTable.profile eq pmdContainer.profile.id) and
+                                    (LocationTable.mod eq pmdContainer.mod.id) and
+                                    (LocationTable.difficulty eq pmdContainer.difficulty.id) and
+                                    (LocationTable.order eq (locations.last().order + 1))
+                        }.single().apply {
+                            order = -1
+                        }
+                    }.await()
+
+                    modifyDatabaseAsync {
+                        locations.reversed().forEach {
+                            val l = Location.findById(it.id)!!
+                            l.order = l.order + 1
+                        }
+                    }.await()
+
+                    modifyDatabaseAsync {
+                        loc.order = locations.first().order
+                    }.await()
+                }
+
+            }
+        } catch (e: Exception) {
+            logger.error("Could not increment locations' order.", e)
+        }
+    }
+}
+
+suspend fun SqliteRepository.decrementLocationsOrderAsync(
+    pmdContainer: PMDContainer,
+    locations: Set<LocationDTO>
+): Deferred<Unit> = withContext(Dispatchers.IO) {
+    async {
+        try {
+            if (locations.isNotEmpty() && locations.first().order != 1) {
+                val loc = modifyDatabaseAsync {
+                    Location.find {
+                        (LocationTable.profile eq pmdContainer.profile.id) and
+                                (LocationTable.mod eq pmdContainer.mod.id) and
+                                (LocationTable.difficulty eq pmdContainer.difficulty.id) and
+                                (LocationTable.order eq (locations.first().order - 1))
+                    }.single().apply {
+                        order = -1
+                    }
+                }.await()
+
+                modifyDatabaseAsync {
+                    locations.forEach {
+                        val l = Location.findById(it.id)!!
+                        l.order = l.order - 1
+                    }
+                }.await()
+
+                modifyDatabaseAsync {
+                    loc.order = locations.last().order
+                }.await()
+            }
+        } catch (e: Exception) {
+            logger.error("Could not decrement locations' order.", e)
+        }
+    }
+}
+
+private suspend fun SqliteRepository.getLocationsAboveOrderAsync(pmdContainer: PMDContainer, o: Int) =
+    suspendedTransactionAsync(Dispatchers.IO) {
+        Location.find {
+            (LocationTable.profile eq pmdContainer.profile.id) and
+                    (LocationTable.mod eq pmdContainer.mod.id) and
+                    (LocationTable.difficulty eq pmdContainer.difficulty.id) and
+                    (LocationTable.order greater o)
+        }.toSet()
+    }
+
+private suspend fun SqliteRepository.getLocationsBelowOrderAsync(pmdContainer: PMDContainer, o: Int) =
+    suspendedTransactionAsync(Dispatchers.IO) {
+        Location.find {
+            (LocationTable.profile eq pmdContainer.profile.id) and
+                    (LocationTable.mod eq pmdContainer.mod.id) and
+                    (LocationTable.difficulty eq pmdContainer.difficulty.id) and
+                    (LocationTable.order less o)
+        }.toSet()
     }
