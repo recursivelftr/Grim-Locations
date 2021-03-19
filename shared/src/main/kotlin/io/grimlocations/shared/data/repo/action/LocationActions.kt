@@ -109,28 +109,29 @@ suspend fun SqliteRepository.incrementLocationsOrderAsync(
         try {
             if (locations.isNotEmpty()) {
                 val highestOrder = getHighestOrderAsync(pmdContainer).await()!!
+                val locs = locations.sortedBy { it.order }
 
-                if (locations.last().order != highestOrder) {
+                if (locs.last().order != highestOrder) {
                     val loc = modifyDatabaseAsync {
                         Location.find {
                             (LocationTable.profile eq pmdContainer.profile.id) and
                                     (LocationTable.mod eq pmdContainer.mod.id) and
                                     (LocationTable.difficulty eq pmdContainer.difficulty.id) and
-                                    (LocationTable.order eq (locations.last().order + 1))
+                                    (LocationTable.order eq (locs.last().order + 1))
                         }.single().apply {
                             order = -1
                         }
                     }.await()
 
                     modifyDatabaseAsync {
-                        locations.reversed().forEach {
+                        locs.reversed().forEach {
                             val l = Location.findById(it.id)!!
                             l.order = l.order + 1
                         }
                     }.await()
 
                     modifyDatabaseAsync {
-                        loc.order = locations.first().order
+                        loc.order = locs.first().order
                     }.await()
                 }
 
@@ -147,34 +148,49 @@ suspend fun SqliteRepository.decrementLocationsOrderAsync(
 ): Deferred<Unit> = withContext(Dispatchers.IO) {
     async {
         try {
-            if (locations.isNotEmpty() && locations.first().order != 1) {
-                val loc = modifyDatabaseAsync {
-                    Location.find {
-                        (LocationTable.profile eq pmdContainer.profile.id) and
-                                (LocationTable.mod eq pmdContainer.mod.id) and
-                                (LocationTable.difficulty eq pmdContainer.difficulty.id) and
-                                (LocationTable.order eq (locations.first().order - 1))
-                    }.single().apply {
-                        order = -1
-                    }
-                }.await()
+            if (locations.isNotEmpty()) {
+                val locs = locations.sortedBy { it.order }
 
-                modifyDatabaseAsync {
-                    locations.forEach {
-                        val l = Location.findById(it.id)!!
-                        l.order = l.order - 1
-                    }
-                }.await()
+                if (locs.first().order != 1) {
+                    val loc = modifyDatabaseAsync {
+                        Location.find {
+                            (LocationTable.profile eq pmdContainer.profile.id) and
+                                    (LocationTable.mod eq pmdContainer.mod.id) and
+                                    (LocationTable.difficulty eq pmdContainer.difficulty.id) and
+                                    (LocationTable.order eq (locs.first().order - 1))
+                        }.single().apply {
+                            order = -1
+                        }
+                    }.await()
 
-                modifyDatabaseAsync {
-                    loc.order = locations.last().order
-                }.await()
+                    modifyDatabaseAsync {
+                        locs.forEach {
+                            val l = Location.findById(it.id)!!
+                            l.order = l.order - 1
+                        }
+                    }.await()
+
+                    modifyDatabaseAsync {
+                        loc.order = locations.last().order
+                    }.await()
+                }
             }
         } catch (e: Exception) {
             logger.error("Could not decrement locations' order.", e)
         }
     }
 }
+
+suspend fun SqliteRepository.deleteLocationsAsync(locations: Set<LocationDTO>) =
+    modifyDatabaseAsync {
+        try {
+            locations.forEach {
+                Location.findById(it.id)!!.delete()
+            }
+        } catch (e: Exception) {
+            logger.error("Could not delete locations", e)
+        }
+    }
 
 private suspend fun SqliteRepository.getLocationsAboveOrderAsync(pmdContainer: PMDContainer, o: Int) =
     suspendedTransactionAsync(Dispatchers.IO) {

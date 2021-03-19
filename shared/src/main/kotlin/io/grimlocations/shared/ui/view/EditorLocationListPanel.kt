@@ -2,7 +2,6 @@ package io.grimlocations.shared.ui.view
 
 import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.Icon
@@ -11,14 +10,13 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.grimlocations.shared.data.dto.LocationDTO
 import io.grimlocations.shared.data.dto.RESERVED_PROFILES
+import io.grimlocations.shared.framework.util.extension.isSequential
 import io.grimlocations.shared.ui.view.component.LocationListComponent
 import io.grimlocations.shared.ui.view.component.PMDChooserComponent
 import io.grimlocations.shared.ui.viewmodel.EditorViewModel
@@ -99,10 +97,34 @@ fun EditorLocationListPanel(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.height(listHeight)
                 ) {
+                    Column {
+                        SelectRangeButton(
+                            locations = locationsLeft,
+                            toggled = vm.isLeftMultiSelect,
+                            onClick = {
+                                vm.isLeftMultiSelect = it
+                            }
+                        )
+                        EditButton(
+                            pmdContainer = selectedPMDLeft,
+                            selected = selectedLocationsLeft,
+                            onClick = {}
+                        )
+                        DeleteButton(
+                            pmdContainer = selectedPMDLeft,
+                            locations = locationsLeft,
+                            selected = selectedLocationsLeft,
+                            onClick = {
+                                vm.deleteSelectedLeft()
+                            },
+                        )
+                    }
+                    Spacer(Modifier.width(horizontalSpacerWidth))
                     LocationListComponent(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
                         locations = locationsLeft,
+                        isMultiSelect = vm.isLeftMultiSelect,
                         selectedLocations = selectedLocationsLeft,
                         onSelectLocations = { locs ->
                             vm.selectLocationsLeft(locs)
@@ -189,12 +211,36 @@ fun EditorLocationListPanel(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
                         locations = locationsRight,
+                        isMultiSelect = vm.isRightMultiSelect,
                         selectedLocations = selectedLocationsRight,
                         onSelectLocations = { locs ->
                             vm.selectLocationsRight(locs)
                         },
                         stateVertical = stateVerticalRight
                     )
+                    Spacer(Modifier.width(horizontalSpacerWidth))
+                    Column {
+                        SelectRangeButton(
+                            locations = locationsRight,
+                            toggled = vm.isRightMultiSelect,
+                            onClick = {
+                                vm.isRightMultiSelect = it
+                            }
+                        )
+                        EditButton(
+                            pmdContainer = selectedPMDRight,
+                            selected = selectedLocationsRight,
+                            onClick = {}
+                        )
+                        DeleteButton(
+                            pmdContainer = selectedPMDRight,
+                            locations = locationsRight,
+                            selected = selectedLocationsRight,
+                            onClick = {
+                                vm.deleteSelectedRight()
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -224,7 +270,9 @@ private fun ArrowUpButton(
     onClick: () -> Unit
 ) {
     val disabled = selected.isEmpty() || locations.isEmpty() ||
-            locations.first() == selected.first() || RESERVED_PROFILES.contains(pmdContainer.profile)
+            selected.contains(locations.first()) ||
+            !selected.map { locations.indexOf(it) }.isSequential(sortFirst = true) ||
+            RESERVED_PROFILES.contains(pmdContainer.profile)
 
     IconButton(
         modifier = Modifier.size(arrowButtonSize),
@@ -247,7 +295,10 @@ private fun ArrowDownButton(
     onClick: () -> Unit
 ) {
     val disabled = selected.isEmpty() || locations.isEmpty() ||
-            locations.last() == selected.last() || RESERVED_PROFILES.contains(pmdContainer.profile)
+            selected.contains(locations.last()) ||
+            !selected.map { locations.indexOf(it) }.isSequential(sortFirst = true) ||
+            RESERVED_PROFILES.contains(pmdContainer.profile)
+
 
     IconButton(
         modifier = Modifier.size(arrowButtonSize),
@@ -257,6 +308,29 @@ private fun ArrowDownButton(
         Icon(
             Icons.Default.KeyboardArrowDown,
             "Move Down",
+            tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
+        )
+    }
+}
+
+//TODO: Enable edit button
+@Composable
+private fun EditButton(
+    pmdContainer: PMDContainer,
+    selected: Set<LocationDTO>,
+    onClick: () -> Unit
+) {
+//    val disabled = selected.size != 1 || RESERVED_PROFILES.contains(pmdContainer.profile)
+    val disabled = true
+
+    IconButton(
+        modifier = Modifier.size(arrowButtonSize),
+        enabled = !disabled,
+        onClick = onClick,
+    ) {
+        Icon(
+            Icons.Default.Edit,
+            "Edit",
             tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
         )
     }
@@ -287,41 +361,27 @@ private fun DeleteButton(
 @Composable
 private fun SelectRangeButton(
     locations: Set<LocationDTO>,
+    toggled: Boolean,
     onClick: (Boolean) -> Unit
 ) {
     val disabled = locations.isEmpty()
-    val toggled = remember { mutableStateOf(false) }
-
-    val tint: Color
-    val modifier: Modifier
-    when {
-        disabled -> {
-            tint = Color.DarkGray
-            modifier = Modifier
-        }
-        toggled.value -> {
-            tint = Color.White
-            modifier = Modifier.background(MaterialTheme.colors.primary)
-        }
-        else -> {
-            tint = MaterialTheme.colors.primary
-            modifier = Modifier
-        }
+    val tint = when {
+        disabled -> Color.DarkGray
+        toggled -> MaterialTheme.colors.primary
+        else -> Color.White
     }
 
     IconButton(
         modifier = Modifier.size(arrowButtonSize),
         enabled = !disabled,
         onClick = {
-            onClick(!toggled.value)
-            toggled.value = !toggled.value
+            onClick(!toggled)
         },
     ) {
         Icon(
-            Icons.Default.Delete,
-            "Delete",
+            Icons.Default.DateRange,
+            "Select Multiple",
             tint = tint,
-            modifier = modifier
         )
     }
 }

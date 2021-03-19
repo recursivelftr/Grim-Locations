@@ -116,3 +116,15 @@ fun EditorViewModel.moveSelectedRightDown() {
         stateManager.moveSelectedRightDown()
     }
 }
+
+fun EditorViewModel.deleteSelectedLeft() {
+    viewModelScope.launch {
+        stateManager.deleteSelectedLeft()
+    }
+}
+
+fun EditorViewModel.deleteSelectedRight() {
+    viewModelScope.launch {
+        stateManager.deleteSelectedRight()
+    }
+}

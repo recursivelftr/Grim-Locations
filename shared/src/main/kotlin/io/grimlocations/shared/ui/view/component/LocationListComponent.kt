@@ -32,6 +32,7 @@ fun LocationListComponent(
     locations: Set<LocationDTO>,
     selectedLocations: Set<LocationDTO>,
     onSelectLocations: (Set<LocationDTO>) -> Unit,
+    isMultiSelect: Boolean,
     rowHeight: Dp,
     rowWidth: Dp,
     stateVertical: LazyListState,
@@ -63,11 +64,20 @@ fun LocationListComponent(
                 ) {
                     val location = locations.elementAt(it)
                     Item(
-                        rowHeight,
-                        rowWidth,
-                        location,
-                        selectedLocations.contains(location),
-                        onSelectLocations
+                        rowHeight = rowHeight,
+                        rowWidth = rowWidth,
+                        location = location,
+                        isSelected = selectedLocations.contains(location),
+                        onClick = { l ->
+                            if(isMultiSelect) {
+                                if(selectedLocations.contains(l))
+                                    onSelectLocations(selectedLocations.filter { ll -> ll != l }.toSet())
+                                else
+                                    onSelectLocations(selectedLocations.toMutableSet().apply { add(l) })
+                            } else {
+                                onSelectLocations(setOf(l))
+                            }
+                        }
                     )
                     Divider()
                 }
@@ -90,8 +100,8 @@ private fun Item(
     rowHeight: Dp,
     rowWidth: Dp,
     location: LocationDTO,
+    onClick: (LocationDTO) -> Unit,
     isSelected: Boolean,
-    onClick: (Set<LocationDTO>) -> Unit,
 ) {
 
     val modifier =
@@ -105,7 +115,7 @@ private fun Item(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.height(rowHeight)
             .width(rowWidth)
-            .clickable(onClick = { onClick(setOf(location)) })
+            .clickable(onClick = { onClick(location) })
     ) {
         Spacer(modifier = Modifier.width(rowWidth *.02f))
         Box(modifier.width(rowWidth * .63f)) {
