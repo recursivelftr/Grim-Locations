@@ -252,7 +252,7 @@ suspend fun GLStateManager.moveSelectedRightDown() {
 
 suspend fun GLStateManager.deleteSelectedLeft() {
     val s = getState<EditorState>()
-    repository.deleteLocationsAsync(s.selectedLocationsLeft).await()
+    repository.deleteLocationsAsync(s.selectedPMDLeft, s.selectedLocationsLeft).await()
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -260,7 +260,7 @@ suspend fun GLStateManager.deleteSelectedLeft() {
 
 suspend fun GLStateManager.deleteSelectedRight() {
     val s = getState<EditorState>()
-    repository.deleteLocationsAsync(s.selectedLocationsRight).await()
+    repository.deleteLocationsAsync(s.selectedPMDRight, s.selectedLocationsRight).await()
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }

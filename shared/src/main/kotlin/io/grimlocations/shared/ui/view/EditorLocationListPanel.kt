@@ -379,7 +379,7 @@ private fun SelectRangeButton(
         },
     ) {
         Icon(
-            Icons.Default.DateRange,
+            Icons.Default.List,
             "Select Multiple",
             tint = tint,
         )

@@ -15,7 +15,6 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 
 private val logger: Logger = LogManager.getLogger()
@@ -46,7 +45,7 @@ suspend fun SqliteRepository.copyLocationsToPMD(
                 if (otherSelectedLocations.isEmpty()) {
                     o = getHighestOrderAsync(pmdContainer).await() ?: 0
                 } else {
-                    o = otherSelectedLocations.last().order
+                    o = otherSelectedLocations.maxOf { it.order }
 
                     val l = getLocationsAboveOrderAsync(pmdContainer, o).await()
 
@@ -171,7 +170,7 @@ suspend fun SqliteRepository.decrementLocationsOrderAsync(
                     }.await()
 
                     modifyDatabaseAsync {
-                        loc.order = locations.last().order
+                        loc.order = locs.last().order
                     }.await()
                 }
             }
@@ -181,11 +180,21 @@ suspend fun SqliteRepository.decrementLocationsOrderAsync(
     }
 }
 
-suspend fun SqliteRepository.deleteLocationsAsync(locations: Set<LocationDTO>) =
+suspend fun SqliteRepository.deleteLocationsAsync(pmdContainer: PMDContainer, locations: Set<LocationDTO>) =
     modifyDatabaseAsync {
         try {
             locations.forEach {
                 Location.findById(it.id)!!.delete()
+            }
+
+            Location.wrapRows(
+                LocationTable.select {
+                    (LocationTable.profile eq pmdContainer.profile.id) and
+                            (LocationTable.mod eq pmdContainer.mod.id) and
+                            (LocationTable.difficulty eq pmdContainer.difficulty.id)
+                }.orderBy(LocationTable.order)
+            ).forEachIndexed { i, loc ->
+                loc.order = i + 1
             }
         } catch (e: Exception) {
             logger.error("Could not delete locations", e)
