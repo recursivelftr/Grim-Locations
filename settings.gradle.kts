@@ -8,4 +8,3 @@ pluginManagement {
 }
 
 rootProject.name = "grim-locations"
-include("editor","launcher","shared")
