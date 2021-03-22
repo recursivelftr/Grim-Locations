@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import io.grimlocations.constant.APP_ICON
 import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
@@ -127,6 +128,7 @@ fun openLauncherView(
     var subWindows: Set<AppWindow>? = null
     Window(
         title = "Grim Locations",
+        icon = APP_ICON,
         size = IntSize(500, 400),
         onDismissRequest = {
             subWindows?.forEach { it.closeIfOpen() }

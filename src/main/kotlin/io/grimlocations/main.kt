@@ -3,6 +3,7 @@ package io.grimlocations
 import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
+import io.grimlocations.constant.APP_ICON
 import io.grimlocations.ui.view.*
 import io.grimlocations.util.enableThreadLogging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +22,7 @@ fun main(args: Array<String>) {
 
     Window(
         title = "Grim Locations",
+        icon = APP_ICON,
         undecorated = true,
         size = SPLASH_SCREEN_SIZE
     ) {

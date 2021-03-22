@@ -55,7 +55,12 @@ compose.desktop {
         nativeDistributions {
             modules = arrayListOf("java.desktop,java.sql")
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "GrimLocations"
+            packageName = "Grim Locations"
+
+            windows {
+                iconFile.set(File("./images/LocationsLayeredPurpleBlack.ico"))
+                menuGroup = "Grim Locations"
+            }
         }
     }
 }
@@ -72,7 +77,7 @@ tasks.register<Exec>("extractMsi") {
     commandLine(
         "lessmsi",
         "x",
-        "${buildDir}\\compose\\binaries\\main\\msi\\GrimLocations-$version.msi",
+        "${buildDir}\\compose\\binaries\\main\\msi\\Grim Locations-$version.msi",
         "${buildDir}\\compose\\binaries\\main\\msi\\"
     )
 //    }
@@ -80,6 +85,7 @@ tasks.register<Exec>("extractMsi") {
 
 tasks.register<Copy>("copyExtractedMsi") {
     dependsOn("extractMsi")
+    dependsOn("cleanProdBuild")
 
 //    doLast {
     from("${buildDir}\\compose\\binaries\\main\\msi\\SourceDir\\GrimLocations")
@@ -97,7 +103,7 @@ tasks.register<Delete>("cleanProdBuild") {
 }
 
 tasks.register<Zip>("createProductionBundle") {
-    dependsOn("clean")
+//    dependsOn("clean")
 //    mustRunAfter("clean")
     dependsOn("copyExtractedMsi")
 

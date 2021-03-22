@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import io.grimlocations.constant.APP_ICON
 import io.grimlocations.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.framework.ui.getLazyViewModel
@@ -227,6 +228,7 @@ fun openEditorView(vmProvider: GLViewModelProvider, previousWindow: AppWindow) {
     var subWindows: Set<AppWindow>? = null
     Window(
         title = "Grim Locations",
+        icon = APP_ICON,
         size = IntSize(1500, 950),
         onDismissRequest = {
             subWindows?.forEach { it.closeIfOpen() }

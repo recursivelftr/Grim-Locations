@@ -13,10 +13,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asDesktopBitmap
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.grimlocations.constant.APP_ICON
 import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.framework.ui.get
 import io.grimlocations.framework.ui.getFactoryViewModel
@@ -180,6 +183,7 @@ fun openPropertiesView(
 
     Window(
         title = "Properties",
+        icon = APP_ICON,
         size = IntSize(550, 300),
         onDismissRequest = {
             onClose?.invoke(window)
