@@ -65,49 +65,14 @@ compose.desktop {
     }
 }
 
-tasks.register<Delete>("deleteExtractedMsi") {
-    delete("${buildDir}\\compose\\binaries\\main\\msi\\SourceDir")
-}
 
-tasks.register<Exec>("extractMsi") {
-    dependsOn("packageMsi")
-//    dependsOn("deleteExtractedMsi")
+tasks.register<Zip>("createProductionArtifact") {
+    val clean = tasks.getByName("clean")
+    val createDistributable = tasks.getByName("createDistributable")
+    dependsOn(clean, createDistributable)
+    createDistributable.mustRunAfter(clean)
 
-//    doLast {
-    commandLine(
-        "lessmsi",
-        "x",
-        "${buildDir}\\compose\\binaries\\main\\msi\\Grim Locations-$version.msi",
-        "${buildDir}\\compose\\binaries\\main\\msi\\"
-    )
-//    }
-}
-
-tasks.register<Copy>("copyExtractedMsi") {
-    dependsOn("extractMsi")
-    dependsOn("cleanProdBuild")
-
-//    doLast {
-    from("${buildDir}\\compose\\binaries\\main\\msi\\SourceDir\\GrimLocations")
-    into("$buildDir\\productionbuild")
-//    eachFile {
-//        if (this.relativePath.getFile(destinationDir).exists()) {
-//            this.exclude()
-//        }
-//    }
-//    }
-}
-
-tasks.register<Delete>("cleanProdBuild") {
-    delete("$buildDir\\productionbuild", "$buildDir\\productionartifact")
-}
-
-tasks.register<Zip>("createProductionBundle") {
-//    dependsOn("clean")
-//    mustRunAfter("clean")
-    dependsOn("copyExtractedMsi")
-
-    from("$buildDir\\productionbuild")
+    from("$buildDir\\compose\\binaries\\main\\app\\Grim Locations")
     archiveFileName.set("GrimLocations.zip")
     destinationDirectory.set(File("$buildDir\\productionartifact"))
 }
