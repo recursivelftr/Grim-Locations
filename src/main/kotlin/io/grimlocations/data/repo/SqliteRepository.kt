@@ -113,14 +113,14 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
 
         if (dbDoesntExist) {
             createLocationsFromFile(
-                file = File(javaClass.getResource("/new_character_locations.csv").toURI()),
+                file = File("./external/new_character_locations.csv"),
                 profileDTO = newchar_loc_profile,
                 modDTO = no_mods_mod,
                 difficultyDTO = no_difficulties_difficulty,
             )?.let { error(it) }
 
             createLocationsFromFile(
-                file = File(javaClass.getResource("/reddit_locations.csv").toURI()),
+                file = File("./external/reddit_locations.csv"),
                 profileDTO = reddit_loc_profile,
                 modDTO = no_mods_mod,
                 difficultyDTO = no_difficulties_difficulty,

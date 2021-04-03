@@ -5,7 +5,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     kotlin("jvm") version "1.4.31"
-    id("org.jetbrains.compose") version "0.4.0-build173"
+    id("org.jetbrains.compose") version "0.4.0-build178"
     id("app.cash.exhaustive") version "0.1.1"
 }
 
@@ -65,12 +65,19 @@ compose.desktop {
     }
 }
 
+tasks.register<Copy>("copyExternal") {
+    from(".\\external")
+    into("$buildDir/compose/binaries/main/app/Grim Locations/external")
+}
+
 
 tasks.register<Zip>("createProductionArtifact") {
     val clean = tasks.getByName("clean")
     val createDistributable = tasks.getByName("createDistributable")
-    dependsOn(clean, createDistributable)
+    val copyExternal = tasks.getByName("copyExternal")
+    dependsOn(clean, createDistributable, copyExternal)
     createDistributable.mustRunAfter(clean)
+    copyExternal.mustRunAfter(createDistributable)
 
     from("$buildDir\\compose\\binaries\\main\\app\\Grim Locations")
     archiveFileName.set("GrimLocations.zip")

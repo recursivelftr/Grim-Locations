@@ -16,6 +16,8 @@ import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -91,6 +93,7 @@ suspend fun GLStateManager.updateIfGDRunning(): Boolean {
 }
 
 private var last_modified: Long? = null
+private val locationsFileMutex = Mutex()
 
 suspend fun GLStateManager.checkIfLocationsFileChangedAndLoadLocation() {
     val meta = repository.getMetaAsync().await()
@@ -100,16 +103,31 @@ suspend fun GLStateManager.checkIfLocationsFileChangedAndLoadLocation() {
         else
             loc + File.separator + "GrimInternals_TeleportList.txt"
 
-        val file = File(filePath)
-        val lastModified = repository.getFileLastModified(file)
-        if (lastModified != null && last_modified != lastModified) {
-            if(repository.createLocationsFromFile(file, pmd) == null) {
-                repository.writeLocationsToFile(file, pmd)
-                withContext(Dispatchers.Main) {
-                    reloadEditorState()
-                }
+        locationsFileMutex.withLock {
+            val file = File(filePath)
+            val lastModified = repository.getFileLastModified(file)
+            if (lastModified != null && last_modified != lastModified) {
+                repository.createLocationsFromFile(file, pmd)
+                last_modified = repository.getFileLastModified(file)
+                reloadEditorState()
             }
+        }
+    }
+}
+
+suspend fun GLStateManager.copySelectedPMDToLocationsFile(): String? {
+    val meta = repository.getMetaAsync().await()
+    return guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
+        val filePath = if (loc.endsWithOne("/", "\\"))
+            loc + "GrimInternals_TeleportList.txt"
+        else
+            loc + File.separator + "GrimInternals_TeleportList.txt"
+
+        locationsFileMutex.withLock {
+            val file = File(filePath)
+            val status = repository.writeLocationsToFile(file, pmd)
             last_modified = repository.getFileLastModified(file)
+            status
         }
     }
 }

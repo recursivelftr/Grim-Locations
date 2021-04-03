@@ -34,13 +34,30 @@ fun EditorViewModel.reloadState() {
     }
 }
 
-fun EditorViewModel.startGDProcessCheckLoop() {
-    CoroutineScope(Dispatchers.Main + Job()).launch {
-        while(true) {
-            if(stateManager.updateIfGDRunning()) {
-                stateManager.checkIfLocationsFileChangedAndLoadLocation()
-            }
-            delay(1000)
+suspend fun EditorViewModel.startGDProcessCheckLoop() {
+    while (true) {
+        if (stateManager.updateIfGDRunning()) {
+            stateManager.checkIfLocationsFileChangedAndLoadLocation()
+        }
+        delay(1000)
+    }
+}
+
+fun EditorViewModel.copySelectedPMDToLocationsFile(
+    onOpenPopup: (AppWindow) -> Unit,
+    onClosePopup: (AppWindow) -> Unit,
+) {
+    viewModelScope.launch {
+        val status = stateManager.copySelectedPMDToLocationsFile() ?: "Successfully synced."
+        withContext(Dispatchers.Main) {
+            openOkCancelPopup(
+                status,
+                onOpen = onOpenPopup,
+                onOkClicked = {
+                    onClosePopup(it)
+                    it.closeIfOpen()
+                },
+            )
         }
     }
 }
@@ -94,7 +111,7 @@ fun EditorViewModel.copyRightSelectedToLeft() {
 }
 
 fun EditorViewModel.moveSelectedLeftUp() {
-    viewModelScope.launch { 
+    viewModelScope.launch {
         stateManager.moveSelectedLeftUp()
     }
 }

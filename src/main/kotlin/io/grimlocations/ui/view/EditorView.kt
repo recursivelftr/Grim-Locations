@@ -8,10 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
@@ -21,9 +18,9 @@ import io.grimlocations.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.framework.ui.getLazyViewModel
 import io.grimlocations.framework.ui.view.View
-import io.grimlocations.framework.util.LaunchedEffect
 import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.viewmodel.EditorViewModel
+import io.grimlocations.ui.viewmodel.event.copySelectedPMDToLocationsFile
 import io.grimlocations.ui.viewmodel.event.loadCharacterProfiles
 import io.grimlocations.ui.viewmodel.event.reloadState
 import io.grimlocations.ui.viewmodel.event.startGDProcessCheckLoop
@@ -41,7 +38,7 @@ private fun EditorView(
     val vmProv = LocalViewModel.current as GLViewModelProvider
     val previousLauncherWindow = remember { mutableStateOf<AppWindow?>(null) }
 
-    LaunchedEffect {
+    LaunchedEffect(vm) {
         vm.startGDProcessCheckLoop()
     }
 
@@ -121,7 +118,29 @@ private fun EditorView(
                         )
                     },
                 ) {
-                    Text("Select Active Profile")
+                    Text("Select Active")
+                }
+                Spacer(modifier = Modifier.width(15.dp))
+                Button(
+                    enabled = !(state.profileMap.hasOnlyReservedProfiles() || state.activePMD == null),
+                    onClick = {
+                        vm.copySelectedPMDToLocationsFile(
+                            onOpenPopup = {
+                                onOverlayClick = {
+                                    it.closeIfOpen()
+                                    subWindows.remove(it)
+                                    disabled = false
+                                }
+                                subWindows.add(it)
+                            },
+                            onClosePopup = {
+                                subWindows.remove(it)
+                                disabled = false
+                            }
+                        )
+                    }
+                ) {
+                    Text("Sync Active to Grim Dawn")
                 }
             }
             Spacer(Modifier.height(20.dp))
