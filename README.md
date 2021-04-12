@@ -1,6 +1,6 @@
 ## Grim Locations
 
-<img src="https://i.imgur.com/KHDboPF.png" width="128" height="128" />
+<img src="https://i.imgur.com/KHDboPF.png" width="256" height="256" />
 
 ##### Current Version: 0.1.0
 
