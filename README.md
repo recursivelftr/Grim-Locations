@@ -20,7 +20,8 @@ It is currently pre 1.0, but most features are present. The features that are no
 - (1.0) Comes with a massive list of locations out of the box that are easily transferable to any profile.
 
 ### How to use
-See [this video instruction](https://imgur.com/RUcxB0U) for general use. Other than the general use, it is also recommended to run Grim Locations alongside Grim Dawn. This allows syncing to and from Grim Locations in-game.
+- Unzip anywhere and run GrimLocations.exe.
+- See [this video instruction](https://imgur.com/RUcxB0U) for general use. Other than the general use, it is also recommended to run Grim Locations alongside Grim Dawn. This allows syncing to and from Grim Locations in-game.
 
 ###### Capture locations from Grim Dawn to Grim Locations while in-game
 
@@ -42,7 +43,7 @@ See [this video instruction](https://imgur.com/RUcxB0U) for general use. Other t
     4. Click "Sync Active to Grim Dawn".
     5. Alt-tab back to Grim Dawn and start the game with your selected active character.
     
-##### Loading mod character profiles
+###### Loading mod character profiles
 1. From in Grim Locations, click the settings or gear icon in the top right.
 2. Change the "GD Save Folder" to the folder containing your characters for the mod and click OK.
 3. On the main Grim Locations screen click "Load Character Profiles".
