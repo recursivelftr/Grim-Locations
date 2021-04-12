@@ -40,5 +40,5 @@ fun ProfileModDifficultyMap.firstContainer(): PMDContainer {
 }
 
 fun ProfileModDifficultyMap.hasOnlyReservedProfiles(): Boolean {
-    return this.size == 2 && this.keys.containsAll(RESERVED_PROFILES)
+    return this.size == RESERVED_PROFILES.size && this.keys.containsAll(RESERVED_PROFILES)
 }

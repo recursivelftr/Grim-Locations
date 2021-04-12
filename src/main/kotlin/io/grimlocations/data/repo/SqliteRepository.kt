@@ -106,8 +106,8 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         DEFAULT_GAME_ELITE_DIFFICULTY = elite
         DEFAULT_GAME_ULTIMATE_DIFFICULTY = ultimate
 
-        val (newchar_loc_profile, reddit_loc_profile, no_mods_mod, no_difficulties_difficulty) = getReservedEntities()
-        RESERVED_PROFILES = listOf(newchar_loc_profile, reddit_loc_profile)
+        val (newchar_loc_profile, /*reddit_loc_profile,*/ no_mods_mod, no_difficulties_difficulty) = getReservedEntities()
+        RESERVED_PROFILES = listOf(newchar_loc_profile/*, reddit_loc_profile*/)
         RESERVED_NO_MODS_INDICATOR = no_mods_mod
         RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
 
@@ -119,12 +119,12 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 difficultyDTO = no_difficulties_difficulty,
             )?.let { error(it) }
 
-            createLocationsFromFile(
-                file = File("./external/reddit_locations.csv"),
-                profileDTO = reddit_loc_profile,
-                modDTO = no_mods_mod,
-                difficultyDTO = no_difficulties_difficulty,
-            )?.let { error(it) }
+//            createLocationsFromFile(
+//                file = File("./external/reddit_locations.csv"),
+//                profileDTO = reddit_loc_profile,
+//                modDTO = no_mods_mod,
+//                difficultyDTO = no_difficulties_difficulty,
+//            )?.let { error(it) }
         }
     }
 
@@ -179,16 +179,16 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                     name = RESERVED_PROFILE_GI_LOCATIONS_NAME
                 }
             }
-            val profile2 = newSuspendedTransaction {
-                Profile.new {
-                    name = RESERVED_PROFILE_REDDIT_LOCATIONS_NAME
-                }
-            }
+//            val profile2 = newSuspendedTransaction {
+//                Profile.new {
+//                    name = RESERVED_PROFILE_REDDIT_LOCATIONS_NAME
+//                }
+//            }
 
             newSuspendedTransaction {
                 mod.difficulties = SizedCollection(listOf(difficulty))
                 profile1.mods = SizedCollection(listOf(mod))
-                profile2.mods = SizedCollection(listOf(mod))
+//                profile2.mods = SizedCollection(listOf(mod))
             }
         } catch (e: Exception) {
             logger.error("Issue creating the reserved entities.")
@@ -212,12 +212,12 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
             throw e
         }
 
-    private suspend fun getReservedEntities(): FourTuple<ProfileDTO, ProfileDTO, ModDTO, DifficultyDTO> =
+    private suspend fun getReservedEntities(): Triple<ProfileDTO, ModDTO, DifficultyDTO> =
         try {
             newSuspendedTransaction {
-                FourTuple(
+                Triple(
                     Profile.find { ProfileTable.name eq RESERVED_PROFILE_GI_LOCATIONS_NAME }.single().toDTO(),
-                    Profile.find { ProfileTable.name eq RESERVED_PROFILE_REDDIT_LOCATIONS_NAME }.single().toDTO(),
+//                    Profile.find { ProfileTable.name eq RESERVED_PROFILE_REDDIT_LOCATIONS_NAME }.single().toDTO(),
                     Mod.find { ModTable.name eq RESERVED_NO_MODS_INDICATOR_NAME }.single().toDTO(),
                     Difficulty.find { DifficultyTable.name eq RESERVED_NO_DIFFICULTIES_INDICATOR_NAME }.single().toDTO()
                 )

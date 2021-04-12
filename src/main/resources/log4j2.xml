@@ -5,7 +5,7 @@
             <PatternLayout pattern="%d{HH:mm:ss} [%t] %-5level %logger - %msg%n"/>
         </Console>
         <RollingFile name="LogToRollingFile" fileName="logs/GrimLocations.log"
-            filePattern="logs/editor-%d{MM-dd-yyyy}-%i.log.gz">
+            filePattern="logs/GrimLocations-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger - %msg%n</Pattern>
             </PatternLayout>
