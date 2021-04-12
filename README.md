@@ -7,16 +7,17 @@
 Download: [Google Drive](https://drive.google.com/drive/folders/1xpsOa0gtNde1nMqunC3jxWIcMzT3qGoz)
 
 Grim Locations is a tool for Grim Dawn that accompanies and requires the mod [Grim Internals](https://forums.crateentertainment.com/t/tool-grim-internals).
-It is currently pre 1.0 but most features are present and it is 
+It is currently pre 1.0, but most features are present. The features that are not currently present are marked with 1.0.
 
 ### Features
 - Provides transfer, remove, reorder, and edit functionality for all your Grim Internals locations.
 - Auto-create profiles for your Grim Dawn characters to easily manage their locations.
-- Categorize locations by profile, mod, and difficulty.
-- Comes with a massive list of locations out of the box that are easily transferable to any profile.
+- Categorize locations by profile and difficulty. (1.0 includes categorization by mod as well)
 - Detects new locations while playing Grim Dawn and saves them to the specified active profile.
 - Each location saved gets a date and time, this makes it easy to tell where you left off last.
 - Load any external location list into any profile.
+- (1.0) Create custom profile, mod, and difficulty categories.
+- (1.0) Comes with a massive list of locations out of the box that are easily transferable to any profile.
 
 ### How to use
 See [this video instruction](https://imgur.com/RUcxB0U) for general use. Other than the general use, it is also recommended to run Grim Locations alongside Grim Dawn. This allows syncing to and from Grim Locations in-game.
@@ -59,7 +60,6 @@ See [this video instruction](https://imgur.com/RUcxB0U) for general use. Other t
 ### Post 1.0
 - Look at ways to improve the UI
 - Add "Saved Game Mode" that rearranges the last save to the top and provides an indicator that will show in Grim Internals
-  - Dependent on the Grim Internals developer to make the change where the location list is read every time Grim Internals is opened rather than when the character enters the game
 
 ### Bug Reporting
 
