@@ -57,6 +57,7 @@ See [this video demo](https://imgur.com/RUcxB0U) for general use. Other than the
 - [ ] Add edit screen for Locations. (Will show coordinates as display only)
 - [ ] Import Kortique's location list and create corresponding internal profiles
 - [ ] Improve splash screen
+- [ ] Autodetect Grim Dawn folders
 
 ### Post 1.0
 - Look at ways to improve the UI
