@@ -1,12 +1,23 @@
 package io.grimlocations.data.dto
 
+import androidx.compose.material.MaterialTheme
+import androidx.compose.ui.graphics.Color
 import io.grimlocations.framework.data.dto.DTO
 import io.grimlocations.framework.util.assignOnce
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import java.time.LocalDateTime
 
 const val RESERVED_PROFILE_GI_LOCATIONS_NAME = "New Character Locations"
-const val RESERVED_PROFILE_REDDIT_LOCATIONS_NAME = "Additional Locations"
+const val RESERVED_PROFILE_ACT_1_LOCATIONS_NAME = "Act I"
+const val RESERVED_PROFILE_ACT_2_LOCATIONS_NAME = "Act II"
+const val RESERVED_PROFILE_ACT_3_LOCATIONS_NAME = "Act III"
+const val RESERVED_PROFILE_ACT_4_LOCATIONS_NAME = "Act IV"
+const val RESERVED_PROFILE_ACT_5_LOCATIONS_NAME = "Act V"
+const val RESERVED_PROFILE_ACT_6_LOCATIONS_NAME = "Act VI"
+const val RESERVED_PROFILE_ACT_7_LOCATIONS_NAME = "Act VII"
+const val RESERVED_PROFILES_MONSTER_TOTEM_LOCATIONS_NAME = "Monster Totems"
+const val RESERVED_PROFILES_NEMESIS_LOCATIONS_NAME = "Nemesis"
+const val RESERVED_PROFILE_OTHER_LOCATIONS_NAME = "Other Locations"
 var RESERVED_PROFILES: List<ProfileDTO> by assignOnce()
 
 data class ProfileDTO(
@@ -18,6 +29,12 @@ data class ProfileDTO(
 
 typealias ProfileModDifficultyMap = Map<ProfileDTO, ModDifficultyMap>
 typealias MutableProfileModDifficultyMap = MutableMap<ProfileDTO, MutableModDifficultyMap>
+
+val ProfileDTO.isReserved: Boolean
+    get() = RESERVED_PROFILES.find { it.id == id } != null
+
+val ProfileDTO.isReservedGetColorOrNull: Color?
+    get() = if (isReserved) MaterialTheme.colors.primary else null
 
 fun ProfileModDifficultyMap.firstContainer(): PMDContainer {
     this.entries.firstOrNull()?.let { (p, mdMap) ->

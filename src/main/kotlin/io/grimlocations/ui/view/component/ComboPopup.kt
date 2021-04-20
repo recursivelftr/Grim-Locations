@@ -37,15 +37,15 @@ private val dropDownHeaderHeight = dropDownAverageItemHeight + 5.dp
 @Composable
 fun <K> ComboPopup(
     title: String,
-    selected: Pair<K, String>?,
-    items: List<Pair<K, String>>,
+    selected: Triple<K, String, Color?>?,
+    items: List<Triple<K, String, Color?>>,
     emptyItemsMessage: String = "None",
     onOpen: (previousWindow: AppWindow?, newWindow: AppWindow) -> Unit,
     onClose: (() -> Unit)? = null,
     width: Dp,
     popupMaxHeight: Dp = 260.dp,
     textFieldHeight: Dp = 56.dp, //Minimum height for a text field defined by compose
-    onSelect: (Pair<K, String>) -> Unit,
+    onSelect: (Triple<K, String, Color?>) -> Unit,
     disabled: Boolean = false
 ) {
 
@@ -161,11 +161,11 @@ private fun <K> openPopupWindow(
     titleColor: Color,
     width: Dp,
     height: Dp,
-    items: List<Pair<K, String>>,
+    items: List<Triple<K, String, Color?>>,
     primaryColor: Color,
     dropDownBackgroundColor: Color,
     textColor: Color,
-    onSelect: (Pair<K, String>) -> Unit,
+    onSelect: (Triple<K, String, Color?>) -> Unit,
     onOpen: (AppWindow) -> Unit,
     onClose: (() -> Unit)?
 ) {

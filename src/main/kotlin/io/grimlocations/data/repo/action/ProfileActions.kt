@@ -30,17 +30,29 @@ suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(
 ): Deferred<ProfileModDifficultyMap> =
     suspendedTransactionAsync(Dispatchers.IO) {
         val map: MutableProfileModDifficultyMap = mutableMapOf()
+        val reservedMap: MutableProfileModDifficultyMap = mutableMapOf()
+        val regularMap: MutableProfileModDifficultyMap = mutableMapOf()
+
         ProfileTable.selectAll().forEach {
             val p = Profile.wrapRow(it)
-            if(includeReservedProfiles || (!RESERVED_PROFILES.containsId(p.id.value))) {
+            if (includeReservedProfiles && RESERVED_PROFILES.containsId(p.id.value)) {
                 val mmap: MutableModDifficultyMap = mutableMapOf()
 
                 p.mods.forEach { m ->
                     mmap[m.toDTO()] = m.difficulties.map { d -> d.toDTO() } as MutableList<DifficultyDTO>
                 }
-                map[p.toDTO()] = mmap
+                reservedMap[p.toDTO()] = mmap
+            } else if (!RESERVED_PROFILES.containsId(p.id.value)) {
+                val mmap: MutableModDifficultyMap = mutableMapOf()
+
+                p.mods.forEach { m ->
+                    mmap[m.toDTO()] = m.difficulties.map { d -> d.toDTO() } as MutableList<DifficultyDTO>
+                }
+                regularMap[p.toDTO()] = mmap
             }
         }
+        map.putAll(reservedMap)
+        map.putAll(regularMap)
         map
     }
 
@@ -60,7 +72,7 @@ suspend fun SqliteRepository.detectAndCreateProfilesAsync(): Deferred<Unit> =
                                 var p = newSuspendedTransaction {
                                     Profile.find { ProfileTable.name eq n }.singleOrNull()
                                 }
-                                if(p == null) {
+                                if (p == null) {
                                     p = newSuspendedTransaction {
                                         Profile.new {
                                             name = n

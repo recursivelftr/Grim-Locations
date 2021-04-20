@@ -3,7 +3,6 @@ package io.grimlocations.data.repo
 import io.grimlocations.data.domain.*
 import io.grimlocations.data.dto.*
 import io.grimlocations.framework.data.repo.Repository
-import io.grimlocations.framework.util.FourTuple
 import io.grimlocations.framework.util.FiveTuple
 import io.grimlocations.util.extension.glDatabaseDir
 import kotlinx.coroutines.Deferred
@@ -89,14 +88,20 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
             logger.info("Database created")
         }
 
-        try {
+        val version = try {
             newSuspendedTransaction {
-                val version = MetaTable.slice(MetaTable.version).selectAll().single()[MetaTable.version]
-                logger.info("Database version: $version")
+                val v = MetaTable.slice(MetaTable.version).selectAll().single()[MetaTable.version]
+                logger.info("Database version: $v")
+                v
             }
         } catch (e: Exception) {
             logger.error("Issue getting the Meta record.")
             throw e
+        }
+
+        if (version < 1) { //Addition changes for v1 below
+            deleteAdditionalLocations()
+            createActAndOtherReservedEntities()
         }
 
         val (base_game_mod, normal, veteran, elite, ultimate) = getDefaultEntities()
@@ -106,25 +111,34 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         DEFAULT_GAME_ELITE_DIFFICULTY = elite
         DEFAULT_GAME_ULTIMATE_DIFFICULTY = ultimate
 
-        val (newchar_loc_profile, /*reddit_loc_profile,*/ no_mods_mod, no_difficulties_difficulty) = getReservedEntities()
-        RESERVED_PROFILES = listOf(newchar_loc_profile/*, reddit_loc_profile*/)
+        val (newchar_loc_profile, no_mods_mod, no_difficulties_difficulty) = getReservedEntities()
+        val actsAndOtherMap = getActAndOtherReservedEntities()
+        RESERVED_PROFILES = listOf(
+            newchar_loc_profile,
+            *actsAndOtherMap.values.take(10).toTypedArray(),
+        )
         RESERVED_NO_MODS_INDICATOR = no_mods_mod
         RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
 
-        if (dbDoesntExist) {
+        if (dbDoesntExist) { //need to keep this check to support older versions
             createLocationsFromFile(
                 file = File("./external/new_character_locations.csv"),
                 profileDTO = newchar_loc_profile,
                 modDTO = no_mods_mod,
                 difficultyDTO = no_difficulties_difficulty,
             )?.let { error(it) }
+        }
 
-//            createLocationsFromFile(
-//                file = File("./external/reddit_locations.csv"),
-//                profileDTO = reddit_loc_profile,
-//                modDTO = no_mods_mod,
-//                difficultyDTO = no_difficulties_difficulty,
-//            )?.let { error(it) }
+        if (version < 1) {
+            createActAndOtherLocationsFromFile(
+                map = actsAndOtherMap,
+                mod = no_mods_mod,
+                difficulty = no_difficulties_difficulty,
+            )
+            newSuspendedTransaction {
+                val meta = Meta.wrapRow(MetaTable.selectAll().single())
+                meta.version = 1
+            }
         }
     }
 
@@ -179,19 +193,85 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                     name = RESERVED_PROFILE_GI_LOCATIONS_NAME
                 }
             }
-//            val profile2 = newSuspendedTransaction {
-//                Profile.new {
-//                    name = RESERVED_PROFILE_REDDIT_LOCATIONS_NAME
-//                }
-//            }
 
             newSuspendedTransaction {
                 mod.difficulties = SizedCollection(listOf(difficulty))
                 profile1.mods = SizedCollection(listOf(mod))
-//                profile2.mods = SizedCollection(listOf(mod))
             }
         } catch (e: Exception) {
             logger.error("Issue creating the reserved entities.")
+            throw e
+        }
+    }
+
+    private suspend fun createActAndOtherReservedEntities() {
+        try {
+            val profile2 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILE_ACT_1_LOCATIONS_NAME
+                }
+            }
+            val profile3 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILE_ACT_2_LOCATIONS_NAME
+                }
+            }
+            val profile4 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILE_ACT_3_LOCATIONS_NAME
+                }
+            }
+            val profile5 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILE_ACT_4_LOCATIONS_NAME
+                }
+            }
+            val profile6 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILE_ACT_5_LOCATIONS_NAME
+                }
+            }
+            val profile7 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILE_ACT_6_LOCATIONS_NAME
+                }
+            }
+            val profile8 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILE_ACT_7_LOCATIONS_NAME
+                }
+            }
+            val profile9 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILES_MONSTER_TOTEM_LOCATIONS_NAME
+                }
+            }
+            val profile10 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILES_NEMESIS_LOCATIONS_NAME
+                }
+            }
+            val profile11 = newSuspendedTransaction {
+                Profile.new {
+                    name = RESERVED_PROFILE_OTHER_LOCATIONS_NAME
+                }
+            }
+
+            newSuspendedTransaction {
+                val mod = Mod.find { ModTable.name eq RESERVED_NO_MODS_INDICATOR_NAME }.single()
+                profile2.mods = SizedCollection(listOf(mod))
+                profile3.mods = SizedCollection(listOf(mod))
+                profile4.mods = SizedCollection(listOf(mod))
+                profile5.mods = SizedCollection(listOf(mod))
+                profile6.mods = SizedCollection(listOf(mod))
+                profile7.mods = SizedCollection(listOf(mod))
+                profile8.mods = SizedCollection(listOf(mod))
+                profile9.mods = SizedCollection(listOf(mod))
+                profile10.mods = SizedCollection(listOf(mod))
+                profile11.mods = SizedCollection(listOf(mod))
+            }
+        } catch (e: Exception) {
+            logger.error("Issue creating the Act reserved entities.")
             throw e
         }
     }
@@ -217,7 +297,6 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
             newSuspendedTransaction {
                 Triple(
                     Profile.find { ProfileTable.name eq RESERVED_PROFILE_GI_LOCATIONS_NAME }.single().toDTO(),
-//                    Profile.find { ProfileTable.name eq RESERVED_PROFILE_REDDIT_LOCATIONS_NAME }.single().toDTO(),
                     Mod.find { ModTable.name eq RESERVED_NO_MODS_INDICATOR_NAME }.single().toDTO(),
                     Difficulty.find { DifficultyTable.name eq RESERVED_NO_DIFFICULTIES_INDICATOR_NAME }.single().toDTO()
                 )
@@ -226,5 +305,93 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
             logger.error("Issue getting the reserved entities.")
             throw e
         }
+
+    private suspend fun getActAndOtherReservedEntities(): Map<String, ProfileDTO> =
+        try {
+            newSuspendedTransaction {
+                mapOf(
+                    RESERVED_PROFILE_ACT_1_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILE_ACT_1_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILE_ACT_2_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILE_ACT_2_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILE_ACT_3_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILE_ACT_3_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILE_ACT_4_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILE_ACT_4_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILE_ACT_5_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILE_ACT_5_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILE_ACT_6_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILE_ACT_6_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILE_ACT_7_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILE_ACT_7_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILES_MONSTER_TOTEM_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILES_MONSTER_TOTEM_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILES_NEMESIS_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILES_NEMESIS_LOCATIONS_NAME }
+                        .single().toDTO(),
+                    RESERVED_PROFILE_OTHER_LOCATIONS_NAME to Profile.find { ProfileTable.name eq RESERVED_PROFILE_OTHER_LOCATIONS_NAME }
+                        .single().toDTO(),
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("Issue getting the reserved entities.")
+            throw e
+        }
+
+    private suspend fun createActAndOtherLocationsFromFile(
+        map: Map<String, ProfileDTO>,
+        mod: ModDTO,
+        difficulty: DifficultyDTO
+    ) {
+        map.forEach { (k, v) ->
+            when (k) {
+                RESERVED_PROFILES_MONSTER_TOTEM_LOCATIONS_NAME -> {
+                    createLocationsFromFile(
+                        file = File("./external/monster_totems.csv"),
+                        profileDTO = v,
+                        modDTO = mod,
+                        difficultyDTO = difficulty,
+                    )?.let { error(it) }
+                }
+                RESERVED_PROFILES_NEMESIS_LOCATIONS_NAME -> {
+                    createLocationsFromFile(
+                        file = File("./external/nemesis.csv"),
+                        profileDTO = v,
+                        modDTO = mod,
+                        difficultyDTO = difficulty,
+                    )?.let { error(it) }
+                }
+                RESERVED_PROFILE_OTHER_LOCATIONS_NAME -> {
+                    createLocationsFromFile(
+                        file = File("./external/other.csv"),
+                        profileDTO = v,
+                        modDTO = mod,
+                        difficultyDTO = difficulty,
+                    )?.let { error(it) }
+                }
+                else -> {
+                    createLocationsFromFile(
+                        file = File("./external/act_${map.keys.indexOf(k) + 1}.csv"),
+                        profileDTO = v,
+                        modDTO = mod,
+                        difficultyDTO = difficulty,
+                    )?.let { error(it) }
+                }
+            }
+        }
+    }
+
+    private suspend fun deleteAdditionalLocations(): Unit = try {
+        newSuspendedTransaction {
+            Profile.find { ProfileTable.name eq "Additional Locations" }.firstOrNull()?.also { p ->
+                LocationTable.deleteWhere { LocationTable.profile eq p.id }
+                ProfileModIntermTable.deleteWhere { ProfileModIntermTable.profile eq p.id }
+                p.delete()
+            }
+            Unit
+        }
+    } catch (e: Exception) {
+        logger.error("Issue deleting additional locations.")
+        throw e
+    }
 }
 

@@ -4,8 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    kotlin("jvm") version "1.4.31"
-    id("org.jetbrains.compose") version "0.4.0-build178"
+    kotlin("jvm") version "1.4.32"
+    id("org.jetbrains.compose") version "0.4.0-build183"
     id("app.cash.exhaustive") version "0.1.1"
 }
 
@@ -23,8 +23,8 @@ compileKotlin.kotlinOptions.useIR = true
 compileKotlin.kotlinOptions.jvmTarget = "15"
 
 dependencies {
-    val exposedVersion = "0.29.1"
-    val coroutinesVersion = "1.4.2"
+    val exposedVersion = "0.30.2"
+    val coroutinesVersion = "1.4.3"
     val sqliteVersion = "3.34.0"
     val junitVersion = "5.6.0"
     val log4jVersion = "2.14.0"

@@ -14,9 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.grimlocations.data.dto.ProfileModDifficultyMap
-import io.grimlocations.data.dto.RESERVED_NO_DIFFICULTIES_INDICATOR
-import io.grimlocations.data.dto.RESERVED_NO_MODS_INDICATOR
+import io.grimlocations.data.dto.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.util.extension.closeIfOpen
 
@@ -36,7 +34,7 @@ fun PMDChooserComponent(
     val modListWindow = remember { mutableStateOf<AppWindow?>(null) }
     val difficultyListWindow = remember { mutableStateOf<AppWindow?>(null) }
 
-    val profiles = remember(map) { map.keys.map { Pair(it.id, it.name) } }
+    val profiles = remember(map) { map.keys.map { Triple(it.id, it.name, it.isReservedGetColorOrNull) } }
     val mods = remember(map, selected) { map[selected.profile]!!.keys.map { Pair(it.id, it.name) } }
     val difficulties = remember(map, selected) { map[selected.profile]!![selected.mod]!!.map { Pair(it.id, it.name) } }
 
@@ -60,7 +58,7 @@ fun PMDChooserComponent(
             "Profile",
             items = profiles,
             emptyItemsMessage = "No Profiles",
-            selected = Pair(selectedProfile.id, selectedProfile.name),
+            selected = Triple(selectedProfile.id, selectedProfile.name, selectedProfile.isReservedGetColorOrNull),
             width = textBoxWidth,
             onOpen = { p, c ->
                 manageWindows(
@@ -89,7 +87,7 @@ fun PMDChooserComponent(
             items = mods,
             emptyItemsMessage = "No Mods",
             disabled = selected.mod == RESERVED_NO_MODS_INDICATOR,
-            selected = Pair(selectedMod.id, selectedMod.name),
+            selected = Triple(selectedMod.id, selectedMod.name, null),
             width = textBoxWidth,
             onOpen = { p, c ->
                 manageWindows(
