@@ -1,7 +1,5 @@
 package io.grimlocations.data.dto
 
-import androidx.compose.material.MaterialTheme
-import androidx.compose.ui.graphics.Color
 import io.grimlocations.framework.data.dto.DTO
 import io.grimlocations.framework.util.assignOnce
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
@@ -32,9 +30,6 @@ typealias MutableProfileModDifficultyMap = MutableMap<ProfileDTO, MutableModDiff
 
 val ProfileDTO.isReserved: Boolean
     get() = RESERVED_PROFILES.find { it.id == id } != null
-
-val ProfileDTO.isReservedGetColorOrNull: Color?
-    get() = if (isReserved) MaterialTheme.colors.primary else null
 
 fun ProfileModDifficultyMap.firstContainer(): PMDContainer {
     this.entries.firstOrNull()?.let { (p, mdMap) ->

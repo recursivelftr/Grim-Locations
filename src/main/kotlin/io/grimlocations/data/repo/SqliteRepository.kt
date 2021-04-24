@@ -48,6 +48,8 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         return suspendedTransactionAsync(Dispatchers.IO, statement = statement)
     }
 
+    //DB v0 = GL 0.1.0
+    //DB v1 = GL 0.2.0
     suspend fun initDb() {
 //            val diffTest = Difficulty.wrapRow(Difficulties.select { Difficulties.name eq "Any" }.single())
 //

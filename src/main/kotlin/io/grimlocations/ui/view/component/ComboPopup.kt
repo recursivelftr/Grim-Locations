@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -43,7 +44,7 @@ fun <K> ComboPopup(
     onOpen: (previousWindow: AppWindow?, newWindow: AppWindow) -> Unit,
     onClose: (() -> Unit)? = null,
     width: Dp,
-    popupMaxHeight: Dp = 260.dp,
+    popupMaxHeight: Dp = 560.dp,
     textFieldHeight: Dp = 56.dp, //Minimum height for a text field defined by compose
     onSelect: (Triple<K, String, Color?>) -> Unit,
     disabled: Boolean = false
@@ -124,6 +125,7 @@ fun <K> ComboPopup(
                     enabled = !disabled,
                     onValueChange = {},
                     singleLine = true,
+                    textStyle = selected?.third?.let { LocalTextStyle.current.copy(color = it)  } ?: LocalTextStyle.current,
                     label = {
                         Text(
                             title,
@@ -233,7 +235,8 @@ private fun <K> openPopupWindow(
                         LazyColumn(state = stateVertical) {
 
                             items(items.size) { index ->
-                                TextBox(items[index].second, textColor, width - 10.dp) {
+                                val (_, text, color) = items[index]
+                                TextBox(text, color ?: textColor, width - 10.dp) {
                                     onSelect(items[index])
                                 }
                                 Spacer(modifier = Modifier.height(dropDownSpacerHeight))

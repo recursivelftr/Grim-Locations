@@ -1,6 +1,6 @@
 ## Grim Locations
 
-##### Current Version: 0.1.0
+##### Current Version: 0.2.0
 
 Download: [Google Drive](https://drive.google.com/drive/folders/1xpsOa0gtNde1nMqunC3jxWIcMzT3qGoz)  
 Demo: [Link](https://imgur.com/RUcxB0U)
@@ -10,6 +10,12 @@ It is currently pre 1.0, but most features are present. The features that are no
 
 <img src="https://i.imgur.com/pvTrtxj.png" width="445" height="282" />
 
+##### Release 0.2.0
+
+Added all of Kortique's locations and categorized them by act, totem, nemesis, and other.
+
+<img src="https://i.imgur.com/PF87vhK.png" width="88" height="170" />
+
 ### Features
 - Provides transfer, remove, reorder, and edit functionality for all your Grim Internals locations.
 - Auto-create profiles for your Grim Dawn characters to easily manage their locations.
@@ -17,8 +23,8 @@ It is currently pre 1.0, but most features are present. The features that are no
 - Detects new locations while playing Grim Dawn and saves them to the specified active profile.
 - Each location saved gets a date and time, this makes it easy to tell where you left off last.
 - Load any external location list into any profile.
+- Comes with a massive list of locations out of the box that are easily transferable to any profile.
 - (1.0) Create custom profile, mod, and difficulty categories.
-- (1.0) Comes with a massive list of locations out of the box that are easily transferable to any profile.
 
 ### How to use
 See [this video demo](https://imgur.com/RUcxB0U) for general use. Other than the general use, it is also recommended to run Grim Locations alongside Grim Dawn. This allows syncing to and from Grim Locations in-game.
@@ -50,12 +56,12 @@ See [this video demo](https://imgur.com/RUcxB0U) for general use. Other than the
     - Note that this button can be clicked multiple times without worry. Grim Locations does not allow duplicates and it will not override existing profiles.
 
 ### Road to 1.0
+- [X] Import Kortique's location list and create corresponding internal profiles
 - [ ] Remove Sync Active to Grim Dawn button. If the active is changed it will auto sync.
 - [ ] Add Profile management screen.
 - [ ] Add Mod management screen.
 - [ ] Add Difficulty management screen.
 - [ ] Add edit screen for Locations. (Will show coordinates as display only)
-- [ ] Import Kortique's location list and create corresponding internal profiles
 - [ ] Improve splash screen
 - [ ] Autodetect Grim Dawn folders
 

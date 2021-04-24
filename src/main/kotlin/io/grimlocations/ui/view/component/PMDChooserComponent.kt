@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -34,9 +35,10 @@ fun PMDChooserComponent(
     val modListWindow = remember { mutableStateOf<AppWindow?>(null) }
     val difficultyListWindow = remember { mutableStateOf<AppWindow?>(null) }
 
-    val profiles = remember(map) { map.keys.map { Triple(it.id, it.name, it.isReservedGetColorOrNull) } }
-    val mods = remember(map, selected) { map[selected.profile]!!.keys.map { Pair(it.id, it.name) } }
-    val difficulties = remember(map, selected) { map[selected.profile]!![selected.mod]!!.map { Pair(it.id, it.name) } }
+    val primaryColor = MaterialTheme.colors.primary
+    val profiles = remember(map) { map.keys.map { Triple(it.id, it.name, if (it.isReserved) primaryColor else null ) } }
+    val mods = remember(map, selected) { map[selected.profile]!!.keys.map { Triple(it.id, it.name, null) } }
+    val difficulties = remember(map, selected) { map[selected.profile]!![selected.mod]!!.map { Triple(it.id, it.name, null) } }
 
     val selectedProfile = selected.profile
     val selectedMod =
@@ -58,7 +60,7 @@ fun PMDChooserComponent(
             "Profile",
             items = profiles,
             emptyItemsMessage = "No Profiles",
-            selected = Triple(selectedProfile.id, selectedProfile.name, selectedProfile.isReservedGetColorOrNull),
+            selected = Triple(selectedProfile.id, selectedProfile.name, if (selectedProfile.isReserved) primaryColor else null),
             width = textBoxWidth,
             onOpen = { p, c ->
                 manageWindows(
@@ -115,7 +117,7 @@ fun PMDChooserComponent(
             items = difficulties,
             emptyItemsMessage = "No Difficulties",
             disabled = selected.difficulty == RESERVED_NO_DIFFICULTIES_INDICATOR,
-            selected = Pair(selectedDifficulty.id, selectedDifficulty.name),
+            selected = Triple(selectedDifficulty.id, selectedDifficulty.name, null),
             width = textBoxWidth,
             onOpen = { p, c ->
                 manageWindows(
