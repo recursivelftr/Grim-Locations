@@ -10,7 +10,7 @@ It is currently pre 1.0, but most features are present. The features that are no
 
 <img src="https://i.imgur.com/pvTrtxj.png" width="445" height="282" />
 
-##### Release 0.2.0
+### Release 0.2.0
 
 Added all of Kortique's locations and categorized them by act, totem, nemesis, and other.
 
@@ -29,7 +29,7 @@ Added all of Kortique's locations and categorized them by act, totem, nemesis, a
 ### How to use
 See [this video demo](https://imgur.com/RUcxB0U) for general use. Other than the general use, it is also recommended to run Grim Locations alongside Grim Dawn. This allows syncing to and from Grim Locations in-game.
 
-###### Capture locations from Grim Dawn to Grim Locations while in-game
+##### Capture locations from Grim Dawn to Grim Locations while in-game
 
 1. Start Grim Locations and select an active profile, mod, and difficulty.
     - Optional: Modify the active profile in the editor and click "Sync to Grim Dawn".
@@ -38,7 +38,7 @@ See [this video demo](https://imgur.com/RUcxB0U) for general use. Other than the
 4. Start the game, when you open Grim Internals you should see that your locations match that of the active profile in Grim Locations.
 5. Save a location via Grim Internals and alt-tab over to Grim Locations. You should see that the Grim Dawn status is "Running" and your new location was added to the locations of the active profile, mod, and difficulty.
 
-###### Sync locations from Grim Locations to Grim Dawn (Grim Locations to Grim Dawn)
+##### Sync locations from Grim Locations to Grim Dawn (Grim Locations to Grim Dawn)
 - From out of game (Grim Dawn is closed):
     1. Select the active profile, mod, and difficulty and make any changes to their locations.
     2. Click "Sync to Grim Dawn".
