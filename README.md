@@ -16,6 +16,10 @@ Added all of Kortique's locations and categorized them by act, totem, nemesis, a
 
 <img src="https://i.imgur.com/PF87vhK.png" width="88" height="170" />
 
+### Upgrading
+
+To upgrade from one release to another, delete the old version's files and folders then unzip the new version and run the exe file. Do not delete the database located in C:\Users\{user}\AppData\Local\Grim Locations. The database will be updated automatically when the new version is run.
+
 ### Features
 - Provides transfer, remove, reorder, and edit functionality for all your Grim Internals locations.
 - Auto-create profiles for your Grim Dawn characters to easily manage their locations.
