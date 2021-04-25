@@ -33,8 +33,7 @@ To upgrade from one release to another, delete the old version's files and folde
 ### Instructions and Videos
 See [this video demo](https://imgur.com/R6XyOT3) for general use. Other than the general use, it is also recommended to run Grim Locations alongside Grim Dawn. This allows syncing to and from Grim Locations in-game.
 
-##### Capture locations from Grim Dawn to Grim Locations while in-game
-[Video Instructions](https://imgur.com/5SvJJJd)
+##### Capture locations from Grim Dawn to Grim Locations while in-game [[Video]](https://imgur.com/5SvJJJd)
 
 1. Start Grim Locations and select an active profile, mod, and difficulty.
     - Optional: Modify the active profile in the editor and click "Sync to Grim Dawn".
@@ -43,8 +42,7 @@ See [this video demo](https://imgur.com/R6XyOT3) for general use. Other than the
 4. Start the game, when you open Grim Internals you should see that your locations match that of the active profile in Grim Locations.
 5. Save a location via Grim Internals and alt-tab over to Grim Locations. You should see that the Grim Dawn status is "Running" and your new location was added to the locations of the active profile, mod, and difficulty.
 
-##### Sync locations from Grim Locations to Grim Dawn (Grim Locations to Grim Dawn)
-[Video Instructions](https://imgur.com/ibVso3R)
+##### Sync locations from Grim Locations to Grim Dawn (Grim Locations to Grim Dawn) [[Video]](https://imgur.com/ibVso3R)
 
 - From out of game (Grim Dawn is closed):
     1. Select the active profile, mod, and difficulty and make any changes to their locations.
@@ -56,8 +54,7 @@ See [this video demo](https://imgur.com/R6XyOT3) for general use. Other than the
     4. Click "Sync Active to Grim Dawn".
     5. Alt-tab back to Grim Dawn and start the game with your selected active character.
 
-##### Loading mod character profiles
-[Video Instructions](https://imgur.com/UCHyWWU)
+##### Loading mod character profiles [[Video]](https://imgur.com/UCHyWWU)
 
 1. From in Grim Locations, click the settings or gear icon in the top right.
 2. Change the "GD Save Folder" to the folder containing your characters for the mod and click OK.
