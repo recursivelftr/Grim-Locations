@@ -3,7 +3,7 @@
 ##### Current Version: 0.2.0
 
 Download: [Google Drive](https://drive.google.com/drive/folders/1xpsOa0gtNde1nMqunC3jxWIcMzT3qGoz)  
-Demo: [Link](https://imgur.com/RUcxB0U)
+Demo: [Link](https://imgur.com/R6XyOT3)
 
 Grim Locations is a tool for Grim Dawn that accompanies and requires the mod [Grim Internals](https://forums.crateentertainment.com/t/tool-grim-internals).
 It is currently pre 1.0, but most features are present. The features that are not present are marked with 1.0.
