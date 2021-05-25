@@ -13,23 +13,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asDesktopBitmap
-import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.framework.ui.LocalViewModel
-import io.grimlocations.framework.ui.get
 import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
-import io.grimlocations.framework.util.assignOnce
 import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.viewmodel.PropertiesViewModel
-import io.grimlocations.ui.viewmodel.event.persistState
-import io.grimlocations.ui.viewmodel.event.updateInstallPath
-import io.grimlocations.ui.viewmodel.event.updateSavePath
+import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.PropertiesState
 import io.grimlocations.ui.viewmodel.state.PropertiesStateError.GRIM_INTERNALS_NOT_FOUND
 import io.grimlocations.ui.viewmodel.state.PropertiesStateWarning.NO_CHARACTERS_FOUND
@@ -44,8 +38,8 @@ private val TEXT_FIELD_WIDTH = 400.dp
 private fun PropertiesView(
     onCancel: () -> Unit,
     onOk: () -> Unit,
-    propertiesViewModel: PropertiesViewModel = getFactoryViewModel(),
-) = View(propertiesViewModel) {
+    vm: PropertiesViewModel = getFactoryViewModel(),
+) = View(vm) {
 
     Surface(
         modifier = Modifier.fillMaxSize()
@@ -61,8 +55,8 @@ private fun PropertiesView(
                 TextField(
 //                    textStyle = TextStyle.Default.copy(color = Color.White),
 //                    textColor = Color.White,
-                    value = it.installPath ?: "",
-                    onValueChange = propertiesViewModel::updateInstallPath,
+                    value = it.installPath ?: vm.getGdInstallLocation() ?: "",
+                    onValueChange = vm::updateInstallPath,
                     label = {
                         Text("GD Installation Folder", style = TextStyle(fontSize = 15.sp))
                     },
@@ -73,10 +67,10 @@ private fun PropertiesView(
                 IconButton(
                     modifier = Modifier.size(40.dp),
                     onClick = {
-                        with(propertiesViewModel.installFileChooser) {
+                        with(vm.installFileChooser) {
                             val okOrCancel = showOpenDialog(null)
                             if (okOrCancel == JFileChooser.APPROVE_OPTION) {
-                                propertiesViewModel.updateInstallPath(selectedFile.absolutePath)
+                                vm.updateInstallPath(selectedFile.absolutePath)
                             }
                         }
                     }
@@ -106,8 +100,8 @@ private fun PropertiesView(
                 TextField(
 //                    textStyle = TextStyle.Default.copy(color = Color.White),
 //                    textColor = Color.White,
-                    value = it.savePath ?: "",
-                    onValueChange = propertiesViewModel::updateSavePath,
+                    value = it.savePath ?: vm.getGdSaveLocation() ?: "",
+                    onValueChange = vm::updateSavePath,
                     label = {
                         Text("GD Save Folder", style = TextStyle(fontSize = 15.sp))
                     },
@@ -120,10 +114,10 @@ private fun PropertiesView(
                 IconButton(
                     modifier = Modifier.size(40.dp),
                     onClick = {
-                        with(propertiesViewModel.saveFileChooser) {
+                        with(vm.saveFileChooser) {
                             val okOrCancel = showOpenDialog(null)
                             if (okOrCancel == JFileChooser.APPROVE_OPTION) {
-                                propertiesViewModel.updateSavePath(selectedFile.absolutePath)
+                                vm.updateSavePath(selectedFile.absolutePath)
                             }
                         }
                     }
@@ -157,7 +151,7 @@ private fun PropertiesView(
                 Button(
                     enabled = isOkEnabled(it),
                     onClick = {
-                        propertiesViewModel.persistState()
+                        vm.persistState()
                         onOk()
                     },
                 ) {

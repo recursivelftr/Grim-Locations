@@ -9,6 +9,8 @@ import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.viewmodel.state.PropertiesState
 import io.grimlocations.ui.viewmodel.state.PropertiesStateError
 import io.grimlocations.ui.viewmodel.state.PropertiesStateWarning
+import io.grimlocations.util.extension.gdInstallLocation
+import io.grimlocations.util.extension.gdSaveLocation
 
 suspend fun GLStateManager.loadPropertiesState() {
     val meta = repository.getMetaAsync().await()
@@ -56,3 +58,7 @@ suspend fun GLStateManager.removePropertiesStateWarnings(vararg warnings: Proper
     val state = getState<PropertiesState>()
     setState(state.copy(warnings = state.warnings.filter { !warnings.contains(it) }.toSet()))
 }
+
+fun GLStateManager.getGdInstallLocation(): String? = repository.appDirs.gdInstallLocation
+
+fun GLStateManager.getGdSaveLocation(): String? = repository.appDirs.gdSaveLocation

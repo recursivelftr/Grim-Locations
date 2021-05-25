@@ -29,6 +29,7 @@ fun PropertiesViewModel.updateInstallPath(path: String) {
     }
 }
 
+
 fun PropertiesViewModel.updateSavePath(path: String) {
     viewModelScope.launch {
         stateManager.updatePropertiesSavePath(path)
@@ -40,6 +41,10 @@ fun PropertiesViewModel.updateSavePath(path: String) {
         }
     }
 }
+
+fun PropertiesViewModel.getGdSaveLocation(): String? = stateManager.getGdSaveLocation()
+
+fun PropertiesViewModel.getGdInstallLocation(): String? = stateManager.getGdInstallLocation()
 
 private fun isValidInstallPath(path: String): Boolean {
     try {

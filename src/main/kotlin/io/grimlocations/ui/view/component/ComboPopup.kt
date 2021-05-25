@@ -18,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -188,7 +187,7 @@ private fun <K> openPopupWindow(
 
 //            val primaryColor = MaterialTheme.colors.primary
 //            val dropDownBackgroundColor = MaterialTheme.colors.surface.let { remember { it.copy(alpha = ContainerAlpha) } }
-            val scrollBarStyle = ScrollbarStyleAmbient.current.let {
+            val scrollBarStyle = LocalScrollbarStyle.current.let {
                 remember {
                     it.copy(
                         unhoverColor = primaryColor,
@@ -246,8 +245,6 @@ private fun <K> openPopupWindow(
                             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
                             adapter = rememberScrollbarAdapter(
                                 scrollState = stateVertical,
-                                itemCount = items.size,
-                                averageItemSize = dropDownAverageItemHeight
                             ),
                             style = scrollBarStyle
                         )

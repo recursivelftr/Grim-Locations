@@ -17,6 +17,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.grimlocations.constant.APP_ICON
 import io.grimlocations.ui.view.GrimLocationsTheme
 import io.grimlocations.util.extension.closeIfOpen
 
@@ -82,6 +83,7 @@ fun openOkCancelPopup(
 ) {
     Window(
         title = "Grim Locations",
+        icon = APP_ICON,
         size = IntSize(width, height),
 //        undecorated = true
     ) {

@@ -4,27 +4,18 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.primarySurface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.ShortcutsBuilderScope
-import androidx.compose.ui.input.key.plus
-import androidx.compose.ui.input.key.shortcuts
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.grimlocations.constant.DATETIME_FORMATTER
 import io.grimlocations.data.dto.LocationDTO
-import java.time.LocalDateTime
-import java.time.Month
 
 @ExperimentalFoundationApi
 @Composable
@@ -39,7 +30,7 @@ fun LocationListComponent(
 ) {
     val primaryColor = MaterialTheme.colors.primary
 
-    val scrollBarStyle = ScrollbarStyleAmbient.current.let {
+    val scrollBarStyle = LocalScrollbarStyle.current.let {
         remember {
             it.copy(
                 unhoverColor = primaryColor,
@@ -87,8 +78,6 @@ fun LocationListComponent(
             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
             adapter = rememberScrollbarAdapter(
                 scrollState = stateVertical,
-                itemCount = locations.size,
-                averageItemSize = rowHeight
             ),
             style = scrollBarStyle
         )
