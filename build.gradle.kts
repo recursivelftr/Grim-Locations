@@ -5,8 +5,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     kotlin("jvm") version "1.5.10"
-    id("org.jetbrains.compose") version "0.4.0-build211"
-    id("app.cash.exhaustive") version "0.1.1"
+    id("org.jetbrains.compose") version "0.4.0"
 }
 
 group = "io.grimlocations"
@@ -19,7 +18,6 @@ repositories {
 }
 
 val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions.useIR = true
 compileKotlin.kotlinOptions.jvmTarget = "15"
 
 dependencies {

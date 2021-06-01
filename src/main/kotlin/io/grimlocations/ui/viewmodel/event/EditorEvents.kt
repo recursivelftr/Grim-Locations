@@ -43,25 +43,6 @@ suspend fun EditorViewModel.startGDProcessCheckLoop() {
     }
 }
 
-fun EditorViewModel.copySelectedPMDToLocationsFile(
-    onOpenPopup: (AppWindow) -> Unit,
-    onClosePopup: (AppWindow) -> Unit,
-) {
-    viewModelScope.launch {
-        val status = stateManager.copySelectedPMDToLocationsFile() ?: "Successfully synced."
-        withContext(Dispatchers.Main) {
-            openOkCancelPopup(
-                status,
-                onOpen = onOpenPopup,
-                onOkClicked = {
-                    onClosePopup(it)
-                    it.closeIfOpen()
-                },
-            )
-        }
-    }
-}
-
 fun EditorViewModel.selectLocationsLeft(loc: Set<LocationDTO>) {
     viewModelScope.launch {
         stateManager.selectLocationsLeft(loc)

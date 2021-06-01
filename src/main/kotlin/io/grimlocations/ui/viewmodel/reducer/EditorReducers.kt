@@ -115,19 +115,20 @@ suspend fun GLStateManager.checkIfLocationsFileChangedAndLoadLocation() {
     }
 }
 
-suspend fun GLStateManager.copySelectedPMDToLocationsFile(): String? {
+private suspend fun GLStateManager.copySelectedPMDToLocationsFile(pmdc: PMDContainer) {
     val meta = repository.getMetaAsync().await()
-    return guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
-        val filePath = if (loc.endsWithOne("/", "\\"))
-            loc + "GrimInternals_TeleportList.txt"
-        else
-            loc + File.separator + "GrimInternals_TeleportList.txt"
+    if(pmdc == meta.activePMD) {
+        guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
+            val filePath = if (loc.endsWithOne("/", "\\"))
+                loc + "GrimInternals_TeleportList.txt"
+            else
+                loc + File.separator + "GrimInternals_TeleportList.txt"
 
-        locationsFileMutex.withLock {
-            val file = File(filePath)
-            val status = repository.writeLocationsToFile(file, pmd)
-            last_modified = repository.getFileLastModified(file)
-            status
+            locationsFileMutex.withLock {
+                val file = File(filePath)
+                repository.writeLocationsToFile(file, pmd)
+                last_modified = repository.getFileLastModified(file)
+            }
         }
     }
 }
@@ -207,6 +208,7 @@ suspend fun GLStateManager.copyLeftSelectedToRight() {
         selectedLocations = s.selectedLocationsLeft,
         otherSelectedLocations = s.selectedLocationsRight
     ).await()
+    copySelectedPMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -219,6 +221,7 @@ suspend fun GLStateManager.copyRightSelectedToLeft() {
         selectedLocations = s.selectedLocationsRight,
         otherSelectedLocations = s.selectedLocationsLeft
     ).await()
+    copySelectedPMDToLocationsFile(s.selectedPMDLeft)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -230,6 +233,7 @@ suspend fun GLStateManager.moveSelectedLeftUp() {
         pmdContainer = s.selectedPMDLeft,
         locations = s.selectedLocationsLeft
     ).await()
+    copySelectedPMDToLocationsFile(s.selectedPMDLeft)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -241,6 +245,7 @@ suspend fun GLStateManager.moveSelectedLeftDown() {
         pmdContainer = s.selectedPMDLeft,
         locations = s.selectedLocationsLeft
     ).await()
+    copySelectedPMDToLocationsFile(s.selectedPMDLeft)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -252,6 +257,7 @@ suspend fun GLStateManager.moveSelectedRightUp() {
         pmdContainer = s.selectedPMDRight,
         locations = s.selectedLocationsRight
     ).await()
+    copySelectedPMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -263,6 +269,7 @@ suspend fun GLStateManager.moveSelectedRightDown() {
         pmdContainer = s.selectedPMDRight,
         locations = s.selectedLocationsRight
     ).await()
+    copySelectedPMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -271,6 +278,7 @@ suspend fun GLStateManager.moveSelectedRightDown() {
 suspend fun GLStateManager.deleteSelectedLeft() {
     val s = getState<EditorState>()
     repository.deleteLocationsAsync(s.selectedPMDLeft, s.selectedLocationsLeft).await()
+    copySelectedPMDToLocationsFile(s.selectedPMDLeft)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -279,6 +287,7 @@ suspend fun GLStateManager.deleteSelectedLeft() {
 suspend fun GLStateManager.deleteSelectedRight() {
     val s = getState<EditorState>()
     repository.deleteLocationsAsync(s.selectedPMDRight, s.selectedLocationsRight).await()
+    copySelectedPMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }

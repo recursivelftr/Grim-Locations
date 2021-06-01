@@ -20,7 +20,6 @@ import io.grimlocations.framework.ui.getLazyViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.viewmodel.EditorViewModel
-import io.grimlocations.ui.viewmodel.event.copySelectedPMDToLocationsFile
 import io.grimlocations.ui.viewmodel.event.loadCharacterProfiles
 import io.grimlocations.ui.viewmodel.event.reloadState
 import io.grimlocations.ui.viewmodel.event.startGDProcessCheckLoop
@@ -120,28 +119,15 @@ private fun EditorView(
                 ) {
                     Text("Select Active")
                 }
-                Spacer(modifier = Modifier.width(15.dp))
-                Button(
-                    enabled = !(state.profileMap.hasOnlyReservedProfiles() || state.activePMD == null),
-                    onClick = {
-                        vm.copySelectedPMDToLocationsFile(
-                            onOpenPopup = {
-                                onOverlayClick = {
-                                    it.closeIfOpen()
-                                    subWindows.remove(it)
-                                    disabled = false
-                                }
-                                subWindows.add(it)
-                            },
-                            onClosePopup = {
-                                subWindows.remove(it)
-                                disabled = false
-                            }
-                        )
-                    }
-                ) {
-                    Text("Sync Active to Grim Dawn")
-                }
+//                Spacer(modifier = Modifier.width(15.dp))
+//                Button(
+//                    enabled = !(state.profileMap.hasOnlyReservedProfiles() || state.activePMD == null),
+//                    onClick = {
+//
+//                    }
+//                ) {
+//                    Text("Sync Active to Grim Dawn")
+//                }
             }
             Spacer(Modifier.height(20.dp))
             Row(
