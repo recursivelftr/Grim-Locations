@@ -60,11 +60,11 @@ private fun EditorView(
                                 vmProvider = vmProv,
                                 onClose = {
                                     subWindows.remove(it)
-                                    disabled = false
+                                    viewDisabled = false
                                 },
                                 captureWindow = { subWindows.add(it) }
                             )
-                            disabled = true
+                            viewDisabled = true
                             onOverlayClick = {}
                         }
                     )
@@ -77,19 +77,19 @@ private fun EditorView(
             ) {
                 Button(
                     onClick = {
-                        disabled = true
+                        viewDisabled = true
                         vm.loadCharacterProfiles(
                             onOpenPopup = {
                                 onOverlayClick = {
                                     it.closeIfOpen()
                                     subWindows.remove(it)
-                                    disabled = false
+                                    viewDisabled = false
                                 }
                                 subWindows.add(it)
                             },
                             onClosePopup = {
                                 subWindows.remove(it)
-                                disabled = false
+                                viewDisabled = false
                             }
                         )
                     },
@@ -100,14 +100,14 @@ private fun EditorView(
                 Button(
                     enabled = !state.profileMap.hasOnlyReservedProfiles(),
                     onClick = {
-                        disabled = true
+                        viewDisabled = true
                         onOverlayClick = {}
                         openLauncherView(
                             vmProvider = vmProv,
                             onClose = {
                                 subWindows.remove(previousLauncherWindow.value)
                                 vm.reloadState()
-                                disabled = false
+                                viewDisabled = false
                             },
                             captureWindow = { w ->
                                 subWindows.remove(previousLauncherWindow.value)
@@ -148,12 +148,18 @@ private fun EditorView(
                 state = state,
                 vm = vm,
                 onOpen = { p, c ->
-                    disabled = true
+                    viewDisabled = true
                     subWindows.remove(p)
                     subWindows.add(c)
                     onOverlayClick = { subWindows.forEach { a -> a.closeIfOpen() } }
                 },
-                onClose = { disabled = false }
+                onOpenDisabledOverlay = { p, c ->
+                    viewDisabled = true
+                    subWindows.remove(p)
+                    subWindows.add(c)
+                    onOverlayClick = { }
+                },
+                onClose = { viewDisabled = false }
             )
         }
     }

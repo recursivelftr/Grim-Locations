@@ -52,12 +52,12 @@ private fun LauncherView(
                     selected = state.selected,
                     onSelect = { c -> vm.selectPMD(c) },
                     onOpen = { p, c ->
-                        disabled = true
+                        viewDisabled = true
                         subWindows.remove(p)
                         subWindows.add(c)
                         onOverlayClick = { subWindows.forEach { a -> a.closeIfOpen() } }
                     },
-                    onClose = { disabled = false }
+                    onClose = { viewDisabled = false }
                 )
                 Spacer(Modifier.height(20.dp))
                 Row(
@@ -75,13 +75,13 @@ private fun LauncherView(
                                             onOverlayClick = {
                                                 it.closeIfOpen()
                                                 subWindows.remove(it)
-                                                disabled = false
+                                                viewDisabled = false
                                             }
                                             subWindows.add(it)
                                         },
                                         onClosePopup = {
                                             subWindows.remove(it)
-                                            disabled = false
+                                            viewDisabled = false
                                         }
                                     )
                                 }

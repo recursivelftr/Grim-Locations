@@ -23,6 +23,7 @@ import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
+import org.apache.logging.log4j.LogManager
 
 private val listHeight = 400.dp
 private val arrowButtonSize = 50.dp
@@ -37,12 +38,15 @@ private var previousPMDRight: PMDContainer? = null
 private lateinit var stateVerticalLeft: LazyListState
 private lateinit var stateVerticalRight: LazyListState
 
+private val logger = LogManager.getLogger()
+
 @ExperimentalFoundationApi
 @Composable
 fun EditorLocationListPanel(
     state: EditorState,
     vm: EditorViewModel,
     onOpen: (AppWindow?, AppWindow) -> Unit,
+    onOpenDisabledOverlay: (AppWindow?, AppWindow) -> Unit,
     onClose: (() -> Unit),
 ) {
     with(state) {
@@ -230,7 +234,13 @@ fun EditorLocationListPanel(
                         EditButton(
                             pmdContainer = selectedPMDRight,
                             selected = selectedLocationsRight,
-                            onClick = {}
+                            onClick = {
+                                vm.editLocation(
+                                    location = it,
+                                    onOpenPopup = onOpenDisabledOverlay,
+
+                                )
+                            }
                         )
                         DeleteButton(
                             pmdContainer = selectedPMDRight,
@@ -313,20 +323,24 @@ private fun ArrowDownButton(
     }
 }
 
-//TODO: Enable edit button
 @Composable
 private fun EditButton(
     pmdContainer: PMDContainer,
     selected: Set<LocationDTO>,
-    onClick: () -> Unit
+    onClick: (LocationDTO) -> Unit
 ) {
-//    val disabled = selected.size != 1 || RESERVED_PROFILES.contains(pmdContainer.profile)
-    val disabled = true
+    val disabled = selected.size != 1 || RESERVED_PROFILES.contains(pmdContainer.profile)
 
     IconButton(
         modifier = Modifier.size(arrowButtonSize),
         enabled = !disabled,
-        onClick = onClick,
+        onClick = {
+            try {
+                onClick(selected.single())
+            } catch (e: Exception) {
+                logger.error("Could not open location edit popup.", e)
+            }
+        },
     ) {
         Icon(
             Icons.Default.Edit,
@@ -334,6 +348,7 @@ private fun EditButton(
             tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
         )
     }
+
 }
 
 @Composable

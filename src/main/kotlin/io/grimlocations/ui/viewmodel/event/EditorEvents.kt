@@ -1,8 +1,10 @@
 package io.grimlocations.ui.viewmodel.event
 
 import androidx.compose.desktop.AppWindow
+import androidx.compose.foundation.ExperimentalFoundationApi
 import io.grimlocations.data.dto.LocationDTO
 import io.grimlocations.ui.view.component.openOkCancelPopup
+import io.grimlocations.ui.view.openEditLocationPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
@@ -22,6 +24,34 @@ fun EditorViewModel.loadCharacterProfiles(
                 onOkClicked = {
                     onClosePopup(it)
                     it.closeIfOpen()
+                },
+            )
+        }
+    }
+}
+
+@ExperimentalCoroutinesApi
+@ExperimentalFoundationApi
+fun EditorViewModel.editLocation(
+    location: LocationDTO,
+    onOpenPopup: (AppWindow) -> Unit,
+    onClosePopup: (AppWindow) -> Unit,
+) {
+    viewModelScope.launch {
+        stateManager.loadCharacterProfiles()
+        withContext(Dispatchers.Main) {
+            openEditLocationPopup(
+                location = location,
+                onOpen = onOpenPopup,
+                onCancelClicked = onClosePopup,
+                onOkClicked = { win, loc ->
+                    viewModelScope.launch {
+                        withContext(Dispatchers.IO) {
+                            stateManager.updateLocation(loc)
+                        }
+                    }
+                    onClosePopup(win)
+                    win.closeIfOpen()
                 },
             )
         }

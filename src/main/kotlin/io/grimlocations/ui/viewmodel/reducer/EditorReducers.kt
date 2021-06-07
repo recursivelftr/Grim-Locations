@@ -7,6 +7,7 @@ import io.grimlocations.data.repo.createLocationsFromFile
 import io.grimlocations.data.repo.getFileLastModified
 import io.grimlocations.data.repo.isGDRunning
 import io.grimlocations.data.repo.writeLocationsToFile
+import io.grimlocations.framework.data.dto.replaceDTO
 import io.grimlocations.framework.ui.getState
 import io.grimlocations.framework.ui.setState
 import io.grimlocations.framework.util.awaitAll
@@ -290,5 +291,21 @@ suspend fun GLStateManager.deleteSelectedRight() {
     copySelectedPMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
+    }
+}
+
+suspend fun GLStateManager.updateLocation(location: LocationDTO) {
+    val s = getState<EditorState>()
+    if(repository.updateLocationAsync(location).await() == null) {
+        withContext(Dispatchers.Main) {
+            setState(
+                s.copy(
+                    locationsRight = s.locationsRight.replaceDTO(location),
+                    locationsLeft = s.locationsLeft.replaceDTO(location),
+                    selectedLocationsRight = s.selectedLocationsRight.replaceDTO(location),
+                    selectedLocationsLeft = s.selectedLocationsLeft.replaceDTO(location),
+                )
+            )
+        }
     }
 }

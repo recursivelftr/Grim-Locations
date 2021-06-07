@@ -31,7 +31,7 @@ inline fun <reified S : State, VM : ViewModel<S, *>>
     if (state == null) {
         loading()
     } else {
-        if (viewVm.disabled) {
+        if (viewVm.viewDisabled) {
             Overlay(viewVm.onOverlayClick) { viewVm.content(state) }
         } else {
             viewVm.content(state)
@@ -53,7 +53,7 @@ inline fun <reified S1 : State, reified S2 : State, VM1 : ViewModel<S1, *>, VM2 
     val state2 = viewModel2.stateFlow.collectAsState().value
 
     guardLet(state1, state2) { s1, s2 ->
-        if (viewVm.disabled) {
+        if (viewVm.viewDisabled) {
             Overlay(viewVm.onOverlayClick) { viewVm.content(s1, s2) }
         } else {
             viewVm.content(s1, s2)
@@ -77,7 +77,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, VM1 : Vi
     val state3 = viewModel3.stateFlow.collectAsState().value
 
     guardLet(state1, state2, state3) { s1, s2, s3 ->
-        if (viewVm.disabled) {
+        if (viewVm.viewDisabled) {
             Overlay(viewVm.onOverlayClick) { viewVm.content(s1, s2, s3) }
         } else {
             viewVm.content(s1, s2, s3)
@@ -103,7 +103,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
     val state4 = viewModel4.stateFlow.collectAsState().value
 
     guardLet(state1, state2, state3, state4) { s1, s2, s3, s4 ->
-        if (viewVm.disabled) {
+        if (viewVm.viewDisabled) {
             Overlay(viewVm.onOverlayClick) { viewVm.content(s1, s2, s3, s4) }
         } else {
             viewVm.content(s1, s2, s3, s4)
@@ -131,7 +131,7 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
     val state5 = viewModel5.stateFlow.collectAsState().value
 
     guardLet(state1, state2, state3, state4, state5) { s1, s2, s3, s4, s5 ->
-        if (viewVm.disabled) {
+        if (viewVm.viewDisabled) {
             Overlay(viewVm.onOverlayClick) { viewVm.content(s1, s2, s3, s4, s5) }
         } else {
             viewVm.content(s1, s2, s3, s4, s5)
@@ -157,7 +157,7 @@ fun Overlay(onClick: () -> Unit, content: @Composable () -> Unit) {
 }
 
 interface View {
-    var disabled: Boolean
+    var viewDisabled: Boolean
     var onOverlayClick: () -> Unit
     val subWindows: MutableSet<AppWindow>
 }
@@ -168,7 +168,7 @@ class ViewVm : View {
 
     override val subWindows = mutableSetOf<AppWindow>()
 
-    override var disabled: Boolean
+    override var viewDisabled: Boolean
         get() = _disabled.value
         set(value) {
             _disabled.value = value

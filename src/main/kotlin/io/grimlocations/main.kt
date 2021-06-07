@@ -12,7 +12,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 
-val logger = LogManager.getLogger()
+private val logger = LogManager.getLogger()
 
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi

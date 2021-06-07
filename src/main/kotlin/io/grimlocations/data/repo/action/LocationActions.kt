@@ -201,6 +201,19 @@ suspend fun SqliteRepository.deleteLocationsAsync(pmdContainer: PMDContainer, lo
         }
     }
 
+suspend fun SqliteRepository.updateLocationAsync(location: LocationDTO) =
+    modifyDatabaseAsync {
+        try {
+            val loc = Location.findById(location.id)!!
+            loc.name = location.name
+            null
+        } catch (e: Exception) {
+            val message = "Could not update location: $location"
+            logger.error(message, e)
+            message
+        }
+    }
+
 private suspend fun SqliteRepository.getLocationsAboveOrderAsync(pmdContainer: PMDContainer, o: Int) =
     suspendedTransactionAsync(Dispatchers.IO) {
         Location.find {
