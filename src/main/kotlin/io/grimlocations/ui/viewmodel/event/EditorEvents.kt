@@ -3,6 +3,7 @@ package io.grimlocations.ui.viewmodel.event
 import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import io.grimlocations.data.dto.LocationDTO
+import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.view.openEditLocationPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
@@ -32,18 +33,50 @@ fun EditorViewModel.loadCharacterProfiles(
 
 @ExperimentalCoroutinesApi
 @ExperimentalFoundationApi
-fun EditorViewModel.editLocation(
+fun EditorViewModel.editLocationLeft(
     location: LocationDTO,
     onOpenPopup: (AppWindow) -> Unit,
     onClosePopup: (AppWindow) -> Unit,
 ) {
+    editLocation(
+        location = location,
+        onOpenPopup = onOpenPopup,
+        onClosePopup = onClosePopup,
+        updateLocation = GLStateManager::updateLocationLeft
+    )
+}
+
+@ExperimentalCoroutinesApi
+@ExperimentalFoundationApi
+fun EditorViewModel.editLocationRight(
+    location: LocationDTO,
+    onOpenPopup: (AppWindow) -> Unit,
+    onClosePopup: (AppWindow) -> Unit,
+) {
+    editLocation(
+        location = location,
+        onOpenPopup = onOpenPopup,
+        onClosePopup = onClosePopup,
+        updateLocation = GLStateManager::updateLocationRight
+    )
+}
+
+@ExperimentalCoroutinesApi
+@ExperimentalFoundationApi
+private fun EditorViewModel.editLocation(
+    location: LocationDTO,
+    onOpenPopup: (AppWindow) -> Unit,
+    onClosePopup: (AppWindow) -> Unit,
+    updateLocation: suspend GLStateManager.(LocationDTO) -> Unit,
+) {
     viewModelScope.launch {
-        stateManager.loadCharacterProfiles()
         withContext(Dispatchers.Main) {
             openEditLocationPopup(
                 location = location,
                 onOpen = onOpenPopup,
-                onCancelClicked = onClosePopup,
+                onCancelClicked = {
+                    onClosePopup(it)
+                },
                 onOkClicked = { win, loc ->
                     viewModelScope.launch {
                         withContext(Dispatchers.IO) {
@@ -51,7 +84,6 @@ fun EditorViewModel.editLocation(
                         }
                     }
                     onClosePopup(win)
-                    win.closeIfOpen()
                 },
             )
         }

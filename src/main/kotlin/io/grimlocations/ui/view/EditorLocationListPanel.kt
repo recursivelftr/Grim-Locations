@@ -23,6 +23,7 @@ import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.apache.logging.log4j.LogManager
 
 private val listHeight = 400.dp
@@ -40,14 +41,16 @@ private lateinit var stateVerticalRight: LazyListState
 
 private val logger = LogManager.getLogger()
 
+@ExperimentalCoroutinesApi
 @ExperimentalFoundationApi
 @Composable
 fun EditorLocationListPanel(
     state: EditorState,
     vm: EditorViewModel,
     onOpen: (AppWindow?, AppWindow) -> Unit,
-    onOpenDisabledOverlay: (AppWindow?, AppWindow) -> Unit,
     onClose: (() -> Unit),
+    onOpenDisabledOverlayPopup: (AppWindow) -> Unit,
+    onCloseDisabledOverlayPopup: (AppWindow) -> Unit,
 ) {
     with(state) {
         val isLeftArrowDisabled = isArrowLeftRightDisabled(
@@ -112,7 +115,13 @@ fun EditorLocationListPanel(
                         EditButton(
                             pmdContainer = selectedPMDLeft,
                             selected = selectedLocationsLeft,
-                            onClick = {}
+                            onClick = {
+                                vm.editLocationLeft(
+                                    location = it,
+                                    onOpenPopup = onOpenDisabledOverlayPopup,
+                                    onClosePopup = onCloseDisabledOverlayPopup,
+                                )
+                            }
                         )
                         DeleteButton(
                             pmdContainer = selectedPMDLeft,
@@ -235,10 +244,10 @@ fun EditorLocationListPanel(
                             pmdContainer = selectedPMDRight,
                             selected = selectedLocationsRight,
                             onClick = {
-                                vm.editLocation(
+                                vm.editLocationRight(
                                     location = it,
-                                    onOpenPopup = onOpenDisabledOverlay,
-
+                                    onOpenPopup = onOpenDisabledOverlayPopup,
+                                    onClosePopup = onCloseDisabledOverlayPopup,
                                 )
                             }
                         )
@@ -345,7 +354,7 @@ private fun EditButton(
         Icon(
             Icons.Default.Edit,
             "Edit",
-            tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
+            tint = if (disabled) Color.DarkGray else Color.White
         )
     }
 
@@ -368,7 +377,7 @@ private fun DeleteButton(
         Icon(
             Icons.Default.Delete,
             "Delete",
-            tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
+            tint = if (disabled) Color.DarkGray else Color.White
         )
     }
 }

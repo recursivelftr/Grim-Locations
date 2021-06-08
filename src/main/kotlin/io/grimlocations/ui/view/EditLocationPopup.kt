@@ -5,10 +5,7 @@ import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,7 +20,7 @@ import io.grimlocations.data.dto.LocationDTO
 import io.grimlocations.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
-private val TEXT_FIELD_WIDTH = 400.dp
+private val TEXT_FIELD_WIDTH = 480.dp
 
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
@@ -33,7 +30,7 @@ private fun EditLocationPopup(
     onOkClicked: (LocationDTO) -> Unit,
     onCancelClicked: (() -> Unit)?,
 ) {
-    val loc = remember { mutableStateOf(location) }
+    val locName = remember { mutableStateOf(location.name) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -42,8 +39,8 @@ private fun EditLocationPopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TextField(
-                value = loc.value.name,
-                onValueChange = { loc.value = loc.value.copy(name = it) },
+                value = locName.value,
+                onValueChange = { locName.value = it },
                 label = {
                     Text("Name", style = TextStyle(fontSize = 15.sp))
                 },
@@ -51,15 +48,7 @@ private fun EditLocationPopup(
                 modifier = Modifier.width(TEXT_FIELD_WIDTH)
             )
             Spacer(Modifier.height(20.dp))
-            TextField(
-                value = loc.value.coordinate.run { "$coordinate1, $coordinate2, $coordinate3" },
-                onValueChange = { loc.value = loc.value.copy(name = it) },
-                label = {
-                    Text("Name", style = TextStyle(fontSize = 15.sp))
-                },
-                singleLine = true,
-                modifier = Modifier.width(TEXT_FIELD_WIDTH)
-            )
+            CoordianteRow(location)
             Spacer(Modifier.height(20.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -74,12 +63,80 @@ private fun EditLocationPopup(
                     Spacer(modifier = Modifier.width(10.dp))
                 }
                 Button(
-                    onClick = { onOkClicked(loc.value) },
+                    onClick = { onOkClicked(location.copy(name = locName.value)) },
                 ) {
                     Text("Ok")
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CoordianteRow(location: LocationDTO) {
+
+    val labelColor = MaterialTheme.colors.onSurface.let {
+        val isLightColors = MaterialTheme.colors.isLight
+        remember {
+            val offset = if (isLightColors) .3f else -.3f
+            it.copy(red = it.red + offset, blue = it.blue + offset, green = it.green + offset)
+        }
+    }
+
+    val textBoxWidth = 150.dp
+    val textFieldHeight = 56.dp
+    val spacerWidth = 15.dp
+    val enabled = true
+    val readonly = true
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        TextField(
+            value = location.coordinate.coordinate1,
+            readOnly = readonly,
+            enabled = enabled,
+            onValueChange = {},
+            singleLine = true,
+            label = {
+                Text(
+                    "Coordinate One",
+                    color = labelColor
+                )
+            },
+            modifier = Modifier.width(textBoxWidth).height(textFieldHeight)
+        )
+        Spacer(modifier = Modifier.width(spacerWidth))
+        TextField(
+            value = location.coordinate.coordinate2,
+            readOnly = readonly,
+            enabled = enabled,
+            onValueChange = {},
+            singleLine = true,
+            label = {
+                Text(
+                    "Coordinate Two",
+                    color = labelColor
+                )
+            },
+            modifier = Modifier.width(textBoxWidth).height(textFieldHeight)
+        )
+        Spacer(modifier = Modifier.width(spacerWidth))
+        TextField(
+            value = location.coordinate.coordinate3,
+            readOnly = readonly,
+            enabled = enabled,
+            onValueChange = {},
+            singleLine = true,
+            label = {
+                Text(
+                    "Coordinate Three",
+                    color = labelColor
+                )
+            },
+            modifier = Modifier.width(textBoxWidth).height(textFieldHeight)
+        )
     }
 }
 
@@ -91,12 +148,17 @@ fun openEditLocationPopup(
     onCancelClicked: (AppWindow) -> Unit,
     onOkClicked: (AppWindow, LocationDTO) -> Unit,
 ) {
+    lateinit var window: AppWindow
+
     Window(
         title = "Grim Locations",
         icon = APP_ICON,
-        size = IntSize(550, 300),
+        size = IntSize(600, 275),
+        onDismissRequest = {
+            onCancelClicked(window)
+        }
     ) {
-        val window = LocalAppWindow.current
+        window = LocalAppWindow.current
 
         remember { onOpen(window) }
 

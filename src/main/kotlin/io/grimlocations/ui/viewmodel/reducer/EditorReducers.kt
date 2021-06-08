@@ -116,7 +116,7 @@ suspend fun GLStateManager.checkIfLocationsFileChangedAndLoadLocation() {
     }
 }
 
-private suspend fun GLStateManager.copySelectedPMDToLocationsFile(pmdc: PMDContainer) {
+private suspend fun GLStateManager.copyActivePMDToLocationsFile(pmdc: PMDContainer) {
     val meta = repository.getMetaAsync().await()
     if(pmdc == meta.activePMD) {
         guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
@@ -209,7 +209,7 @@ suspend fun GLStateManager.copyLeftSelectedToRight() {
         selectedLocations = s.selectedLocationsLeft,
         otherSelectedLocations = s.selectedLocationsRight
     ).await()
-    copySelectedPMDToLocationsFile(s.selectedPMDRight)
+    copyActivePMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -222,7 +222,7 @@ suspend fun GLStateManager.copyRightSelectedToLeft() {
         selectedLocations = s.selectedLocationsRight,
         otherSelectedLocations = s.selectedLocationsLeft
     ).await()
-    copySelectedPMDToLocationsFile(s.selectedPMDLeft)
+    copyActivePMDToLocationsFile(s.selectedPMDLeft)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -234,7 +234,7 @@ suspend fun GLStateManager.moveSelectedLeftUp() {
         pmdContainer = s.selectedPMDLeft,
         locations = s.selectedLocationsLeft
     ).await()
-    copySelectedPMDToLocationsFile(s.selectedPMDLeft)
+    copyActivePMDToLocationsFile(s.selectedPMDLeft)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -246,7 +246,7 @@ suspend fun GLStateManager.moveSelectedLeftDown() {
         pmdContainer = s.selectedPMDLeft,
         locations = s.selectedLocationsLeft
     ).await()
-    copySelectedPMDToLocationsFile(s.selectedPMDLeft)
+    copyActivePMDToLocationsFile(s.selectedPMDLeft)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -258,7 +258,7 @@ suspend fun GLStateManager.moveSelectedRightUp() {
         pmdContainer = s.selectedPMDRight,
         locations = s.selectedLocationsRight
     ).await()
-    copySelectedPMDToLocationsFile(s.selectedPMDRight)
+    copyActivePMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -270,7 +270,7 @@ suspend fun GLStateManager.moveSelectedRightDown() {
         pmdContainer = s.selectedPMDRight,
         locations = s.selectedLocationsRight
     ).await()
-    copySelectedPMDToLocationsFile(s.selectedPMDRight)
+    copyActivePMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -279,7 +279,7 @@ suspend fun GLStateManager.moveSelectedRightDown() {
 suspend fun GLStateManager.deleteSelectedLeft() {
     val s = getState<EditorState>()
     repository.deleteLocationsAsync(s.selectedPMDLeft, s.selectedLocationsLeft).await()
-    copySelectedPMDToLocationsFile(s.selectedPMDLeft)
+    copyActivePMDToLocationsFile(s.selectedPMDLeft)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
@@ -288,15 +288,25 @@ suspend fun GLStateManager.deleteSelectedLeft() {
 suspend fun GLStateManager.deleteSelectedRight() {
     val s = getState<EditorState>()
     repository.deleteLocationsAsync(s.selectedPMDRight, s.selectedLocationsRight).await()
-    copySelectedPMDToLocationsFile(s.selectedPMDRight)
+    copyActivePMDToLocationsFile(s.selectedPMDRight)
     withContext(Dispatchers.Main) {
         reloadEditorState()
     }
 }
 
-suspend fun GLStateManager.updateLocation(location: LocationDTO) {
+suspend fun GLStateManager.updateLocationLeft(location: LocationDTO) {
     val s = getState<EditorState>()
+    updateLocation(location, s.selectedPMDLeft, s)
+}
+
+suspend fun GLStateManager.updateLocationRight(location: LocationDTO) {
+    val s = getState<EditorState>()
+    updateLocation(location, s.selectedPMDRight, s)
+}
+
+private suspend fun GLStateManager.updateLocation(location: LocationDTO, pmd: PMDContainer, s: EditorState) {
     if(repository.updateLocationAsync(location).await() == null) {
+        copyActivePMDToLocationsFile(pmd)
         withContext(Dispatchers.Main) {
             setState(
                 s.copy(

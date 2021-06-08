@@ -153,13 +153,16 @@ private fun EditorView(
                     subWindows.add(c)
                     onOverlayClick = { subWindows.forEach { a -> a.closeIfOpen() } }
                 },
-                onOpenDisabledOverlay = { p, c ->
-                    viewDisabled = true
-                    subWindows.remove(p)
-                    subWindows.add(c)
+                onClose = { viewDisabled = false },
+                onOpenDisabledOverlayPopup = { w ->
+                    subWindows.add(w)
                     onOverlayClick = { }
+                    viewDisabled = true
                 },
-                onClose = { viewDisabled = false }
+                onCloseDisabledOverlayPopup = {
+                    subWindows.remove(it)
+                    viewDisabled = false
+                }
             )
         }
     }
