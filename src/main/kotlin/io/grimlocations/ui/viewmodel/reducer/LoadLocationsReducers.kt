@@ -11,7 +11,7 @@ import io.grimlocations.framework.ui.setState
 import io.grimlocations.framework.util.awaitAll
 import io.grimlocations.framework.util.extension.endsWithOne
 import io.grimlocations.ui.GLStateManager
-import io.grimlocations.ui.viewmodel.state.LauncherState
+import io.grimlocations.ui.viewmodel.state.LoadLocationsState
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.io.File
@@ -19,7 +19,7 @@ import java.io.File
 private val logger: Logger = LogManager.getLogger()
 
 @Suppress("UNCHECKED_CAST")
-suspend fun GLStateManager.loadLauncherState() {
+suspend fun GLStateManager.loadLoadLocationsState() {
     val (map, meta) = awaitAll(
         repository.getProfilesModsDifficultiesAsync(
             includeReservedProfiles = false
@@ -28,25 +28,20 @@ suspend fun GLStateManager.loadLauncherState() {
     )
 
     setState(
-        LauncherState(
+        LoadLocationsState(
             map = map,
             selected = meta.activePMD ?: map.firstContainer(),
-            installPath = meta.installLocation!!,
-            locationsFilePath = null,
+            locationsFilePath = meta.installLocation!!,
         )
     )
 }
 
-suspend fun GLStateManager.updateLauncherState(state: LauncherState) {
+suspend fun GLStateManager.updateLoadLocationsState(state: LoadLocationsState) {
     setState(state)
 }
 
-suspend fun GLStateManager.persistActivePMD() {
-    val s = getState<LauncherState>()
-    repository.persistActivePMDAsync(s.selected).await()
-}
 
-suspend fun GLStateManager.loadLocationsIntoSelectedProfile(filePath: String): String {
+suspend fun GLStateManager.loadLocationsIntoSelectedProfile(filePath: String): String? {
     val file = File(filePath)
     return if (file.isDirectory || !filePath.endsWithOne("csv", "txt", ignoreCase = true)) {
         "The file is not a csv or txt file.".also {
@@ -55,22 +50,9 @@ suspend fun GLStateManager.loadLocationsIntoSelectedProfile(filePath: String): S
     } else {
         repository.createLocationsFromFile(
             file,
-            getState<LauncherState>().selected
+            getState<LoadLocationsState>().selected
         )?.also {
             logger.error(it)
-        } ?: "Locations successfully loaded."
+        }
     }
-}
-
-suspend fun GLStateManager.writeToLocationsFile(): String? {
-    val meta = repository.getMetaAsync().await()
-    meta.installLocation?.also {
-        val s = getState<LauncherState>()
-        return if (it.endsWithOne("/", "\\"))
-            repository.writeLocationsToFile(File(it + "GrimInternals_TeleportList.txt"), s.selected)
-        else
-            repository.writeLocationsToFile(File(it + File.separator + "GrimInternals_TeleportList.txt"), s.selected)
-    }
-
-    return "GD install location needs to be set."
 }

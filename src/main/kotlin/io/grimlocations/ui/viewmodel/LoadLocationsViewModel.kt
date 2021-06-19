@@ -3,18 +3,19 @@ package io.grimlocations.ui.viewmodel
 import io.grimlocations.framework.ui.viewmodel.ViewModel
 import io.grimlocations.framework.ui.viewmodel.stateFlow
 import io.grimlocations.ui.GLStateManager
-import io.grimlocations.ui.viewmodel.reducer.loadLauncherState
-import io.grimlocations.ui.viewmodel.state.LauncherState
+import io.grimlocations.ui.viewmodel.reducer.loadActiveChooserState
+import io.grimlocations.ui.viewmodel.reducer.loadLoadLocationsState
+import io.grimlocations.ui.viewmodel.state.LoadLocationsState
 import io.grimlocations.util.JSystemFileChooser
 import kotlinx.coroutines.launch
 import java.io.File
 
-class LauncherViewModel(override val stateManager: GLStateManager) :
-    ViewModel<LauncherState, GLStateManager>() {
+class LoadLocationsViewModel(override val stateManager: GLStateManager) :
+    ViewModel<LoadLocationsState, GLStateManager>() {
 
     val locationsFileChooser by lazy {
         JSystemFileChooser().applyCsvTextFilesOnly().apply {
-            stateFlow.value?.installPath?.let {
+            stateFlow.value?.locationsFilePath?.let {
                 currentDirectory = File(it)
             }
         }
@@ -22,7 +23,7 @@ class LauncherViewModel(override val stateManager: GLStateManager) :
 
     override fun loadState() {
         viewModelScope.launch {
-            stateManager.loadLauncherState()
+            stateManager.loadLoadLocationsState()
         }
     }
 }

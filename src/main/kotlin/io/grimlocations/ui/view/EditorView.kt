@@ -35,7 +35,7 @@ private fun EditorView(
     captureSubWindows: ((Set<AppWindow>) -> Unit),
 ) = View(vm) { state ->
     val vmProv = LocalViewModel.current as GLViewModelProvider
-    val previousLauncherWindow = remember { mutableStateOf<AppWindow?>(null) }
+    val previousActiveChooserWindow = remember { mutableStateOf<AppWindow?>(null) }
 
     LaunchedEffect(vm) {
         vm.startGDProcessCheckLoop()
@@ -102,32 +102,46 @@ private fun EditorView(
                     onClick = {
                         viewDisabled = true
                         onOverlayClick = {}
-                        openLauncherView(
+                        openActiveChooserView(
                             vmProvider = vmProv,
                             onClose = {
-                                subWindows.remove(previousLauncherWindow.value)
+                                subWindows.remove(previousActiveChooserWindow.value)
                                 vm.reloadState()
                                 viewDisabled = false
                             },
                             captureWindow = { w ->
-                                subWindows.remove(previousLauncherWindow.value)
+                                subWindows.remove(previousActiveChooserWindow.value)
                                 subWindows.add(w)
-                                previousLauncherWindow.value = w
+                                previousActiveChooserWindow.value = w
                             }
                         )
                     },
                 ) {
                     Text("Select Active")
                 }
-//                Spacer(modifier = Modifier.width(15.dp))
-//                Button(
-//                    enabled = !(state.profileMap.hasOnlyReservedProfiles() || state.activePMD == null),
-//                    onClick = {
-//
-//                    }
-//                ) {
-//                    Text("Sync Active to Grim Dawn")
-//                }
+                Spacer(modifier = Modifier.width(15.dp))
+                Button(
+                    enabled = !state.profileMap.hasOnlyReservedProfiles(),
+                    onClick = {
+                        viewDisabled = true
+                        onOverlayClick = {}
+                        openLoadLocationsView(
+                            vmProvider = vmProv,
+                            onClose = {
+                                subWindows.remove(previousActiveChooserWindow.value)
+                                vm.reloadState()
+                                viewDisabled = false
+                            },
+                            captureWindow = { w ->
+                                subWindows.remove(previousActiveChooserWindow.value)
+                                subWindows.add(w)
+                                previousActiveChooserWindow.value = w
+                            }
+                        )
+                    },
+                ) {
+                    Text("Load Locations to Profile")
+                }
             }
             Spacer(Modifier.height(20.dp))
             Row(

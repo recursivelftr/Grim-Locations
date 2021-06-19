@@ -21,7 +21,7 @@ import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.view.component.PMDChooserComponent
-import io.grimlocations.ui.viewmodel.LauncherViewModel
+import io.grimlocations.ui.viewmodel.ActiveChooserViewModel
 import io.grimlocations.ui.viewmodel.event.loadLocationsIntoSelectedProfile
 import io.grimlocations.ui.viewmodel.event.persistPMDAndWriteLocations
 import io.grimlocations.ui.viewmodel.event.selectPMD
@@ -32,8 +32,8 @@ import javax.swing.JFileChooser
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 @Composable
-private fun LauncherView(
-    vm: LauncherViewModel = getFactoryViewModel(),
+private fun ActiveChooserView(
+    vm: ActiveChooserViewModel = getFactoryViewModel(),
     captureSubWindows: ((Set<AppWindow>) -> Unit),
 ) {
     View(vm) { state ->
@@ -66,38 +66,6 @@ private fun LauncherView(
                 ) {
                     Button(
                         onClick = {
-                            with(vm.locationsFileChooser) {
-                                val okOrCancel = showOpenDialog(null)
-                                if (okOrCancel == JFileChooser.APPROVE_OPTION) {
-                                    vm.loadLocationsIntoSelectedProfile(
-                                        filePath = selectedFile.absolutePath,
-                                        onOpenPopup = {
-                                            onOverlayClick = {
-                                                it.closeIfOpen()
-                                                subWindows.remove(it)
-                                                viewDisabled = false
-                                            }
-                                            subWindows.add(it)
-                                        },
-                                        onClosePopup = {
-                                            subWindows.remove(it)
-                                            viewDisabled = false
-                                        }
-                                    )
-                                }
-                            }
-                        },
-                    ) {
-                        Text("Load Locations to Profile")
-                    }
-                }
-                Spacer(Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Button(
-                        onClick = {
                             window.closeIfOpen()
                         },
                     ) {
@@ -119,7 +87,7 @@ private fun LauncherView(
 
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
-fun openLauncherView(
+fun openActiveChooserView(
     vmProvider: GLViewModelProvider,
     previousWindow: AppWindow? = null,
     onClose: (() -> Unit)? = null,
@@ -143,7 +111,7 @@ fun openLauncherView(
 
         CompositionLocalProvider(LocalViewModel provides vmProvider) {
             GrimLocationsTheme {
-                LauncherView(
+                ActiveChooserView(
                     captureSubWindows = { l ->
                         subWindows = l
                     }
