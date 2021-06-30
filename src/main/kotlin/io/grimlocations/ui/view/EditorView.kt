@@ -1,7 +1,6 @@
 package io.grimlocations.ui.view
 
 import androidx.compose.desktop.AppWindow
-import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,10 +8,16 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowSize
+import androidx.compose.ui.window.rememberWindowState
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.framework.ui.LocalViewModel
@@ -23,6 +28,7 @@ import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.event.loadCharacterProfiles
 import io.grimlocations.ui.viewmodel.event.reloadState
 import io.grimlocations.ui.viewmodel.event.startGDProcessCheckLoop
+import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,9 +39,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 private fun EditorView(
     vm: EditorViewModel = getLazyViewModel(),
     captureSubWindows: ((Set<AppWindow>) -> Unit),
+    captureState: (EditorState) -> Unit,
 ) = View(vm) { state ->
     val vmProv = LocalViewModel.current as GLViewModelProvider
     val previousActiveChooserWindow = remember { mutableStateOf<AppWindow?>(null) }
+
+    captureState(state)
 
     LaunchedEffect(vm) {
         vm.startGDProcessCheckLoop()
@@ -56,7 +65,7 @@ private fun EditorView(
                         Icons.Default.Settings,
                         "Settings",
                         modifier = Modifier.size(40.dp).clickable {
-                            openPropertiesView(
+                            legacyOpenPropertiesView(
                                 vmProvider = vmProv,
                                 onClose = {
                                     subWindows.remove(it)
@@ -149,7 +158,7 @@ private fun EditorView(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text("Grim Dawn Status: ")
-                if(state.isGDRunning) {
+                if (state.isGDRunning) {
                     Text("Running", color = Color(0, 204, 0))
                 } else {
                     Text("Not Running")
@@ -250,28 +259,41 @@ private fun ActiveProfileRow(pmd: PMDContainer?) {
     }
 }
 
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
-fun openEditorView(vmProvider: GLViewModelProvider, previousWindow: AppWindow) {
-    var subWindows: Set<AppWindow>? = null
+@Composable
+fun openEditorView(
+    exitApplication: () -> Unit,
+) {
+    var subWindows: Set<AppWindow>? by remember { mutableStateOf(null) }
+    val state =
+        rememberWindowState(size = WindowSize(1500.dp, 950.dp), position = WindowPosition.Aligned(Alignment.Center))
+
+    lateinit var editorState: EditorState
+
+    val captureState = remember<(EditorState) -> Unit>{ { editorState = it } }
+
     Window(
         title = "Grim Locations",
         icon = APP_ICON,
-        size = IntSize(1500, 950),
-        onDismissRequest = {
-            subWindows?.forEach { it.closeIfOpen() }
+        state = state,
+        onCloseRequest = {
+            if(editorState.isGDRunning){
+
+            } else {
+                subWindows?.forEach { it.closeIfOpen() }
+                exitApplication()
+            }
         }
     ) {
-        remember { previousWindow.closeIfOpen() }
-
-        CompositionLocalProvider(LocalViewModel provides vmProvider) {
-            GrimLocationsTheme {
-                EditorView(
-                    captureSubWindows = { l ->
-                        subWindows = l
-                    }
-                )
-            }
+        GrimLocationsTheme {
+            EditorView(
+                captureSubWindows = { l ->
+                    subWindows = l
+                },
+                captureState = captureState
+            )
         }
     }
 }

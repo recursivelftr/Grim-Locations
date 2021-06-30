@@ -6,13 +6,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowSize
 import io.grimlocations.data.repo.SqliteRepository
 import io.grimlocations.data.repo.action.arePropertiesSetAsync
+import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.GLViewModelProvider
 import kotlinx.coroutines.*
@@ -21,7 +25,7 @@ import net.harawata.appdirs.AppDirsFactory
 @ExperimentalCoroutinesApi
 @Composable
 fun AppEntryStandaloneView(
-    newWindow: (Boolean, GLViewModelProvider) -> Unit
+    newWindow: @Composable (Boolean) -> Unit
 ) {
     val state = remember { mutableStateOf<StartState?>(null) }
 
@@ -34,8 +38,11 @@ fun AppEntryStandaloneView(
         }
     }
 
+
     state.value?.also {
-        newWindow(it.arePropertiesSet, it.viewModelProvider)
+        CompositionLocalProvider(LocalViewModel provides it.viewModelProvider) {
+            newWindow(it.arePropertiesSet)
+        }
     } ?: SplashScreen()
 }
 
@@ -50,7 +57,7 @@ private suspend fun initializeApp(): StartState {
     )
 }
 
-val SPLASH_SCREEN_SIZE = IntSize(500, 300)
+val SPLASH_SCREEN_SIZE = WindowSize(500.dp, 300.dp)
 
 @Composable
 private fun SplashScreen() {

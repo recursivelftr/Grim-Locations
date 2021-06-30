@@ -1,8 +1,15 @@
 package io.grimlocations
 
 import androidx.compose.desktop.LocalAppWindow
-import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.ui.view.*
 import io.grimlocations.util.enableThreadLogging
@@ -14,30 +21,38 @@ import java.nio.file.attribute.BasicFileAttributes
 
 private val logger = LogManager.getLogger()
 
+
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 fun main(args: Array<String>) {
     enableThreadLogging()
 
+    application {
+        val state = rememberWindowState(size = SPLASH_SCREEN_SIZE, position = WindowPosition.Aligned(Alignment.Center))
+        val isOpen = remember { mutableStateOf(true) }
 
-    Window(
-        title = "Grim Locations",
-        icon = APP_ICON,
-        undecorated = true,
-        size = SPLASH_SCREEN_SIZE
-    ) {
-        val window = LocalAppWindow.current
+        if (isOpen.value) {
 
-        GrimLocationsTheme {
-            AppEntryStandaloneView { arePropertiesSet, vmProvider ->
-                if (arePropertiesSet)
-                    openEditorView(vmProvider, window)
-                else
-                    openPropertiesView(
-                        vmProvider,
-                        nextWindow = ::openEditorView,
-                        previousWindowToClose = window
-                    )
+            Window(
+                title = "Grim Locations",
+                icon = APP_ICON,
+                undecorated = true,
+                state = state,
+                onCloseRequest = ::exitApplication
+            ) {
+                GrimLocationsTheme {
+                    AppEntryStandaloneView { arePropertiesSet ->
+                        if (arePropertiesSet)
+                            openEditorView(::exitApplication)
+                        else
+                            openPropertiesView(
+                                nextWindow = { openEditorView(::exitApplication) },
+                                closeWindow = ::exitApplication,
+                            )
+                        isOpen.value = false
+                    }
+                }
             }
         }
     }
@@ -51,7 +66,8 @@ fun fileReadsTest() {
     val playerBak = File("C:\\Users\\gramb\\Documents\\My Games\\Grim Dawn\\save\\main\\_Recursive\\player.gdc.bak")
     val player2Bak = File("C:\\Users\\gramb\\Documents\\My Games\\Grim Dawn\\save\\main\\_RecursiveN\\player.gdc.bak")
     val player3Bak = File("C:\\Users\\gramb\\Documents\\My Games\\Grim Dawn\\save\\main\\_RecursiveW\\player.gdc.bak")
-    val quests = File("C:\\Users\\gramb\\Documents\\My Games\\Grim Dawn\\save\\main\\_Recursive\\maps_survivalworld_i.map\\Elite\\quests.gdd")
+    val quests =
+        File("C:\\Users\\gramb\\Documents\\My Games\\Grim Dawn\\save\\main\\_Recursive\\maps_survivalworld_i.map\\Elite\\quests.gdd")
     val playmenu = File("C:\\Users\\gramb\\Documents\\My Games\\Grim Dawn\\save\\playmenu.cpn")
 
     val locAtr = Files.readAttributes(locations.toPath(), BasicFileAttributes::class.java)

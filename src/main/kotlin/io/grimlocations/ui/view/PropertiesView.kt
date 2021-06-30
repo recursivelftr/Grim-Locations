@@ -2,21 +2,26 @@ package io.grimlocations.ui.view
 
 import androidx.compose.desktop.AppWindow
 import androidx.compose.desktop.LocalAppWindow
-import androidx.compose.desktop.Window
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowSize
+import androidx.compose.ui.window.rememberWindowState
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.framework.ui.getFactoryViewModel
@@ -27,7 +32,6 @@ import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.PropertiesState
 import io.grimlocations.ui.viewmodel.state.PropertiesStateError.GRIM_INTERNALS_NOT_FOUND
 import io.grimlocations.ui.viewmodel.state.PropertiesStateWarning.NO_CHARACTERS_FOUND
-import io.grimlocations.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.swing.JFileChooser
 
@@ -165,17 +169,48 @@ private fun PropertiesView(
 private fun isOkEnabled(state: PropertiesState) =
     state.installPath != null && state.installPath.isNotBlank() && state.errors.isEmpty()
 
+@ExperimentalComposeUiApi
 @ExperimentalCoroutinesApi
+@Composable
 fun openPropertiesView(
+    nextWindow: @Composable (() -> Unit),
+    closeWindow: () -> Unit,
+) {
+    val state =
+        rememberWindowState(size = WindowSize(550.dp, 300.dp), position = WindowPosition.Aligned(Alignment.Center))
+
+    val isOpen = remember { mutableStateOf(true) }
+
+    if(isOpen.value) {
+        Window(
+            title = "Properties",
+            icon = APP_ICON,
+            state = state,
+            onCloseRequest = closeWindow,
+        ) {
+            GrimLocationsTheme {
+                PropertiesView(
+                    onCancel = closeWindow,
+                    onOk = {
+                        isOpen.value = false
+                    }
+                )
+            }
+        }
+    } else {
+        nextWindow()
+    }
+}
+
+@ExperimentalCoroutinesApi
+fun legacyOpenPropertiesView(
     vmProvider: GLViewModelProvider,
-    nextWindow: ((GLViewModelProvider, AppWindow) -> Unit)? = null,
-    previousWindowToClose: AppWindow? = null,
     onClose: ((AppWindow) -> Unit)? = null,
     captureWindow: ((AppWindow) -> Unit)? = null,
 ) {
     lateinit var window: AppWindow
 
-    Window(
+    androidx.compose.desktop.Window(
         title = "Properties",
         icon = APP_ICON,
         size = IntSize(550, 300),
@@ -188,7 +223,6 @@ fun openPropertiesView(
 
         remember {
             captureWindow?.invoke(window)
-            previousWindowToClose?.closeIfOpen()
         }
 
         CompositionLocalProvider(LocalViewModel provides vmProvider) {
@@ -198,10 +232,7 @@ fun openPropertiesView(
                         window.close()
                     },
                     {
-                        if (nextWindow == null)
-                            window.close()
-                        else
-                            nextWindow.invoke(vmProvider, window)
+                        window.close()
                     }
                 )
             }
