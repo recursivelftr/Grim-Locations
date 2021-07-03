@@ -25,7 +25,7 @@ import net.harawata.appdirs.AppDirsFactory
 @ExperimentalCoroutinesApi
 @Composable
 fun AppEntryStandaloneView(
-    newWindow: @Composable (Boolean) -> Unit
+    newWindow: @Composable (Boolean, GLViewModelProvider) -> Unit
 ) {
     val state = remember { mutableStateOf<StartState?>(null) }
 
@@ -40,9 +40,7 @@ fun AppEntryStandaloneView(
 
 
     state.value?.also {
-        CompositionLocalProvider(LocalViewModel provides it.viewModelProvider) {
-            newWindow(it.arePropertiesSet)
-        }
+        newWindow(it.arePropertiesSet, it.viewModelProvider)
     } ?: SplashScreen()
 }
 

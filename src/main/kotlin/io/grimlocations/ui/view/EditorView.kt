@@ -264,6 +264,7 @@ private fun ActiveProfileRow(pmd: PMDContainer?) {
 @ExperimentalCoroutinesApi
 @Composable
 fun openEditorView(
+    vmProvider: GLViewModelProvider,
     exitApplication: () -> Unit,
 ) {
     var subWindows: Set<AppWindow>? by remember { mutableStateOf(null) }
@@ -272,14 +273,14 @@ fun openEditorView(
 
     lateinit var editorState: EditorState
 
-    val captureState = remember<(EditorState) -> Unit>{ { editorState = it } }
+    val captureState = remember<(EditorState) -> Unit> { { editorState = it } }
 
     Window(
         title = "Grim Locations",
         icon = APP_ICON,
         state = state,
         onCloseRequest = {
-            if(editorState.isGDRunning){
+            if (editorState.isGDRunning) {
 
             } else {
                 subWindows?.forEach { it.closeIfOpen() }
@@ -287,13 +288,15 @@ fun openEditorView(
             }
         }
     ) {
-        GrimLocationsTheme {
-            EditorView(
-                captureSubWindows = { l ->
-                    subWindows = l
-                },
-                captureState = captureState
-            )
+        CompositionLocalProvider(LocalViewModel provides vmProvider) {
+            GrimLocationsTheme {
+                EditorView(
+                    captureSubWindows = { l ->
+                        subWindows = l
+                    },
+                    captureState = captureState
+                )
+            }
         }
     }
 }

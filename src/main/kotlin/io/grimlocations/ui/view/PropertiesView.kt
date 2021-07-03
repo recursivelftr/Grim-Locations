@@ -173,6 +173,7 @@ private fun isOkEnabled(state: PropertiesState) =
 @ExperimentalCoroutinesApi
 @Composable
 fun openPropertiesView(
+    vmProvider: GLViewModelProvider,
     nextWindow: @Composable (() -> Unit),
     closeWindow: () -> Unit,
 ) {
@@ -181,20 +182,22 @@ fun openPropertiesView(
 
     val isOpen = remember { mutableStateOf(true) }
 
-    if(isOpen.value) {
+    if (isOpen.value) {
         Window(
             title = "Properties",
             icon = APP_ICON,
             state = state,
             onCloseRequest = closeWindow,
         ) {
-            GrimLocationsTheme {
-                PropertiesView(
-                    onCancel = closeWindow,
-                    onOk = {
-                        isOpen.value = false
-                    }
-                )
+            CompositionLocalProvider(LocalViewModel provides vmProvider) {
+                GrimLocationsTheme {
+                    PropertiesView(
+                        onCancel = closeWindow,
+                        onOk = {
+                            isOpen.value = false
+                        }
+                    )
+                }
             }
         }
     } else {

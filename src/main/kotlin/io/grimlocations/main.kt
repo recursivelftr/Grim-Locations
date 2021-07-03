@@ -1,9 +1,10 @@
 package io.grimlocations
 
-import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.Window
@@ -11,6 +12,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.grimlocations.constant.APP_ICON
+import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.view.*
 import io.grimlocations.util.enableThreadLogging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +23,9 @@ import java.nio.file.attribute.BasicFileAttributes
 
 private val logger = LogManager.getLogger()
 
+private enum class Startup {
+    LOADING, EDITOR_VIEW, PROPERTIES_VIEW
+}
 
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
@@ -30,31 +35,41 @@ fun main(args: Array<String>) {
 
     application {
         val state = rememberWindowState(size = SPLASH_SCREEN_SIZE, position = WindowPosition.Aligned(Alignment.Center))
-        val isOpen = remember { mutableStateOf(true) }
+        var loadingState by remember { mutableStateOf(Pair<Startup, GLViewModelProvider?>(Startup.LOADING, null)) }
 
-        if (isOpen.value) {
-
-            Window(
-                title = "Grim Locations",
-                icon = APP_ICON,
-                undecorated = true,
-                state = state,
-                onCloseRequest = ::exitApplication
-            ) {
-                GrimLocationsTheme {
-                    AppEntryStandaloneView { arePropertiesSet ->
-                        if (arePropertiesSet)
-                            openEditorView(::exitApplication)
-                        else
-                            openPropertiesView(
-                                nextWindow = { openEditorView(::exitApplication) },
-                                closeWindow = ::exitApplication,
-                            )
-                        isOpen.value = false
+        when (loadingState.first) {
+            Startup.LOADING -> {
+                Window(
+                    title = "Grim Locations",
+                    icon = APP_ICON,
+                    undecorated = true,
+                    state = state,
+                    onCloseRequest = ::exitApplication
+                ) {
+                    GrimLocationsTheme {
+                        AppEntryStandaloneView { arePropertiesSet, vmProvider ->
+                            loadingState = if (arePropertiesSet) {
+                                Pair(Startup.EDITOR_VIEW, vmProvider)
+                            } else {
+                                Pair(Startup.PROPERTIES_VIEW, vmProvider)
+                            }
+                        }
                     }
                 }
             }
+            Startup.EDITOR_VIEW -> {
+                openEditorView(loadingState.second!!, ::exitApplication)
+            }
+            Startup.PROPERTIES_VIEW -> {
+                openPropertiesView(
+                    vmProvider = loadingState.second!!,
+                    nextWindow = { openEditorView(loadingState.second!!, ::exitApplication) },
+                    closeWindow = ::exitApplication,
+                )
+            }
         }
+
+
     }
 }
 
