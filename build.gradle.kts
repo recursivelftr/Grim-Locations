@@ -5,7 +5,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     kotlin("jvm") version "1.5.10"
-    id("org.jetbrains.compose") version "0.5.0-build228"
+    id("org.jetbrains.compose") version "0.5.0-build245"
 }
 
 group = "io.grimlocations"

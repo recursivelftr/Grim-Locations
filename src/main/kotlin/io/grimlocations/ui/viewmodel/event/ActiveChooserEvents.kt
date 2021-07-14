@@ -2,7 +2,6 @@ package io.grimlocations.ui.viewmodel.event
 
 import androidx.compose.desktop.AppWindow
 import io.grimlocations.framework.ui.viewmodel.stateFlow
-import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.viewmodel.ActiveChooserViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer

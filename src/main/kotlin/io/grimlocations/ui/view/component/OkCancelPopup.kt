@@ -3,6 +3,7 @@ package io.grimlocations.ui.view.component
 import androidx.compose.desktop.AppWindow
 import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.desktop.Window
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
@@ -11,15 +12,22 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowSize
+import androidx.compose.ui.window.rememberDialogState
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.ui.view.GrimLocationsTheme
 import io.grimlocations.util.extension.closeIfOpen
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 private val dropDownBackgroundColorDark = Color(47, 47, 47)
 private val dropDownBackgroundColorLight = Color(224, 224, 224)
@@ -55,7 +63,7 @@ private fun OkCancelPopup(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                if(onCancelClicked != null) {
+                if (onCancelClicked != null) {
                     Button(
                         onClick = onCancelClicked,
                     ) {
@@ -73,7 +81,7 @@ private fun OkCancelPopup(
     }
 }
 
-fun openOkCancelPopup(
+fun legacyOpenOkCancelPopup(
     message: String,
     onOpen: (AppWindow) -> Unit,
     onCancelClicked: ((AppWindow) -> Unit)? = null,
@@ -106,5 +114,28 @@ fun openOkCancelPopup(
                 }
             )
         }
+    }
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
+@Composable
+fun openOkCancelPopup(
+    message: String,
+    onCancelClicked: (() -> Unit)? = null, //in the case of null then ok is the same as cancel
+    onOkClicked: () -> Unit,
+    width: Dp = 400.dp,
+    height: Dp = 200.dp,
+) {
+    val dialogState =
+        rememberDialogState(size = WindowSize(width, height), position = WindowPosition.Aligned(Alignment.Center))
+
+    Dialog(
+        onCloseRequest = onCancelClicked ?: onOkClicked,
+        title = "",
+        state = dialogState,
+    ) {
+        OkCancelPopup(message, onOkClicked, onCancelClicked)
     }
 }

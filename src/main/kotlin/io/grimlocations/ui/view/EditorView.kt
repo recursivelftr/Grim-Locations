@@ -14,16 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.WindowSize
-import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.*
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.framework.ui.getLazyViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.ui.GLViewModelProvider
+import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.event.loadCharacterProfiles
 import io.grimlocations.ui.viewmodel.event.reloadState
@@ -275,13 +273,15 @@ fun openEditorView(
 
     val captureState = remember<(EditorState) -> Unit> { { editorState = it } }
 
+    var isClosingWithGdRunning by remember { mutableStateOf(false) }
+
     Window(
         title = "Grim Locations",
         icon = APP_ICON,
         state = state,
         onCloseRequest = {
             if (editorState.isGDRunning) {
-
+                isClosingWithGdRunning = true
             } else {
                 subWindows?.forEach { it.closeIfOpen() }
                 exitApplication()
@@ -296,6 +296,18 @@ fun openEditorView(
                     },
                     captureState = captureState
                 )
+
+                if(isClosingWithGdRunning){
+                    openOkCancelPopup(
+                        message = "Grim Dawn is running. Are you sure you would like to exit?",
+                        onOkClicked = {
+                            exitApplication()
+                        },
+                        onCancelClicked= {
+                            isClosingWithGdRunning = false
+                        }
+                    )
+                }
             }
         }
     }

@@ -2,9 +2,8 @@ package io.grimlocations.ui.viewmodel.event
 
 import androidx.compose.desktop.AppWindow
 import io.grimlocations.framework.ui.viewmodel.stateFlow
-import io.grimlocations.ui.view.component.openOkCancelPopup
+import io.grimlocations.ui.view.component.legacyOpenOkCancelPopup
 import io.grimlocations.ui.viewmodel.LoadLocationsViewModel
-import io.grimlocations.ui.viewmodel.PropertiesViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.util.extension.closeIfOpen
@@ -44,7 +43,7 @@ fun LoadLocationsViewModel.loadLocationsIntoSelectedProfile(
         val msg = stateManager.loadLocationsIntoSelectedProfile(filePath)
         withContext(Dispatchers.Main) {
             if (msg != null) {
-                openOkCancelPopup(
+                legacyOpenOkCancelPopup(
                     message = msg,
                     onOpen = onOpenPopup,
                     onOkClicked = {

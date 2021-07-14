@@ -4,7 +4,7 @@ import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import io.grimlocations.data.dto.LocationDTO
 import io.grimlocations.ui.GLStateManager
-import io.grimlocations.ui.view.component.openOkCancelPopup
+import io.grimlocations.ui.view.component.legacyOpenOkCancelPopup
 import io.grimlocations.ui.view.openEditLocationPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
@@ -19,7 +19,7 @@ fun EditorViewModel.loadCharacterProfiles(
     viewModelScope.launch {
         stateManager.loadCharacterProfiles()
         withContext(Dispatchers.Main) {
-            openOkCancelPopup(
+            legacyOpenOkCancelPopup(
                 "Character profiles successfully loaded.",
                 onOpen = onOpenPopup,
                 onOkClicked = {
