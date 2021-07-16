@@ -33,27 +33,14 @@ fun LoadLocationsViewModel.updateLocationsFilePath(path: String) {
 
 fun LoadLocationsViewModel.getGdSaveLocation(): String? = stateManager.getGdSaveLocation()
 
-fun LoadLocationsViewModel.loadLocationsIntoSelectedProfile(
-    filePath: String,
-    window: AppWindow,
-    onOpenPopup: (AppWindow) -> Unit,
-    onClosePopup: (AppWindow) -> Unit,
-) {
+fun LoadLocationsViewModel.loadLocationsIntoSelectedProfile(filePath: String, onSuccess: () -> Unit) {
     viewModelScope.launch {
-        val msg = stateManager.loadLocationsIntoSelectedProfile(filePath)
-        withContext(Dispatchers.Main) {
-            if (msg != null) {
-                legacyOpenOkCancelPopup(
-                    message = msg,
-                    onOpen = onOpenPopup,
-                    onOkClicked = {
-                        onClosePopup(it)
-                        it.closeIfOpen()
-                    },
-                )
-            } else {
-                window.closeIfOpen()
-            }
-        }
+        stateManager.loadLocationsIntoSelectedProfile(filePath, onSuccess)
+    }
+}
+
+fun LoadLocationsViewModel.clearLoadMsg() {
+    viewModelScope.launch {
+        stateManager.clearLoadMsg()
     }
 }

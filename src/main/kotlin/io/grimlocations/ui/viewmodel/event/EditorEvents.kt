@@ -3,9 +3,7 @@ package io.grimlocations.ui.viewmodel.event
 import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import io.grimlocations.data.dto.LocationDTO
-import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.view.component.legacyOpenOkCancelPopup
-import io.grimlocations.ui.view.openEditLocationPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
@@ -33,62 +31,68 @@ fun EditorViewModel.loadCharacterProfiles(
 
 @ExperimentalCoroutinesApi
 @ExperimentalFoundationApi
-fun EditorViewModel.editLocationLeft(
-    location: LocationDTO,
-    onOpenPopup: (AppWindow) -> Unit,
-    onClosePopup: (AppWindow) -> Unit,
-) {
-    editLocation(
-        location = location,
-        onOpenPopup = onOpenPopup,
-        onClosePopup = onClosePopup,
-        updateLocation = GLStateManager::updateLocationLeft
-    )
-}
-
-@ExperimentalCoroutinesApi
-@ExperimentalFoundationApi
-fun EditorViewModel.editLocationRight(
-    location: LocationDTO,
-    onOpenPopup: (AppWindow) -> Unit,
-    onClosePopup: (AppWindow) -> Unit,
-) {
-    editLocation(
-        location = location,
-        onOpenPopup = onOpenPopup,
-        onClosePopup = onClosePopup,
-        updateLocation = GLStateManager::updateLocationRight
-    )
-}
-
-@ExperimentalCoroutinesApi
-@ExperimentalFoundationApi
-private fun EditorViewModel.editLocation(
-    location: LocationDTO,
-    onOpenPopup: (AppWindow) -> Unit,
-    onClosePopup: (AppWindow) -> Unit,
-    updateLocation: suspend GLStateManager.(LocationDTO) -> Unit,
-) {
+fun EditorViewModel.editAndCloseLocationLeft(loc: LocationDTO) {
     viewModelScope.launch {
-        withContext(Dispatchers.Main) {
-            openEditLocationPopup(
-                location = location,
-                onOpen = onOpenPopup,
-                onCancelClicked = {
-                    onClosePopup(it)
-                },
-                onOkClicked = { win, loc ->
-                    viewModelScope.launch {
-                        withContext(Dispatchers.IO) {
-                            stateManager.updateLocation(loc)
-                        }
-                    }
-                    onClosePopup(win)
-                },
-            )
-        }
+        stateManager.updateAndCloseLocationLeft(loc)
     }
 }
+
+@ExperimentalCoroutinesApi
+@ExperimentalFoundationApi
+fun EditorViewModel.editAndCloseLocationRight(loc: LocationDTO) {
+    viewModelScope.launch {
+        stateManager.updateAndCloseLocationRight(loc)
+    }
+}
+
+fun EditorViewModel.openEditLocationLeft() {
+    viewModelScope.launch {
+        stateManager.openEditLocationLeft()
+    }
+}
+
+fun EditorViewModel.closeEditLocationLeft() {
+    viewModelScope.launch {
+        stateManager.closeEditLocationLeft()
+    }
+}
+
+fun EditorViewModel.openEditLocationRight() {
+    viewModelScope.launch {
+        stateManager.openEditLocationRight()
+    }
+}
+
+fun EditorViewModel.closeEditLocationRight() {
+    viewModelScope.launch {
+        stateManager.closeEditLocationRight()
+    }
+}
+
+fun EditorViewModel.openPropertiesView() {
+    viewModelScope.launch {
+        stateManager.openPropertiesView()
+    }
+}
+
+fun EditorViewModel.closePropertiesView() {
+    viewModelScope.launch {
+        stateManager.closePropertiesView()
+    }
+}
+
+fun EditorViewModel.openLoadLocationsView() {
+    viewModelScope.launch {
+        stateManager.openLoadLocationsView()
+    }
+}
+
+fun EditorViewModel.closeLoadLocationsView() {
+    viewModelScope.launch {
+        stateManager.closeLoadLocationsView()
+    }
+}
+
 
 fun EditorViewModel.reloadState() {
     viewModelScope.launch {

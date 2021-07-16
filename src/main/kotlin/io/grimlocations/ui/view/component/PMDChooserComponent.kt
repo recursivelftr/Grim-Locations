@@ -18,17 +18,21 @@ import androidx.compose.ui.unit.dp
 import io.grimlocations.data.dto.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.util.extension.closeIfOpen
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 private val textBoxWidth = 300.dp
 
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
 @Composable
 fun PMDChooserComponent(
     map: ProfileModDifficultyMap,
     selected: PMDContainer,
     onSelect: (PMDContainer) -> Unit,
-    onOpen: (AppWindow?, AppWindow) -> Unit,
-    onClose: (() -> Unit)?,
     spacerHeight: Dp = 15.dp,
 ) {
     val profileListWindow = remember { mutableStateOf<AppWindow?>(null) }
@@ -62,13 +66,6 @@ fun PMDChooserComponent(
             emptyItemsMessage = "No Profiles",
             selected = Triple(selectedProfile.id, selectedProfile.name, if (selectedProfile.isReserved) primaryColor else null),
             width = textBoxWidth,
-            onOpen = { p, c ->
-                manageWindows(
-                    onOpen, p, c,
-                    profileListWindow, modListWindow, difficultyListWindow
-                )
-            },
-            onClose = onClose,
             onSelect = {
                 val profile = map.keys.find { item -> item.id == it.first }!!
                 val mod = map[profile]!!.keys.first()
@@ -91,13 +88,6 @@ fun PMDChooserComponent(
             disabled = selected.mod == RESERVED_NO_MODS_INDICATOR,
             selected = Triple(selectedMod.id, selectedMod.name, null),
             width = textBoxWidth,
-            onOpen = { p, c ->
-                manageWindows(
-                    onOpen, p, c,
-                    modListWindow, profileListWindow, difficultyListWindow
-                )
-            },
-            onClose = onClose,
             onSelect = {
                 val mod = map[selected.profile]!!.keys.find { item -> item.id == it.first }!!
                 val difficulty = map[selected.profile]!![mod]!!.first()
@@ -119,13 +109,6 @@ fun PMDChooserComponent(
             disabled = selected.difficulty == RESERVED_NO_DIFFICULTIES_INDICATOR,
             selected = Triple(selectedDifficulty.id, selectedDifficulty.name, null),
             width = textBoxWidth,
-            onOpen = { p, c ->
-                manageWindows(
-                    onOpen, p, c,
-                    difficultyListWindow, modListWindow, profileListWindow
-                )
-            },
-            onClose = onClose,
             onSelect = {
                 val difficulty = map[selected.profile]!![selected.mod]!!.find { item -> item.id == it.first }!!
 

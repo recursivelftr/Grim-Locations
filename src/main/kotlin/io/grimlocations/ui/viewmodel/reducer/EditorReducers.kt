@@ -46,7 +46,11 @@ suspend fun GLStateManager.loadEditorState(
                 activePMD = meta.activePMD,
                 isGDRunning = false,
                 selectedLocationsLeft = setOf(),
-                selectedLocationsRight = setOf()
+                selectedLocationsRight = setOf(),
+                isEditLocationLeftPopupOpen = false,
+                isEditLocationRightPopupOpen = false,
+                isLoadLocationsPopupOpen = false,
+                isPropertiesPopupOpen = false,
             )
         )
     } else {
@@ -75,6 +79,62 @@ suspend fun GLStateManager.loadEditorState(
 suspend fun GLStateManager.loadCharacterProfiles() {
     repository.detectAndCreateProfilesAsync().await()
     reloadEditorState()
+}
+
+suspend fun GLStateManager.openEditLocationLeft(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isEditLocationLeftPopupOpen = true))
+    }
+}
+
+suspend fun GLStateManager.closeEditLocationLeft(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isEditLocationLeftPopupOpen = false))
+    }
+}
+
+suspend fun GLStateManager.openEditLocationRight(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isEditLocationRightPopupOpen = true))
+    }
+}
+
+suspend fun GLStateManager.closeEditLocationRight(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isEditLocationRightPopupOpen = false))
+    }
+}
+
+suspend fun GLStateManager.openPropertiesView(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isPropertiesPopupOpen = true))
+    }
+}
+
+suspend fun GLStateManager.closePropertiesView(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isPropertiesPopupOpen = false))
+    }
+}
+
+suspend fun GLStateManager.openLoadLocationsView(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isLoadLocationsPopupOpen = true))
+    }
+}
+
+suspend fun GLStateManager.closeLoadLocationsView(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isLoadLocationsPopupOpen = false))
+    }
 }
 
 suspend fun GLStateManager.reloadEditorState() {
@@ -294,17 +354,17 @@ suspend fun GLStateManager.deleteSelectedRight() {
     }
 }
 
-suspend fun GLStateManager.updateLocationLeft(location: LocationDTO) {
+suspend fun GLStateManager.updateAndCloseLocationLeft(loc: LocationDTO) {
     val s = getState<EditorState>()
-    updateLocation(location, s.selectedPMDLeft, s)
+    updateAndCloseLocation(loc, s.selectedPMDLeft, s)
 }
 
-suspend fun GLStateManager.updateLocationRight(location: LocationDTO) {
+suspend fun GLStateManager.updateAndCloseLocationRight(loc: LocationDTO) {
     val s = getState<EditorState>()
-    updateLocation(location, s.selectedPMDRight, s)
+    updateAndCloseLocation(loc, s.selectedPMDRight, s)
 }
 
-private suspend fun GLStateManager.updateLocation(location: LocationDTO, pmd: PMDContainer, s: EditorState) {
+private suspend fun GLStateManager.updateAndCloseLocation(location: LocationDTO, pmd: PMDContainer, s: EditorState) {
     if(repository.updateLocationAsync(location).await() == null) {
         copyActivePMDToLocationsFile(pmd)
         withContext(Dispatchers.Main) {
@@ -314,6 +374,8 @@ private suspend fun GLStateManager.updateLocation(location: LocationDTO, pmd: PM
                     locationsLeft = s.locationsLeft.replaceDTO(location),
                     selectedLocationsRight = s.selectedLocationsRight.replaceDTO(location),
                     selectedLocationsLeft = s.selectedLocationsLeft.replaceDTO(location),
+                    isEditLocationLeftPopupOpen = false,
+                    isEditLocationRightPopupOpen = false,
                 )
             )
         }

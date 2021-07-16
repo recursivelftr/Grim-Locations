@@ -1,7 +1,5 @@
 package io.grimlocations.ui.view
 
-import androidx.compose.desktop.AppWindow
-import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -15,13 +13,9 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.WindowSize
-import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.*
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.framework.ui.getFactoryViewModel
@@ -172,7 +166,7 @@ private fun isOkEnabled(state: PropertiesState) =
 @ExperimentalComposeUiApi
 @ExperimentalCoroutinesApi
 @Composable
-fun openPropertiesView(
+fun openInitialPropertiesView(
     vmProvider: GLViewModelProvider,
     nextWindow: @Composable (() -> Unit),
     closeWindow: () -> Unit,
@@ -205,66 +199,26 @@ fun openPropertiesView(
     }
 }
 
+@ExperimentalComposeUiApi
 @ExperimentalCoroutinesApi
-fun legacyOpenPropertiesView(
-    vmProvider: GLViewModelProvider,
-    onClose: ((AppWindow) -> Unit)? = null,
-    captureWindow: ((AppWindow) -> Unit)? = null,
+@Composable
+fun openPropertiesView(
+    closeWindow: () -> Unit,
 ) {
-    lateinit var window: AppWindow
+    val state =
+        rememberDialogState(size = WindowSize(550.dp, 300.dp), position = WindowPosition.Aligned(Alignment.Center))
 
-    androidx.compose.desktop.Window(
+    Dialog(
         title = "Properties",
         icon = APP_ICON,
-        size = IntSize(550, 300),
-        onDismissRequest = {
-            onClose?.invoke(window)
-        }
+        state = state,
+        onCloseRequest = closeWindow,
     ) {
-
-        window = LocalAppWindow.current
-
-        remember {
-            captureWindow?.invoke(window)
-        }
-
-        CompositionLocalProvider(LocalViewModel provides vmProvider) {
-            GrimLocationsTheme {
-                PropertiesView(
-                    {
-                        window.close()
-                    },
-                    {
-                        window.close()
-                    }
-                )
-            }
+        GrimLocationsTheme {
+            PropertiesView(
+                onCancel = closeWindow,
+                onOk = closeWindow,
+            )
         }
     }
 }
-
-//@ExperimentalCoroutinesApi
-//@Composable
-//fun PropertiesDialog(
-//    onDismiss: () -> Unit,
-//    onCancelClicked: (() -> Unit)? = null,
-//    onOkClicked: (() -> Unit)? = null,
-//) {
-//    Dialog(
-//        onDismissRequest = onDismiss,
-//        properties = DialogProperties()
-//    ) {
-//        val window = LocalAppWindow.current
-//        PropertiesView(
-//            onCancel = {
-//                onCancelClicked?.invoke()
-//                onDismiss()
-//            },
-//            onOk = {
-//                onOkClicked?.invoke()
-//                onDismiss()
-//            }
-//        )
-//    }
-//}
-

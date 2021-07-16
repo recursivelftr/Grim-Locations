@@ -16,6 +16,10 @@ data class EditorState(
     val selectedLocationsLeft: Set<LocationDTO>,
     val selectedLocationsRight: Set<LocationDTO>,
     val isGDRunning: Boolean,
+    val isPropertiesPopupOpen: Boolean,
+    val isLoadLocationsPopupOpen: Boolean,
+    val isEditLocationRightPopupOpen: Boolean,
+    val isEditLocationLeftPopupOpen: Boolean,
 ) : State {
     override fun equals(other: Any?): Boolean {
         return this === other

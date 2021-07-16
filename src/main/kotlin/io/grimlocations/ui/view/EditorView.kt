@@ -6,15 +6,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.*
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowSize
+import androidx.compose.ui.window.rememberWindowState
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.framework.ui.LocalViewModel
@@ -23,24 +26,21 @@ import io.grimlocations.framework.ui.view.View
 import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
-import io.grimlocations.ui.viewmodel.event.loadCharacterProfiles
-import io.grimlocations.ui.viewmodel.event.reloadState
-import io.grimlocations.ui.viewmodel.event.startGDProcessCheckLoop
+import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 @Composable
 private fun EditorView(
     vm: EditorViewModel = getLazyViewModel(),
-    captureSubWindows: ((Set<AppWindow>) -> Unit),
     captureState: (EditorState) -> Unit,
 ) = View(vm) { state ->
     val vmProv = LocalViewModel.current as GLViewModelProvider
-    val previousActiveChooserWindow = remember { mutableStateOf<AppWindow?>(null) }
 
     captureState(state)
 
@@ -48,7 +48,15 @@ private fun EditorView(
         vm.startGDProcessCheckLoop()
     }
 
-    remember { captureSubWindows(subWindows) }
+    if (state.isPropertiesPopupOpen) {
+        openPropertiesView(vm::closePropertiesView)
+    }
+
+    if (state.isLoadLocationsPopupOpen) {
+        openLoadLocationsView(
+            onClose = vm::closeLoadLocationsView,
+        )
+    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -59,96 +67,29 @@ private fun EditorView(
                 Column(modifier = Modifier.wrapContentSize()) {
 
                     Spacer(modifier = Modifier.height(10.dp))
+
+                    Icon(
+                        Icons.Default.AccountCircle,
+                        "Settings",
+//                        enabled = !state.profileMap.hasOnlyReservedProfiles(),
+                        modifier = getLoadLocationsIconModifier(!state.profileMap.hasOnlyReservedProfiles()) {
+                            vm.openLoadLocationsView()
+                        },
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.wrapContentSize()) {
+
+                    Spacer(modifier = Modifier.height(10.dp))
                     Icon(
                         Icons.Default.Settings,
                         "Settings",
                         modifier = Modifier.size(40.dp).clickable {
-                            legacyOpenPropertiesView(
-                                vmProvider = vmProv,
-                                onClose = {
-                                    subWindows.remove(it)
-                                    viewDisabled = false
-                                },
-                                captureWindow = { subWindows.add(it) }
-                            )
-                            viewDisabled = true
-                            onOverlayClick = {}
+                            vm.openPropertiesView()
                         }
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Button(
-                    onClick = {
-                        viewDisabled = true
-                        vm.loadCharacterProfiles(
-                            onOpenPopup = {
-                                onOverlayClick = {
-                                    it.closeIfOpen()
-                                    subWindows.remove(it)
-                                    viewDisabled = false
-                                }
-                                subWindows.add(it)
-                            },
-                            onClosePopup = {
-                                subWindows.remove(it)
-                                viewDisabled = false
-                            }
-                        )
-                    },
-                ) {
-                    Text("Load Character Profiles")
-                }
-                Spacer(modifier = Modifier.width(15.dp))
-                Button(
-                    enabled = !state.profileMap.hasOnlyReservedProfiles(),
-                    onClick = {
-                        viewDisabled = true
-                        onOverlayClick = {}
-                        openActiveChooserView(
-                            vmProvider = vmProv,
-                            onClose = {
-                                subWindows.remove(previousActiveChooserWindow.value)
-                                vm.reloadState()
-                                viewDisabled = false
-                            },
-                            captureWindow = { w ->
-                                subWindows.remove(previousActiveChooserWindow.value)
-                                subWindows.add(w)
-                                previousActiveChooserWindow.value = w
-                            }
-                        )
-                    },
-                ) {
-                    Text("Select Active")
-                }
-                Spacer(modifier = Modifier.width(15.dp))
-                Button(
-                    enabled = !state.profileMap.hasOnlyReservedProfiles(),
-                    onClick = {
-                        viewDisabled = true
-                        onOverlayClick = {}
-                        openLoadLocationsView(
-                            vmProvider = vmProv,
-                            onClose = {
-                                subWindows.remove(previousActiveChooserWindow.value)
-                                vm.reloadState()
-                                viewDisabled = false
-                            },
-                            captureWindow = { w ->
-                                subWindows.remove(previousActiveChooserWindow.value)
-                                subWindows.add(w)
-                                previousActiveChooserWindow.value = w
-                            }
-                        )
-                    },
-                ) {
-                    Text("Load Locations to Profile")
-                }
             }
             Spacer(Modifier.height(20.dp))
             Row(
@@ -168,22 +109,6 @@ private fun EditorView(
             EditorLocationListPanel(
                 state = state,
                 vm = vm,
-                onOpen = { p, c ->
-                    viewDisabled = true
-                    subWindows.remove(p)
-                    subWindows.add(c)
-                    onOverlayClick = { subWindows.forEach { a -> a.closeIfOpen() } }
-                },
-                onClose = { viewDisabled = false },
-                onOpenDisabledOverlayPopup = { w ->
-                    subWindows.add(w)
-                    onOverlayClick = { }
-                    viewDisabled = true
-                },
-                onCloseDisabledOverlayPopup = {
-                    subWindows.remove(it)
-                    viewDisabled = false
-                }
             )
         }
     }
@@ -257,6 +182,13 @@ private fun ActiveProfileRow(pmd: PMDContainer?) {
     }
 }
 
+private fun getLoadLocationsIconModifier(isEnabled: Boolean, onClick: () -> Unit): Modifier =
+    if (isEnabled) {
+        Modifier.size(40.dp).clickable(onClick = onClick)
+    } else {
+        Modifier.size(40.dp)
+    }
+
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
@@ -291,20 +223,17 @@ fun openEditorView(
         CompositionLocalProvider(LocalViewModel provides vmProvider) {
             GrimLocationsTheme {
                 EditorView(
-                    captureSubWindows = { l ->
-                        subWindows = l
-                    },
                     captureState = captureState
                 )
 
-                if(isClosingWithGdRunning){
+                if (isClosingWithGdRunning) {
                     openOkCancelPopup(
                         message = "Grim Dawn is running. Are you sure you want to exit?",
                         width = 500.dp,
                         onOkClicked = {
                             exitApplication()
                         },
-                        onCancelClicked= {
+                        onCancelClicked = {
                             isClosingWithGdRunning = false
                         }
                     )

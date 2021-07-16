@@ -1,8 +1,6 @@
 package io.grimlocations.ui.view.component
 
-import androidx.compose.desktop.AppWindow
 import androidx.compose.desktop.LocalAppWindow
-import androidx.compose.desktop.Window
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,18 +9,19 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowSize
+import androidx.compose.ui.window.rememberDialogState
 import io.grimlocations.ui.view.GrimLocationsTheme
-import io.grimlocations.util.extension.closeIfOpen
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 private val transparentColor = Color(0, 0, 0, 0)
 private val dropDownBackgroundColorDark = Color(47, 47, 47)
@@ -33,15 +32,15 @@ private val dropDownSpacerHeight = 5.dp
 private val dropDownAverageItemHeight = dropDownItemHeight + dropDownSpacerHeight
 private val dropDownHeaderHeight = dropDownAverageItemHeight + 5.dp
 
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
 @Composable
 fun <K> ComboPopup(
     title: String,
     selected: Triple<K, String, Color?>?,
     items: List<Triple<K, String, Color?>>,
     emptyItemsMessage: String = "None",
-    onOpen: (previousWindow: AppWindow?, newWindow: AppWindow) -> Unit,
-    onClose: (() -> Unit)? = null,
     width: Dp,
     popupMaxHeight: Dp = 560.dp,
     textFieldHeight: Dp = 56.dp, //Minimum height for a text field defined by compose
@@ -74,38 +73,32 @@ fun <K> ComboPopup(
         else
             selected?.second ?: items[0].second
 
-
-    val previousWindow = remember { mutableStateOf<AppWindow?>(null) }
-
-    val openPopup: () -> Unit
-    if (disabled) {
-        openPopup = {}
-    } else {
-        openPopup = {
-            if (items.isNotEmpty()) {
-                val possibleHeight = dropDownHeaderHeight + (items.size * dropDownAverageItemHeight.value).dp
-                openPopupWindow(
-                    title,
-                    labelColor,
-                    width,
-                    if (possibleHeight < popupMaxHeight) possibleHeight else popupMaxHeight,
-                    items,
-                    primaryColor,
-                    dropDownBackgroundColor,
-                    textColor,
-                    {
-                        previousWindow.value?.closeIfOpen()
-                        onSelect(it)
-                    },
-                    {
-                        previousWindow.value?.closeIfOpen()
-                        onOpen(previousWindow.value, it)
-                        previousWindow.value = it
-                    },
-                    onClose
-                )
-            }
+    var isPopupOpen by remember { mutableStateOf(false) }
+    val openPopup = {
+        if(items.isNotEmpty() && !disabled) {
+            isPopupOpen = true
         }
+    }
+    val closePopup = {
+        if(items.isNotEmpty() && !disabled) {
+            isPopupOpen = false
+        }
+    }
+
+    if (items.isNotEmpty() && !disabled && isPopupOpen) {
+        val possibleHeight = dropDownHeaderHeight + (items.size * dropDownAverageItemHeight.value).dp
+        openPopupWindow(
+            title,
+            labelColor,
+            width,
+            if (possibleHeight < popupMaxHeight) possibleHeight else popupMaxHeight,
+            items,
+            primaryColor,
+            dropDownBackgroundColor,
+            textColor,
+            closePopup,
+            onSelect,
+        )
     }
 
     Column(
@@ -156,7 +149,10 @@ fun <K> ComboPopup(
     }
 }
 
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
+@Composable
 private fun <K> openPopupWindow(
     title: String,
     titleColor: Color,
@@ -166,25 +162,20 @@ private fun <K> openPopupWindow(
     primaryColor: Color,
     dropDownBackgroundColor: Color,
     textColor: Color,
+    onClose: () -> Unit,
     onSelect: (Triple<K, String, Color?>) -> Unit,
-    onOpen: (AppWindow) -> Unit,
-    onClose: (() -> Unit)?
 ) {
-    var isNotOpen = true
-    Window(
+
+    val dialogState =
+        rememberDialogState(size = WindowSize(width, height), position = WindowPosition.Aligned(Alignment.Center))
+
+    Dialog(
+        state = dialogState,
+        title = title,
+        onCloseRequest = onClose,
         undecorated = true,
-        size = IntSize(width.value.toInt(), height.value.toInt()),
-        onDismissRequest = onClose
     ) {
         GrimLocationsTheme {
-            val window = LocalAppWindow.current
-            SideEffect {
-                if (isNotOpen) {
-                    isNotOpen = false
-                    onOpen(window)
-                }
-            }
-
 //            val primaryColor = MaterialTheme.colors.primary
 //            val dropDownBackgroundColor = MaterialTheme.colors.surface.let { remember { it.copy(alpha = ContainerAlpha) } }
             val scrollBarStyle = LocalScrollbarStyle.current.let {
@@ -211,7 +202,7 @@ private fun <K> openPopupWindow(
                             Text(text = title, color = titleColor)
                         }
                         IconButton(
-                            onClick = { window.close() },
+                            onClick = onClose,
                             modifier = Modifier.size(30.dp)
                         ) {
                             Icon(
@@ -237,6 +228,7 @@ private fun <K> openPopupWindow(
                                 val (_, text, color) = items[index]
                                 TextBox(text, color ?: textColor, width - 10.dp) {
                                     onSelect(items[index])
+                                    onClose()
                                 }
                                 Spacer(modifier = Modifier.height(dropDownSpacerHeight))
                             }

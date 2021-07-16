@@ -1,6 +1,5 @@
 package io.grimlocations.ui.view
 
-import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
@@ -11,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -41,18 +41,24 @@ private lateinit var stateVerticalRight: LazyListState
 
 private val logger = LogManager.getLogger()
 
-@ExperimentalCoroutinesApi
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
 @Composable
 fun EditorLocationListPanel(
     state: EditorState,
     vm: EditorViewModel,
-    onOpen: (AppWindow?, AppWindow) -> Unit,
-    onClose: (() -> Unit),
-    onOpenDisabledOverlayPopup: (AppWindow) -> Unit,
-    onCloseDisabledOverlayPopup: (AppWindow) -> Unit,
 ) {
     with(state) {
+
+        if (isEditLocationLeftPopupOpen) {
+            openEditLocationPopupLeft(this, vm)
+        }
+
+        if (isEditLocationRightPopupOpen) {
+            openEditLocationPopupRight(this, vm)
+        }
+
         val isLeftArrowDisabled = isArrowLeftRightDisabled(
             primaryPMD = selectedPMDLeft,
             otherPMD = selectedPMDRight,
@@ -92,8 +98,6 @@ fun EditorLocationListPanel(
                     PMDChooserComponent(
                         map = profileMap,
                         selected = selectedPMDLeft,
-                        onOpen = onOpen,
-                        onClose = onClose,
                         onSelect = { pmdContainer ->
                             vm.selectPMDLeft(pmdContainer)
                         }
@@ -116,11 +120,7 @@ fun EditorLocationListPanel(
                             pmdContainer = selectedPMDLeft,
                             selected = selectedLocationsLeft,
                             onClick = {
-                                vm.editLocationLeft(
-                                    location = it,
-                                    onOpenPopup = onOpenDisabledOverlayPopup,
-                                    onClosePopup = onCloseDisabledOverlayPopup,
-                                )
+                                vm.openEditLocationLeft()
                             }
                         )
                         DeleteButton(
@@ -181,8 +181,6 @@ fun EditorLocationListPanel(
                     PMDChooserComponent(
                         map = profileMap,
                         selected = selectedPMDRight,
-                        onOpen = onOpen,
-                        onClose = onClose,
                         onSelect = { pmdContainer ->
                             vm.selectPMDRight(pmdContainer)
                         }
@@ -244,11 +242,7 @@ fun EditorLocationListPanel(
                             pmdContainer = selectedPMDRight,
                             selected = selectedLocationsRight,
                             onClick = {
-                                vm.editLocationRight(
-                                    location = it,
-                                    onOpenPopup = onOpenDisabledOverlayPopup,
-                                    onClosePopup = onCloseDisabledOverlayPopup,
-                                )
+                                vm.openEditLocationRight()
                             }
                         )
                         DeleteButton(
@@ -408,6 +402,30 @@ private fun SelectRangeButton(
             tint = tint,
         )
     }
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
+@Composable
+private fun openEditLocationPopupLeft(s: EditorState, vm: EditorViewModel) {
+    openEditLocationPopup(
+        location = s.selectedLocationsLeft.single(),
+        onCancelClicked = vm::closeEditLocationLeft,
+        onOkClicked = vm::editAndCloseLocationLeft,
+    )
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
+@Composable
+private fun openEditLocationPopupRight(s: EditorState, vm: EditorViewModel) {
+    openEditLocationPopup(
+        location = s.selectedLocationsRight.single(),
+        onCancelClicked = vm::closeEditLocationRight,
+        onOkClicked = vm::editAndCloseLocationRight,
+    )
 }
 
 private fun isArrowLeftRightDisabled(

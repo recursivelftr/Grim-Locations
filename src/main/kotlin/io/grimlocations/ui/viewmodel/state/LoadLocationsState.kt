@@ -8,6 +8,7 @@ data class LoadLocationsState(
     val map: ProfileModDifficultyMap,
     val selected: PMDContainer,
     val locationsFilePath: String,
+    val loadMsg: String?,
 ) : State {
     override fun equals(other: Any?): Boolean {
         return this === other

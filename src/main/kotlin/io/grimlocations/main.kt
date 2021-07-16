@@ -61,7 +61,7 @@ fun main(args: Array<String>) {
                 openEditorView(loadingState.second!!, ::exitApplication)
             }
             Startup.PROPERTIES_VIEW -> {
-                openPropertiesView(
+                openInitialPropertiesView(
                     vmProvider = loadingState.second!!,
                     nextWindow = { openEditorView(loadingState.second!!, ::exitApplication) },
                     closeWindow = ::exitApplication,

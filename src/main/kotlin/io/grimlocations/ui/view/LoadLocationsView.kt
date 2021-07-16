@@ -1,47 +1,51 @@
 package io.grimlocations.ui.view
 
-import androidx.compose.desktop.AppWindow
-import androidx.compose.desktop.LocalAppWindow
-import androidx.compose.desktop.Window
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.grimlocations.constant.APP_ICON
-import io.grimlocations.framework.ui.LocalViewModel
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowSize
+import androidx.compose.ui.window.rememberDialogState
 import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
-import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.view.component.PMDChooserComponent
+import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.viewmodel.LoadLocationsViewModel
-import io.grimlocations.ui.viewmodel.event.*
-import io.grimlocations.util.extension.closeIfOpen
+import io.grimlocations.ui.viewmodel.event.clearLoadMsg
+import io.grimlocations.ui.viewmodel.event.loadLocationsIntoSelectedProfile
+import io.grimlocations.ui.viewmodel.event.selectPMD
+import io.grimlocations.ui.viewmodel.event.updateLocationsFilePath
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.swing.JFileChooser
 
 private val TEXT_FIELD_WIDTH = 450.dp
 
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 @Composable
 private fun LoadLocationsView(
     vm: LoadLocationsViewModel = getFactoryViewModel(),
-    captureSubWindows: ((Set<AppWindow>) -> Unit),
+    onClose: (() -> Unit)
 ) {
     View(vm) { state ->
 
-        val window = LocalAppWindow.current
-        remember { captureSubWindows(subWindows) }
+        if (state.loadMsg != null) {
+            openOkCancelPopup(
+                message = state.loadMsg,
+                onOkClicked = vm::clearLoadMsg
+            )
+        }
 
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -53,13 +57,6 @@ private fun LoadLocationsView(
                     map = state.map,
                     selected = state.selected,
                     onSelect = { c -> vm.selectPMD(c) },
-                    onOpen = { p, c ->
-                        viewDisabled = true
-                        subWindows.remove(p)
-                        subWindows.add(c)
-                        onOverlayClick = { subWindows.forEach { a -> a.closeIfOpen() } }
-                    },
-                    onClose = { viewDisabled = false }
                 )
                 Spacer(Modifier.height(30.dp))
                 Row(
@@ -101,9 +98,7 @@ private fun LoadLocationsView(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
-                        onClick = {
-                            window.closeIfOpen()
-                        },
+                        onClick = onClose,
                     ) {
                         Text("Cancel")
                     }
@@ -112,19 +107,7 @@ private fun LoadLocationsView(
                         onClick = {
                             vm.loadLocationsIntoSelectedProfile(
                                 filePath = state.locationsFilePath,
-                                window = window,
-                                onOpenPopup = {
-                                    onOverlayClick = {
-                                        it.closeIfOpen()
-                                        subWindows.remove(it)
-                                        viewDisabled = false
-                                    }
-                                    subWindows.add(it)
-                                },
-                                onClosePopup = {
-                                    subWindows.remove(it)
-                                    viewDisabled = false
-                                }
+                                onSuccess = onClose,
                             )
                         },
                     ) {
@@ -136,38 +119,26 @@ private fun LoadLocationsView(
     }
 }
 
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
+@Composable
 fun openLoadLocationsView(
-    vmProvider: GLViewModelProvider,
-    previousWindow: AppWindow? = null,
-    onClose: (() -> Unit)? = null,
-    captureWindow: ((AppWindow) -> Unit)? = null,
+    onClose: (() -> Unit),
 ) {
-    var subWindows: Set<AppWindow>? = null
-    Window(
-        title = "Grim Locations",
-        icon = APP_ICON,
-        size = IntSize(650, 450),
-        onDismissRequest = {
-            subWindows?.forEach { it.closeIfOpen() }
-            onClose?.invoke()
-        }
-    ) {
-        val window = LocalAppWindow.current
-        remember {
-            previousWindow?.closeIfOpen()
-            captureWindow?.invoke(window)
-        }
 
-        CompositionLocalProvider(LocalViewModel provides vmProvider) {
-            GrimLocationsTheme {
-                LoadLocationsView(
-                    captureSubWindows = { l ->
-                        subWindows = l
-                    }
-                )
-            }
+    val dialogState =
+        rememberDialogState(size = WindowSize(650.dp, 450.dp), position = WindowPosition.Aligned(Alignment.Center))
+
+    Dialog(
+        title = "Grim Locations",
+        state = dialogState,
+        onCloseRequest = onClose,
+    ) {
+        GrimLocationsTheme {
+            LoadLocationsView(
+                onClose = onClose,
+            )
         }
     }
 }
