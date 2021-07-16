@@ -299,7 +299,8 @@ fun openEditorView(
 
                 if(isClosingWithGdRunning){
                     openOkCancelPopup(
-                        message = "Grim Dawn is running. Are you sure you would like to exit?",
+                        message = "Grim Dawn is running. Are you sure you want to exit?",
+                        width = 500.dp,
                         onOkClicked = {
                             exitApplication()
                         },
