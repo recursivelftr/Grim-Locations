@@ -28,8 +28,6 @@ dependencies {
     val log4jVersion = "2.14.0"
     val appDirsVersion = "1.2.1"
 
-    testImplementation(kotlin("test-junit5"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
@@ -41,6 +39,9 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
     implementation("net.harawata:appdirs:$appDirsVersion")
     implementation(compose.desktop.currentOs)
+
+    testImplementation(kotlin("test-junit5"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
 }
 
 tasks.test {

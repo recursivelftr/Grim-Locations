@@ -45,7 +45,8 @@ fun <K> ComboPopup(
     popupMaxHeight: Dp = 560.dp,
     textFieldHeight: Dp = 56.dp, //Minimum height for a text field defined by compose
     onSelect: (Triple<K, String, Color?>) -> Unit,
-    disabled: Boolean = false
+    disabled: Boolean = false,
+    controlOnLeft: Boolean = false,
 ) {
 
     val labelColor = MaterialTheme.colors.onSurface.let {
@@ -110,6 +111,19 @@ fun <K> ComboPopup(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.width(maxColumnWidth)
         ) {
+            if(controlOnLeft) {
+                IconButton(
+                    modifier = Modifier.size(dropDownButtonWidth),
+                    onClick = openPopup,
+                ) {
+                    Icon(
+                        Icons.Default.Menu,
+                        "Open",
+                        tint = primaryColor
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+            }
             Box {
                 TextField(
                     value = displayValue,
@@ -134,16 +148,18 @@ fun <K> ComboPopup(
                         .clickable(onClick = openPopup)
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
-            IconButton(
-                modifier = Modifier.size(dropDownButtonWidth),
-                onClick = openPopup,
-            ) {
-                Icon(
-                    Icons.Default.Menu,
-                    "Open",
-                    tint = primaryColor
-                )
+            if(!controlOnLeft) {
+                Spacer(modifier = Modifier.width(10.dp))
+                IconButton(
+                    modifier = Modifier.size(dropDownButtonWidth),
+                    onClick = openPopup,
+                ) {
+                    Icon(
+                        Icons.Default.Menu,
+                        "Open",
+                        tint = primaryColor
+                    )
+                }
             }
         }
     }

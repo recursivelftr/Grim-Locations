@@ -6,18 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.WindowSize
-import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.*
+import androidx.compose.ui.window.v1.MenuBar
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.framework.ui.LocalViewModel
@@ -39,8 +36,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 private fun EditorView(
     vm: EditorViewModel = getLazyViewModel(),
     captureState: (EditorState) -> Unit,
+    exitApplication: () -> Unit
 ) = View(vm) { state ->
-    val vmProv = LocalViewModel.current as GLViewModelProvider
 
     captureState(state)
 
@@ -65,28 +62,11 @@ private fun EditorView(
                 horizontalArrangement = Arrangement.End
             ) {
                 Column(modifier = Modifier.wrapContentSize()) {
-
                     Spacer(modifier = Modifier.height(10.dp))
-
-                    Icon(
-                        Icons.Default.AccountCircle,
-                        "Settings",
-//                        enabled = !state.profileMap.hasOnlyReservedProfiles(),
-                        modifier = getLoadLocationsIconModifier(!state.profileMap.hasOnlyReservedProfiles()) {
-                            vm.openLoadLocationsView()
-                        },
-                    )
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Column(modifier = Modifier.wrapContentSize()) {
-
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Icon(
-                        Icons.Default.Settings,
-                        "Settings",
-                        modifier = Modifier.size(40.dp).clickable {
-                            vm.openPropertiesView()
-                        }
+                    HamburgerDropdownMenu(
+                        state = state,
+                        vm = vm,
+                        exitApplication = exitApplication,
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
@@ -105,7 +85,7 @@ private fun EditorView(
             }
             Spacer(Modifier.height(30.dp))
             ActiveProfileRow(state.activePMD)
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(10.dp))
             EditorLocationListPanel(
                 state = state,
                 vm = vm,
@@ -182,12 +162,50 @@ private fun ActiveProfileRow(pmd: PMDContainer?) {
     }
 }
 
-private fun getLoadLocationsIconModifier(isEnabled: Boolean, onClick: () -> Unit): Modifier =
-    if (isEnabled) {
-        Modifier.size(40.dp).clickable(onClick = onClick)
-    } else {
-        Modifier.size(40.dp)
+@ExperimentalComposeUiApi
+@ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
+@Composable
+private fun HamburgerDropdownMenu(
+    state: EditorState,
+    vm: EditorViewModel,
+    exitApplication: () -> Unit
+) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
+
+    Box {
+        Icon(
+            Icons.Default.Menu,
+            "Menu",
+            modifier = Modifier.size(40.dp).clickable(onClick = {
+                isMenuExpanded = !isMenuExpanded
+            }),
+        )
+        DropdownMenu(
+            expanded = isMenuExpanded,
+            onDismissRequest = { isMenuExpanded = false },
+        ) {
+            DropdownMenuItem(
+                enabled = !state.profileMap.hasOnlyReservedProfiles(),
+                onClick = {
+                    isMenuExpanded = false
+                    vm.openLoadLocationsView()
+                },
+            ) {
+                Text("Load Locations to Profile")
+            }
+
+            DropdownMenuItem(
+                onClick = {
+                    isMenuExpanded = false
+                    vm.openPropertiesView()
+                },
+            ) {
+                Text("Settings")
+            }
+        }
     }
+}
 
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
@@ -197,7 +215,6 @@ fun openEditorView(
     vmProvider: GLViewModelProvider,
     exitApplication: () -> Unit,
 ) {
-    var subWindows: Set<AppWindow>? by remember { mutableStateOf(null) }
     val state =
         rememberWindowState(size = WindowSize(1500.dp, 950.dp), position = WindowPosition.Aligned(Alignment.Center))
 
@@ -215,7 +232,6 @@ fun openEditorView(
             if (editorState.isGDRunning) {
                 isClosingWithGdRunning = true
             } else {
-                subWindows?.forEach { it.closeIfOpen() }
                 exitApplication()
             }
         }
@@ -223,7 +239,8 @@ fun openEditorView(
         CompositionLocalProvider(LocalViewModel provides vmProvider) {
             GrimLocationsTheme {
                 EditorView(
-                    captureState = captureState
+                    captureState = captureState,
+                    exitApplication = exitApplication,
                 )
 
                 if (isClosingWithGdRunning) {

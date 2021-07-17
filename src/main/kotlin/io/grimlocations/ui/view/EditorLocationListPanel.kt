@@ -1,13 +1,15 @@
 package io.grimlocations.ui.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.sharp.ArrowDropDown
+import androidx.compose.material.icons.twotone.ArrowDropDown
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -19,6 +21,8 @@ import io.grimlocations.data.dto.RESERVED_PROFILES
 import io.grimlocations.framework.util.extension.isSequential
 import io.grimlocations.ui.view.component.LocationListComponent
 import io.grimlocations.ui.view.component.PMDChooserComponent
+import io.grimlocations.ui.view.component.Tooltip
+import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.EditorState
@@ -59,13 +63,35 @@ fun EditorLocationListPanel(
             openEditLocationPopupRight(this, vm)
         }
 
-        val isLeftArrowDisabled = isArrowLeftRightDisabled(
+        if (isConfirmDeleteLeftPopupOpen) {
+            openConfirmDeletePopup(
+                onOkClicked = {
+                    vm.deleteSelectedLeft()
+                    vm.closeConfirmDeleteLeft()
+                },
+                onCancelClicked = vm::closeConfirmDeleteLeft,
+                isMultiple = selectedLocationsLeft.size > 1
+            )
+        }
+
+        if (isConfirmDeleteRightPopupOpen) {
+            openConfirmDeletePopup(
+                onOkClicked = {
+                    vm.deleteSelectedRight()
+                    vm.closeConfirmDeleteRight()
+                },
+                onCancelClicked = vm::closeConfirmDeleteRight,
+                isMultiple = selectedLocationsRight.size > 1
+            )
+        }
+
+        val isLeftArrowDisabled = isArrowDisabled(
             primaryPMD = selectedPMDLeft,
             otherPMD = selectedPMDRight,
             primarySelectedLocations = selectedLocationsLeft,
             otherLocations = locationsRight,
         )
-        val isRightArrowDisabled = isArrowLeftRightDisabled(
+        val isRightArrowDisabled = isArrowDisabled(
             primaryPMD = selectedPMDRight,
             otherPMD = selectedPMDLeft,
             primarySelectedLocations = selectedLocationsRight,
@@ -94,15 +120,23 @@ fun EditorLocationListPanel(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row {
-                    PMDChooserComponent(
-                        map = profileMap,
-                        selected = selectedPMDLeft,
-                        onSelect = { pmdContainer ->
-                            vm.selectPMDLeft(pmdContainer)
+                Row(modifier = Modifier.wrapContentSize()) {
+                    SetToActiveButton(
+                        enabled = state.activePMD != null,
+                        onClick = {
+                            vm.selectPMDLeft(state.activePMD!!)
                         }
                     )
+                    Spacer(Modifier.width(50.dp))
                 }
+                Spacer(Modifier.height(5.dp))
+                PMDChooserComponent(
+                    map = profileMap,
+                    selected = selectedPMDLeft,
+                    onSelect = { pmdContainer ->
+                        vm.selectPMDLeft(pmdContainer)
+                    }
+                )
                 Spacer(Modifier.height(verticalSpacerHeight))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -127,9 +161,7 @@ fun EditorLocationListPanel(
                             pmdContainer = selectedPMDLeft,
                             locations = locationsLeft,
                             selected = selectedLocationsLeft,
-                            onClick = {
-                                vm.deleteSelectedLeft()
-                            },
+                            onClick = vm::openConfirmDeleteLeft,
                         )
                     }
                     Spacer(Modifier.width(horizontalSpacerWidth))
@@ -177,15 +209,24 @@ fun EditorLocationListPanel(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row {
-                    PMDChooserComponent(
-                        map = profileMap,
-                        selected = selectedPMDRight,
-                        onSelect = { pmdContainer ->
-                            vm.selectPMDRight(pmdContainer)
+                Row(modifier = Modifier.wrapContentSize()) {
+                    SetToActiveButton(
+                        enabled = state.activePMD != null,
+                        onClick = {
+                            vm.selectPMDRight(state.activePMD!!)
                         }
                     )
+                    Spacer(Modifier.width(50.dp))
                 }
+                Spacer(Modifier.height(5.dp))
+                PMDChooserComponent(
+                    map = profileMap,
+                    selected = selectedPMDRight,
+//                    controlsOnLeft = true,
+                    onSelect = { pmdContainer ->
+                        vm.selectPMDRight(pmdContainer)
+                    }
+                )
                 Spacer(Modifier.height(verticalSpacerHeight))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -249,9 +290,7 @@ fun EditorLocationListPanel(
                             pmdContainer = selectedPMDRight,
                             locations = locationsRight,
                             selected = selectedLocationsRight,
-                            onClick = {
-                                vm.deleteSelectedRight()
-                            },
+                            onClick = vm::openConfirmDeleteRight,
                         )
                     }
                 }
@@ -408,6 +447,54 @@ private fun SelectRangeButton(
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 @Composable
+private fun SetToActiveButton(
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    val tint =
+        if (enabled)
+            MaterialTheme.colors.primary
+        else
+            Color.DarkGray
+
+    Tooltip(
+        text = "Set to Active"
+    ) {
+        IconButton(
+            enabled = enabled,
+            onClick = onClick,
+            modifier = Modifier.size(50.dp)
+        ) {
+            Icon(
+                Icons.Sharp.ArrowDropDown,
+                "Menu",
+                tint = tint,
+                modifier = Modifier.size(50.dp),
+            )
+        }
+
+    }
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
+@Composable
+private fun openConfirmDeletePopup(onOkClicked: () -> Unit, onCancelClicked: () -> Unit, isMultiple: Boolean) {
+    openOkCancelPopup(
+        message = if (isMultiple)
+            "Are you sure you want to delete these locations?"
+        else
+            "Are you sure you want to delete this location?",
+        onCancelClicked = onCancelClicked,
+        onOkClicked = onOkClicked,
+    )
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
+@Composable
 private fun openEditLocationPopupLeft(s: EditorState, vm: EditorViewModel) {
     openEditLocationPopup(
         location = s.selectedLocationsLeft.single(),
@@ -428,7 +515,7 @@ private fun openEditLocationPopupRight(s: EditorState, vm: EditorViewModel) {
     )
 }
 
-private fun isArrowLeftRightDisabled(
+private fun isArrowDisabled(
     primaryPMD: PMDContainer,
     primarySelectedLocations: Set<LocationDTO>,
     otherPMD: PMDContainer,

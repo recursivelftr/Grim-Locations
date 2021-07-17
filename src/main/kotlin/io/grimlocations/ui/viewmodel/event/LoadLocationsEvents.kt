@@ -1,15 +1,12 @@
 package io.grimlocations.ui.viewmodel.event
 
-import androidx.compose.desktop.AppWindow
+import io.grimlocations.framework.ui.getState
 import io.grimlocations.framework.ui.viewmodel.stateFlow
-import io.grimlocations.ui.view.component.legacyOpenOkCancelPopup
 import io.grimlocations.ui.viewmodel.LoadLocationsViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
+import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
-import io.grimlocations.util.extension.closeIfOpen
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -42,5 +39,15 @@ fun LoadLocationsViewModel.loadLocationsIntoSelectedProfile(filePath: String, on
 fun LoadLocationsViewModel.clearLoadMsg() {
     viewModelScope.launch {
         stateManager.clearLoadMsg()
+    }
+}
+
+fun LoadLocationsViewModel.reloadEditorStateAndClose() {
+    viewModelScope.launch {
+        with(stateManager) {
+            reloadEditorState(
+                getState<EditorState>().copy(isLoadLocationsPopupOpen = false)
+            )
+        }
     }
 }

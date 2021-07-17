@@ -20,6 +20,8 @@ data class EditorState(
     val isLoadLocationsPopupOpen: Boolean,
     val isEditLocationRightPopupOpen: Boolean,
     val isEditLocationLeftPopupOpen: Boolean,
+    val isConfirmDeleteRightPopupOpen: Boolean,
+    val isConfirmDeleteLeftPopupOpen: Boolean,
 ) : State {
     override fun equals(other: Any?): Boolean {
         return this === other

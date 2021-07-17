@@ -1,6 +1,5 @@
 package io.grimlocations.ui.view.component
 
-import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,19 +7,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.grimlocations.data.dto.*
+import io.grimlocations.data.dto.ProfileModDifficultyMap
+import io.grimlocations.data.dto.RESERVED_NO_DIFFICULTIES_INDICATOR
+import io.grimlocations.data.dto.RESERVED_NO_MODS_INDICATOR
+import io.grimlocations.data.dto.isReserved
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
-import io.grimlocations.util.extension.closeIfOpen
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 private val textBoxWidth = 300.dp
@@ -34,11 +31,8 @@ fun PMDChooserComponent(
     selected: PMDContainer,
     onSelect: (PMDContainer) -> Unit,
     spacerHeight: Dp = 15.dp,
+    controlsOnLeft: Boolean = false,
 ) {
-    val profileListWindow = remember { mutableStateOf<AppWindow?>(null) }
-    val modListWindow = remember { mutableStateOf<AppWindow?>(null) }
-    val difficultyListWindow = remember { mutableStateOf<AppWindow?>(null) }
-
     val primaryColor = MaterialTheme.colors.primary
     val profiles = remember(map) { map.keys.map { Triple(it.id, it.name, if (it.isReserved) primaryColor else null ) } }
     val mods = remember(map, selected) { map[selected.profile]!!.keys.map { Triple(it.id, it.name, null) } }
@@ -66,6 +60,7 @@ fun PMDChooserComponent(
             emptyItemsMessage = "No Profiles",
             selected = Triple(selectedProfile.id, selectedProfile.name, if (selectedProfile.isReserved) primaryColor else null),
             width = textBoxWidth,
+            controlOnLeft = controlsOnLeft,
             onSelect = {
                 val profile = map.keys.find { item -> item.id == it.first }!!
                 val mod = map[profile]!!.keys.first()
@@ -88,6 +83,7 @@ fun PMDChooserComponent(
             disabled = selected.mod == RESERVED_NO_MODS_INDICATOR,
             selected = Triple(selectedMod.id, selectedMod.name, null),
             width = textBoxWidth,
+            controlOnLeft = controlsOnLeft,
             onSelect = {
                 val mod = map[selected.profile]!!.keys.find { item -> item.id == it.first }!!
                 val difficulty = map[selected.profile]!![mod]!!.first()
@@ -109,6 +105,7 @@ fun PMDChooserComponent(
             disabled = selected.difficulty == RESERVED_NO_DIFFICULTIES_INDICATOR,
             selected = Triple(selectedDifficulty.id, selectedDifficulty.name, null),
             width = textBoxWidth,
+            controlOnLeft = controlsOnLeft,
             onSelect = {
                 val difficulty = map[selected.profile]!![selected.mod]!!.find { item -> item.id == it.first }!!
 
@@ -122,18 +119,4 @@ fun PMDChooserComponent(
             }
         )
     }
-}
-
-private fun manageWindows(
-    onOpen: (AppWindow?, AppWindow) -> Unit,
-    p: AppWindow?,
-    c: AppWindow,
-    focus: MutableState<AppWindow?>,
-    other1: MutableState<AppWindow?>,
-    other2: MutableState<AppWindow?>,
-) {
-    focus.value = c
-    other1.value?.closeIfOpen()
-    other2.value?.closeIfOpen()
-    onOpen(p, c) //must do as last line of this function
 }

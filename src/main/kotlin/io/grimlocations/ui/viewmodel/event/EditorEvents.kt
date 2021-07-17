@@ -1,31 +1,36 @@
 package io.grimlocations.ui.viewmodel.event
 
-import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import io.grimlocations.data.dto.LocationDTO
-import io.grimlocations.ui.view.component.legacyOpenOkCancelPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
-import io.grimlocations.util.extension.closeIfOpen
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-fun EditorViewModel.loadCharacterProfiles(
-    onOpenPopup: (AppWindow) -> Unit,
-    onClosePopup: (AppWindow) -> Unit,
-) {
+
+fun EditorViewModel.openConfirmDeleteLeft() {
     viewModelScope.launch {
-        stateManager.loadCharacterProfiles()
-        withContext(Dispatchers.Main) {
-            legacyOpenOkCancelPopup(
-                "Character profiles successfully loaded.",
-                onOpen = onOpenPopup,
-                onOkClicked = {
-                    onClosePopup(it)
-                    it.closeIfOpen()
-                },
-            )
-        }
+        stateManager.openConfirmDeleteLeft()
+    }
+}
+
+fun EditorViewModel.closeConfirmDeleteLeft() {
+    viewModelScope.launch {
+        stateManager.closeConfirmDeleteLeft()
+    }
+}
+
+fun EditorViewModel.openConfirmDeleteRight() {
+    viewModelScope.launch {
+        stateManager.openConfirmDeleteRight()
+    }
+}
+
+fun EditorViewModel.closeConfirmDeleteRight() {
+    viewModelScope.launch {
+        stateManager.closeConfirmDeleteRight()
     }
 }
 

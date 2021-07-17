@@ -21,10 +21,7 @@ import io.grimlocations.framework.ui.view.View
 import io.grimlocations.ui.view.component.PMDChooserComponent
 import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.viewmodel.LoadLocationsViewModel
-import io.grimlocations.ui.viewmodel.event.clearLoadMsg
-import io.grimlocations.ui.viewmodel.event.loadLocationsIntoSelectedProfile
-import io.grimlocations.ui.viewmodel.event.selectPMD
-import io.grimlocations.ui.viewmodel.event.updateLocationsFilePath
+import io.grimlocations.ui.viewmodel.event.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.swing.JFileChooser
 
@@ -43,7 +40,9 @@ private fun LoadLocationsView(
         if (state.loadMsg != null) {
             openOkCancelPopup(
                 message = state.loadMsg,
-                onOkClicked = vm::clearLoadMsg
+                onOkClicked = vm::clearLoadMsg,
+                width = 600.dp,
+                height = 200.dp
             )
         }
 
@@ -107,7 +106,7 @@ private fun LoadLocationsView(
                         onClick = {
                             vm.loadLocationsIntoSelectedProfile(
                                 filePath = state.locationsFilePath,
-                                onSuccess = onClose,
+                                onSuccess = vm::reloadEditorStateAndClose,
                             )
                         },
                     ) {

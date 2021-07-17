@@ -51,6 +51,8 @@ suspend fun GLStateManager.loadEditorState(
                 isEditLocationRightPopupOpen = false,
                 isLoadLocationsPopupOpen = false,
                 isPropertiesPopupOpen = false,
+                isConfirmDeleteLeftPopupOpen = false,
+                isConfirmDeleteRightPopupOpen = false,
             )
         )
     } else {
@@ -79,6 +81,34 @@ suspend fun GLStateManager.loadEditorState(
 suspend fun GLStateManager.loadCharacterProfiles() {
     repository.detectAndCreateProfilesAsync().await()
     reloadEditorState()
+}
+
+suspend fun GLStateManager.openConfirmDeleteLeft(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isConfirmDeleteLeftPopupOpen = true))
+    }
+}
+
+suspend fun GLStateManager.closeConfirmDeleteLeft(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isConfirmDeleteLeftPopupOpen = false))
+    }
+}
+
+suspend fun GLStateManager.openConfirmDeleteRight(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isConfirmDeleteRightPopupOpen = true))
+    }
+}
+
+suspend fun GLStateManager.closeConfirmDeleteRight(){
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isConfirmDeleteRightPopupOpen = false))
+    }
 }
 
 suspend fun GLStateManager.openEditLocationLeft(){
@@ -137,8 +167,8 @@ suspend fun GLStateManager.closeLoadLocationsView(){
     }
 }
 
-suspend fun GLStateManager.reloadEditorState() {
-    loadEditorState(getState())
+suspend fun GLStateManager.reloadEditorState(state: EditorState? = null) {
+    loadEditorState(state ?: getState())
 }
 
 suspend fun GLStateManager.updateIfGDRunning(): Boolean {
