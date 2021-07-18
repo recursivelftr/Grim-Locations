@@ -9,3 +9,8 @@ data class PMDContainer(
     val mod: ModDTO,
     val difficulty: DifficultyDTO
 )
+
+fun PMDContainer.namesAreEqual(profileName: String, modName: String, difficultyName: String) =
+    profileName == profile.name
+            && modName == mod.name
+            && difficultyName == difficulty.name

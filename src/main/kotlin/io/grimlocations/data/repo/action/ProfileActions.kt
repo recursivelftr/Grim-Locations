@@ -1,7 +1,5 @@
 package io.grimlocations.data.repo.action
 
-import io.grimlocations.data.domain.MetaTable
-import io.grimlocations.data.domain.Mod
 import io.grimlocations.data.domain.Profile
 import io.grimlocations.data.domain.ProfileTable
 import io.grimlocations.data.dto.*
@@ -9,20 +7,36 @@ import io.grimlocations.data.repo.SqliteRepository
 import io.grimlocations.framework.data.dto.containsId
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
-import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
-import java.io.File
 
 private val logger = LogManager.getLogger()
 
 suspend fun SqliteRepository.getProfilesAsync(): Deferred<List<ProfileDTO>> =
     suspendedTransactionAsync(Dispatchers.IO) {
         Profile.wrapRows(ProfileTable.selectAll()).map { it.toDTO() }
+    }
+
+suspend fun SqliteRepository.findOrCreateProfileAsync(name: String): Deferred<ProfileDTO?> =
+    suspendedTransactionAsync(Dispatchers.IO) {
+        try {
+            var p = newSuspendedTransaction {
+                Profile.find { ProfileTable.name eq name }.singleOrNull()
+            }
+            if (p == null) {
+                p = newSuspendedTransaction {
+                    Profile.new {
+                        this.name = name
+                    }
+                }
+            }
+            p.toDTO()
+        } catch (e: Exception) {
+            logger.error("", e)
+            null
+        }
     }
 
 suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(
@@ -56,45 +70,3 @@ suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(
         map
     }
 
-suspend fun SqliteRepository.detectAndCreateProfilesAsync(): Deferred<Unit> =
-    withContext(Dispatchers.IO) {
-        async<Unit> {
-            val path = newSuspendedTransaction {
-                MetaTable.slice(MetaTable.saveLocation).selectAll().single()[MetaTable.saveLocation]
-            }
-
-            try {
-                File(path).listFiles { it: File -> it.isDirectory }?.also {
-                    for (file in it) {
-                        val n = file.name.trim().removePrefix("_")
-                        if (n.isNotBlank()) {
-                            try {
-                                var p = newSuspendedTransaction {
-                                    Profile.find { ProfileTable.name eq n }.singleOrNull()
-                                }
-                                if (p == null) {
-                                    p = newSuspendedTransaction {
-                                        Profile.new {
-                                            name = n
-                                        }
-                                    }
-                                    newSuspendedTransaction {
-                                        val mod = Mod.findById(DEFAULT_GAME_MOD.id)!!
-                                        p.mods = SizedCollection(listOf(mod))
-                                    }
-                                } else {
-                                    logger.info("Duplicate profile found: $n")
-                                }
-                            } catch (e: Exception) {
-                                logger.error("", e)
-                            }
-                        }
-                    }
-                } ?: run {
-                    logger.error("Path is either not a directory or an I/O error has occurred.")
-                }
-            } catch (e: SecurityException) {
-                logger.error("Read access is denied to this directory: $path", e)
-            }
-        }
-    }

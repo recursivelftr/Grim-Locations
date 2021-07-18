@@ -108,7 +108,7 @@ fun EditorViewModel.reloadState() {
 suspend fun EditorViewModel.startGDProcessCheckLoop() {
     while (true) {
         if (stateManager.updateIfGDRunning()) {
-            stateManager.checkIfLocationsFileChangedAndLoadLocation()
+            stateManager.performFileChecksAndLoads()
         }
         delay(1000)
     }

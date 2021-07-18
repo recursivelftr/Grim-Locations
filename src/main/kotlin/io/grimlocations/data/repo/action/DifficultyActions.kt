@@ -1,8 +1,8 @@
 package io.grimlocations.data.repo.action
 
-import io.grimlocations.data.domain.Mod
-import io.grimlocations.data.domain.ModTable
-import io.grimlocations.data.dto.ModDTO
+import io.grimlocations.data.domain.Difficulty
+import io.grimlocations.data.domain.DifficultyTable
+import io.grimlocations.data.dto.DifficultyDTO
 import io.grimlocations.data.repo.SqliteRepository
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -12,15 +12,15 @@ import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionA
 
 private val logger = LogManager.getLogger()
 
-suspend fun SqliteRepository.findOrCreateModAsync(name: String): Deferred<ModDTO?> =
+suspend fun SqliteRepository.findOrCreateDifficultyAsync(name: String): Deferred<DifficultyDTO?> =
     suspendedTransactionAsync(Dispatchers.IO) {
         try {
             var p = newSuspendedTransaction {
-                Mod.find { ModTable.name eq name }.singleOrNull()
+                Difficulty.find { DifficultyTable.name eq name }.singleOrNull()
             }
             if (p == null) {
                 p = newSuspendedTransaction {
-                    Mod.new {
+                    Difficulty.new {
                         this.name = name
                     }
                 }

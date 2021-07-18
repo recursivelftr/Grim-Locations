@@ -1,17 +1,15 @@
 package io.grimlocations.ui.viewmodel.reducer
 
 import io.grimlocations.data.dto.LocationDTO
+import io.grimlocations.data.dto.MetaDTO
 import io.grimlocations.data.dto.firstContainer
+import io.grimlocations.data.repo.*
 import io.grimlocations.data.repo.action.*
-import io.grimlocations.data.repo.createLocationsFromFile
-import io.grimlocations.data.repo.getFileLastModified
-import io.grimlocations.data.repo.isGDRunning
-import io.grimlocations.data.repo.writeLocationsToFile
 import io.grimlocations.framework.data.dto.replaceDTO
 import io.grimlocations.framework.ui.getState
 import io.grimlocations.framework.ui.setState
 import io.grimlocations.framework.util.awaitAll
-import io.grimlocations.framework.util.extension.endsWithOne
+import io.grimlocations.framework.util.extension.asPathToFile
 import io.grimlocations.framework.util.guardLet
 import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.viewmodel.state.EditorState
@@ -78,89 +76,84 @@ suspend fun GLStateManager.loadEditorState(
     }
 }
 
-suspend fun GLStateManager.loadCharacterProfiles() {
-    repository.detectAndCreateProfilesAsync().await()
-    reloadEditorState()
-}
-
-suspend fun GLStateManager.openConfirmDeleteLeft(){
+suspend fun GLStateManager.openConfirmDeleteLeft() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isConfirmDeleteLeftPopupOpen = true))
     }
 }
 
-suspend fun GLStateManager.closeConfirmDeleteLeft(){
+suspend fun GLStateManager.closeConfirmDeleteLeft() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isConfirmDeleteLeftPopupOpen = false))
     }
 }
 
-suspend fun GLStateManager.openConfirmDeleteRight(){
+suspend fun GLStateManager.openConfirmDeleteRight() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isConfirmDeleteRightPopupOpen = true))
     }
 }
 
-suspend fun GLStateManager.closeConfirmDeleteRight(){
+suspend fun GLStateManager.closeConfirmDeleteRight() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isConfirmDeleteRightPopupOpen = false))
     }
 }
 
-suspend fun GLStateManager.openEditLocationLeft(){
+suspend fun GLStateManager.openEditLocationLeft() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isEditLocationLeftPopupOpen = true))
     }
 }
 
-suspend fun GLStateManager.closeEditLocationLeft(){
+suspend fun GLStateManager.closeEditLocationLeft() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isEditLocationLeftPopupOpen = false))
     }
 }
 
-suspend fun GLStateManager.openEditLocationRight(){
+suspend fun GLStateManager.openEditLocationRight() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isEditLocationRightPopupOpen = true))
     }
 }
 
-suspend fun GLStateManager.closeEditLocationRight(){
+suspend fun GLStateManager.closeEditLocationRight() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isEditLocationRightPopupOpen = false))
     }
 }
 
-suspend fun GLStateManager.openPropertiesView(){
+suspend fun GLStateManager.openPropertiesView() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isPropertiesPopupOpen = true))
     }
 }
 
-suspend fun GLStateManager.closePropertiesView(){
+suspend fun GLStateManager.closePropertiesView() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isPropertiesPopupOpen = false))
     }
 }
 
-suspend fun GLStateManager.openLoadLocationsView(){
+suspend fun GLStateManager.openLoadLocationsView() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isLoadLocationsPopupOpen = true))
     }
 }
 
-suspend fun GLStateManager.closeLoadLocationsView(){
+suspend fun GLStateManager.closeLoadLocationsView() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isLoadLocationsPopupOpen = false))
@@ -183,42 +176,57 @@ suspend fun GLStateManager.updateIfGDRunning(): Boolean {
     return isRunning
 }
 
-private var last_modified: Long? = null
+private const val TELEPORT_LIST_FILENAME = "GrimInternals_TeleportList.txt"
+private const val CHAR_FILENAME = "GrimLocations_Char.txt"
+private var locations_file_last_modified: Long? = null
+private var char_file_last_modified: Long? = null
 private val locationsFileMutex = Mutex()
 
-suspend fun GLStateManager.checkIfLocationsFileChangedAndLoadLocation() {
+suspend fun GLStateManager.performFileChecksAndLoads() {
     val meta = repository.getMetaAsync().await()
-    guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
-        val filePath = if (loc.endsWithOne("/", "\\"))
-            loc + "GrimInternals_TeleportList.txt"
-        else
-            loc + File.separator + "GrimInternals_TeleportList.txt"
+    performActivePmdFileCheckAndLoad(meta)
+    performLocationsFileCheckAndLoad(meta)
+}
 
+private suspend fun GLStateManager.performLocationsFileCheckAndLoad(meta: MetaDTO) {
+    guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
         locationsFileMutex.withLock {
-            val file = File(filePath)
+            val file = File(loc.asPathToFile(TELEPORT_LIST_FILENAME))
             val lastModified = repository.getFileLastModified(file)
-            if (lastModified != null && last_modified != lastModified) {
+
+            if (lastModified != null && locations_file_last_modified != lastModified) {
                 repository.createLocationsFromFile(file, pmd)
-                last_modified = repository.getFileLastModified(file)
+                locations_file_last_modified = repository.getFileLastModified(file)
                 reloadEditorState()
             }
         }
     }
 }
 
+private suspend fun GLStateManager.performActivePmdFileCheckAndLoad(meta: MetaDTO) {
+    guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
+            val charFile = File(loc.asPathToFile(CHAR_FILENAME))
+            val lastModified = repository.getFileLastModified(charFile)
+
+            if (lastModified != null && char_file_last_modified != lastModified) {
+                val teleportFile = File(loc.asPathToFile(TELEPORT_LIST_FILENAME))
+
+                repository.createAndSetActivePmd(charFile, teleportFile, pmd)
+                char_file_last_modified = lastModified
+                locations_file_last_modified = repository.getFileLastModified(teleportFile)
+                reloadEditorState()
+            }
+    }
+}
+
 private suspend fun GLStateManager.copyActivePMDToLocationsFile(pmdc: PMDContainer) {
     val meta = repository.getMetaAsync().await()
-    if(pmdc == meta.activePMD) {
+    if (pmdc == meta.activePMD) {
         guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
-            val filePath = if (loc.endsWithOne("/", "\\"))
-                loc + "GrimInternals_TeleportList.txt"
-            else
-                loc + File.separator + "GrimInternals_TeleportList.txt"
-
             locationsFileMutex.withLock {
-                val file = File(filePath)
+                val file = File(loc.asPathToFile(TELEPORT_LIST_FILENAME))
                 repository.writeLocationsToFile(file, pmd)
-                last_modified = repository.getFileLastModified(file)
+                locations_file_last_modified = repository.getFileLastModified(file)
             }
         }
     }
@@ -395,7 +403,7 @@ suspend fun GLStateManager.updateAndCloseLocationRight(loc: LocationDTO) {
 }
 
 private suspend fun GLStateManager.updateAndCloseLocation(location: LocationDTO, pmd: PMDContainer, s: EditorState) {
-    if(repository.updateLocationAsync(location).await() == null) {
+    if (repository.updateLocationAsync(location).await() == null) {
         copyActivePMDToLocationsFile(pmd)
         withContext(Dispatchers.Main) {
             setState(

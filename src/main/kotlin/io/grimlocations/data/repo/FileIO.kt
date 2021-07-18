@@ -2,16 +2,23 @@ package io.grimlocations.data.repo
 
 import io.grimlocations.data.domain.*
 import io.grimlocations.data.dto.*
-import io.grimlocations.data.repo.action.getHighestOrderAsync
+import io.grimlocations.data.repo.action.*
+import io.grimlocations.framework.util.awaitAll
 import io.grimlocations.framework.util.extension.removeAllBlank
+import io.grimlocations.framework.util.guardLet
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
+import io.grimlocations.ui.viewmodel.state.container.namesAreEqual
 import io.grimlocations.util.extension.glDatabaseBackupDir
 import io.grimlocations.util.extension.glDatabaseDir
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.io.BufferedReader
 import java.io.File
@@ -55,6 +62,58 @@ fun SqliteRepository.createRollingBackup(maxBackups: Int) {
         throw e
     }
 }
+
+suspend fun SqliteRepository.createAndSetActivePmd(charFile: File, teleportFile: File, pmd: PMDContainer) =
+    withContext<Unit>(Dispatchers.IO) {
+        var profile: String? = null //line 0
+        var difficulty: String? = null //line 1
+        var mod: String? = null // line 2
+        //line 3 is a blank line in the GrimLocations_Char.txt file
+
+        var count = 0
+        charFile.forEachLine {
+            when {
+                count > 3 -> {
+                    logger.info("There are more than 4 lines in the GrimLocations_Char.txt file.")
+                    return@forEachLine
+                }
+                count < 3 && it.isBlank() -> {
+                    logger.error("Line $count of GrimLocations_Char.txt was blank.")
+                    return@forEachLine
+                }
+                else -> {
+                    when (count) {
+                        0 -> profile = it
+                        1 -> difficulty = it
+                        2 -> mod = it
+                    }
+                }
+            }
+            ++count
+        }
+
+        guardLet(profile, mod, difficulty) { p, m, d ->
+            if (!pmd.namesAreEqual(p, m, d)) {
+                val (tp, tm, td) = awaitAll(
+                    findOrCreateProfileAsync(p),
+                    findOrCreateModAsync(m),
+                    findOrCreateDifficultyAsync(d)
+                )
+                guardLet(tp, tm, td) { profileDTO, modDTO, difficultyDTO ->
+                    val container = PMDContainer(profileDTO, modDTO, difficultyDTO)
+                    kotlinx.coroutines.awaitAll(
+                        persistActivePMDAsync(container),
+                        async {
+                            writeLocationsToFile(teleportFile, container)
+                        }
+                    )
+                }
+            }
+            Unit
+        } ?: kotlin.run {
+            logger.error("Was not able to properly read the GrimLocations_Char.txt file.")
+        }
+    }
 
 //The string returned is the error string, if everything went well then it will return null
 suspend fun SqliteRepository.createLocationsFromFile(
@@ -132,7 +191,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
                 locList.add(LocationDTO(-1, time, time, name, 0, coordDTO))
             }
         }
-    }catch (e: Exception) {
+    } catch (e: Exception) {
         errorString = "Could not read from file: $file"
         logger.error(errorString, e)
     }
@@ -261,3 +320,46 @@ suspend fun SqliteRepository.getFileLastModified(file: File): Long? = withContex
         null
     }
 }
+
+suspend fun SqliteRepository.detectAndCreateProfilesAsync(): Deferred<Unit> =
+    withContext(Dispatchers.IO) {
+        async<Unit> {
+            val path = newSuspendedTransaction {
+                MetaTable.slice(MetaTable.saveLocation).selectAll().single()[MetaTable.saveLocation]
+            }
+
+            try {
+                File(path).listFiles { it: File -> it.isDirectory }?.also {
+                    for (file in it) {
+                        val n = file.name.trim().removePrefix("_")
+                        if (n.isNotBlank()) {
+                            try {
+                                var p = newSuspendedTransaction {
+                                    Profile.find { ProfileTable.name eq n }.singleOrNull()
+                                }
+                                if (p == null) {
+                                    p = newSuspendedTransaction {
+                                        Profile.new {
+                                            name = n
+                                        }
+                                    }
+                                    newSuspendedTransaction {
+                                        val mod = Mod.findById(DEFAULT_GAME_MOD.id)!!
+                                        p.mods = SizedCollection(listOf(mod))
+                                    }
+                                } else {
+                                    logger.info("Duplicate profile found: $n")
+                                }
+                            } catch (e: Exception) {
+                                logger.error("", e)
+                            }
+                        }
+                    }
+                } ?: run {
+                    logger.error("Path is either not a directory or an I/O error has occurred.")
+                }
+            } catch (e: SecurityException) {
+                logger.error("Read access is denied to this directory: $path", e)
+            }
+        }
+    }

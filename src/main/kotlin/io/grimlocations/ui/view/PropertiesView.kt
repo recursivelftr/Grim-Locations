@@ -22,10 +22,11 @@ import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.viewmodel.PropertiesViewModel
-import io.grimlocations.ui.viewmodel.event.*
+import io.grimlocations.ui.viewmodel.event.getGdInstallLocation
+import io.grimlocations.ui.viewmodel.event.persistState
+import io.grimlocations.ui.viewmodel.event.updateInstallPath
 import io.grimlocations.ui.viewmodel.state.PropertiesState
 import io.grimlocations.ui.viewmodel.state.PropertiesStateError.GRIM_INTERNALS_NOT_FOUND
-import io.grimlocations.ui.viewmodel.state.PropertiesStateWarning.NO_CHARACTERS_FOUND
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.swing.JFileChooser
 
@@ -88,54 +89,7 @@ private fun PropertiesView(
                 )
             }
 
-            Spacer(Modifier.height(20.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-
-                TextField(
-//                    textStyle = TextStyle.Default.copy(color = Color.White),
-//                    textColor = Color.White,
-                    value = it.savePath ?: vm.getGdSaveLocation() ?: "",
-                    onValueChange = vm::updateSavePath,
-                    label = {
-                        Text("GD Save Folder", style = TextStyle(fontSize = 15.sp))
-                    },
-                    singleLine = true,
-                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
-                )
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                IconButton(
-                    modifier = Modifier.size(40.dp),
-                    onClick = {
-                        with(vm.saveFileChooser) {
-                            val okOrCancel = showOpenDialog(null)
-                            if (okOrCancel == JFileChooser.APPROVE_OPTION) {
-                                vm.updateSavePath(selectedFile.absolutePath)
-                            }
-                        }
-                    }
-                ) {
-                    Icon(
-                        Icons.Default.Edit,
-                        "Browse",
-                    )
-                }
-            }
-
-            if (it.warnings.contains(NO_CHARACTERS_FOUND)) {
-                Text(
-                    "No character profiles found",
-                    color = Color.Yellow,
-                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(30.dp))
 
             Row(horizontalArrangement = Arrangement.End) {
                 Button(
@@ -144,7 +98,7 @@ private fun PropertiesView(
                     Text("Cancel")
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(20.dp))
 
                 Button(
                     enabled = isOkEnabled(it),
@@ -172,7 +126,7 @@ fun openInitialPropertiesView(
     closeWindow: () -> Unit,
 ) {
     val state =
-        rememberWindowState(size = WindowSize(550.dp, 300.dp), position = WindowPosition.Aligned(Alignment.Center))
+        rememberWindowState(size = WindowSize(550.dp, 250.dp), position = WindowPosition.Aligned(Alignment.Center))
 
     val isOpen = remember { mutableStateOf(true) }
 
@@ -206,7 +160,7 @@ fun openPropertiesView(
     closeWindow: () -> Unit,
 ) {
     val state =
-        rememberDialogState(size = WindowSize(550.dp, 300.dp), position = WindowPosition.Aligned(Alignment.Center))
+        rememberDialogState(size = WindowSize(550.dp, 250.dp), position = WindowPosition.Aligned(Alignment.Center))
 
     Dialog(
         title = "Properties",
