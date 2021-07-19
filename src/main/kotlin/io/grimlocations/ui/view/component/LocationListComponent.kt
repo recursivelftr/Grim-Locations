@@ -10,13 +10,19 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.grimlocations.constant.DATETIME_FORMATTER
 import io.grimlocations.data.dto.LocationDTO
 
+@ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @Composable
 fun LocationListComponent(
@@ -59,6 +65,9 @@ fun LocationListComponent(
                         rowWidth = rowWidth,
                         location = location,
                         isSelected = selectedLocations.contains(location),
+                        ctrlAAction = {
+                          onSelectLocations(locations)
+                        },
                         onClick = { l ->
                             if(isMultiSelect) {
                                 if(selectedLocations.contains(l))
@@ -84,6 +93,7 @@ fun LocationListComponent(
     }
 }
 
+@ExperimentalComposeUiApi
 @Composable
 private fun Item(
     rowHeight: Dp,
@@ -91,6 +101,7 @@ private fun Item(
     location: LocationDTO,
     onClick: (LocationDTO) -> Unit,
     isSelected: Boolean,
+    ctrlAAction: () -> Unit,
 ) {
 
     val modifier =
@@ -102,9 +113,17 @@ private fun Item(
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.height(rowHeight)
+        modifier = modifier.focusable()
+            .onPreviewKeyEvent {
+                if(it.isCtrlPressed && it.key == Key.A){
+                    ctrlAAction()
+                }
+                true
+            }
+            .height(rowHeight)
             .width(rowWidth)
             .clickable(onClick = { onClick(location) })
+
     ) {
         Spacer(modifier = Modifier.width(rowWidth *.02f))
         Box(modifier.width(rowWidth * .63f)) {
