@@ -5,6 +5,7 @@ import io.grimlocations.data.dto.*
 import io.grimlocations.data.repo.action.*
 import io.grimlocations.framework.util.awaitAll
 import io.grimlocations.framework.util.extension.removeAllBlank
+import io.grimlocations.framework.util.guardAlso
 import io.grimlocations.framework.util.guardLet
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.ui.viewmodel.state.container.namesAreEqual
@@ -92,24 +93,22 @@ suspend fun SqliteRepository.createAndSetActivePmd(charFile: File, teleportFile:
             ++count
         }
 
-        guardLet(profile, mod, difficulty) { p, m, d ->
+        guardAlso(profile, mod, difficulty) { p, m, d ->
             if (!pmd.namesAreEqual(p, m, d)) {
-                val (tp, tm, td) = awaitAll(
-                    findOrCreateProfileAsync(p),
-                    findOrCreateModAsync(m),
-                    findOrCreateDifficultyAsync(d)
-                )
-                guardLet(tp, tm, td) { profileDTO, modDTO, difficultyDTO ->
-                    val container = PMDContainer(profileDTO, modDTO, difficultyDTO)
-                    kotlinx.coroutines.awaitAll(
-                        persistActivePMDAsync(container),
-                        async {
-                            writeLocationsToFile(teleportFile, container)
+                findOrCreateProfileAsync(p).await()?.also { profileDTO ->
+                    findOrCreateModAsync(m, profileDTO).await()?.also { modDTO ->
+                        findOrCreateDifficultyAsync(d, modDTO).await()?.also { difficultyDTO ->
+                            val container = PMDContainer(profileDTO, modDTO, difficultyDTO)
+                            kotlinx.coroutines.awaitAll(
+                                persistActivePMDAsync(container),
+                                async {
+                                    writeLocationsToFile(teleportFile, container)
+                                }
+                            )
                         }
-                    )
+                    }
                 }
             }
-            Unit
         } ?: kotlin.run {
             logger.error("Was not able to properly read the GrimLocations_Char.txt file.")
         }
