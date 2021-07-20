@@ -1,33 +1,48 @@
 package io.grimlocations.ui.view
 
-import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.*
-import androidx.compose.ui.window.v1.MenuBar
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowSize
+import androidx.compose.ui.window.rememberWindowState
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.framework.ui.LocalViewModel
 import io.grimlocations.framework.ui.getLazyViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.ui.GLViewModelProvider
+import io.grimlocations.ui.view.component.SelectionMode
 import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
-import io.grimlocations.util.extension.closeIfOpen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+
+private enum class EditorFocus {
+    LEFT_LOCATION_LIST, RIGHT_LOCATION_LIST, NONE
+}
+
+private object EditorFocusManager {
+    var currentFocus = EditorFocus.NONE
+    var selectionMode = SelectionMode.SINGLE
+    var ctrlAActionLeft: (() -> Unit)? = null
+    var ctrlAActionRight: (() -> Unit)? = null
+}
 
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
@@ -228,6 +243,13 @@ fun openEditorView(
         title = "Grim Locations",
         icon = APP_ICON,
         state = state,
+        onPreviewKeyEvent = {
+             if(it.isCtrlPressed && it.key == Key.A) {
+
+                 println("cntrl+a is pressed")
+             }
+            true
+        },
         onCloseRequest = {
             if (editorState.isGDRunning) {
                 isClosingWithGdRunning = true

@@ -13,14 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.grimlocations.constant.DATETIME_FORMATTER
 import io.grimlocations.data.dto.LocationDTO
+
+enum class SelectionMode {
+    SINGLE, MULTIPLE, RANGE
+}
 
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
@@ -29,7 +29,7 @@ fun LocationListComponent(
     locations: Set<LocationDTO>,
     selectedLocations: Set<LocationDTO>,
     onSelectLocations: (Set<LocationDTO>) -> Unit,
-    isMultiSelect: Boolean,
+    selectionMode: SelectionMode,
     rowHeight: Dp,
     rowWidth: Dp,
     stateVertical: LazyListState,
@@ -65,17 +65,38 @@ fun LocationListComponent(
                         rowWidth = rowWidth,
                         location = location,
                         isSelected = selectedLocations.contains(location),
-                        ctrlAAction = {
-                          onSelectLocations(locations)
-                        },
                         onClick = { l ->
-                            if(isMultiSelect) {
-                                if(selectedLocations.contains(l))
-                                    onSelectLocations(selectedLocations.filter { ll -> ll != l }.toSet())
-                                else
-                                    onSelectLocations(selectedLocations.toMutableSet().apply { add(l) })
-                            } else {
-                                onSelectLocations(setOf(l))
+                            when(selectionMode) {
+                                SelectionMode.SINGLE -> {
+                                    onSelectLocations(setOf(l))
+                                }
+                                SelectionMode.MULTIPLE -> { //holding ctrl
+                                    if(selectedLocations.contains(l))
+                                        onSelectLocations(selectedLocations.filter { ll -> ll != l }.toSet())
+                                    else
+                                        onSelectLocations(selectedLocations.toMutableSet().apply { add(l) })
+                                }
+                                SelectionMode.RANGE -> { //holding shift
+                                    if(selectedLocations.isEmpty()){
+                                        onSelectLocations(setOf(l))
+                                    } else if(!selectedLocations.contains(l)) {
+                                        val firstLoc = selectedLocations.first()
+
+                                        if(firstLoc.order > l.order){
+                                            selectedLocations.toMutableSet().addAll(
+                                                locations.filter { aLoc ->
+                                                    aLoc.order < firstLoc.order && aLoc.order >= l.order
+                                                }
+                                            )
+                                        } else {
+                                            selectedLocations.toMutableSet().addAll(
+                                                locations.filter { aLoc ->
+                                                    aLoc.order > firstLoc.order && aLoc.order <= l.order
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     )
@@ -101,7 +122,6 @@ private fun Item(
     location: LocationDTO,
     onClick: (LocationDTO) -> Unit,
     isSelected: Boolean,
-    ctrlAAction: () -> Unit,
 ) {
 
     val modifier =
@@ -113,16 +133,12 @@ private fun Item(
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.focusable()
-            .onPreviewKeyEvent {
-                if(it.isCtrlPressed && it.key == Key.A){
-                    ctrlAAction()
-                }
-                true
-            }
+        modifier = modifier
             .height(rowHeight)
             .width(rowWidth)
-            .clickable(onClick = { onClick(location) })
+            .clickable(onClick = {
+                onClick(location)
+            })
 
     ) {
         Spacer(modifier = Modifier.width(rowWidth *.02f))

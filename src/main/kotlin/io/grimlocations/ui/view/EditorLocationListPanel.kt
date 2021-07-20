@@ -1,15 +1,12 @@
 package io.grimlocations.ui.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.sharp.ArrowDropDown
-import androidx.compose.material.icons.twotone.ArrowDropDown
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -169,7 +166,7 @@ fun EditorLocationListPanel(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
                         locations = locationsLeft,
-                        isMultiSelect = vm.isLeftMultiSelect,
+                        selectionMode = vm.isLeftMultiSelect,
                         selectedLocations = selectedLocationsLeft,
                         onSelectLocations = { locs ->
                             vm.selectLocationsLeft(locs)
@@ -263,7 +260,7 @@ fun EditorLocationListPanel(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
                         locations = locationsRight,
-                        isMultiSelect = vm.isRightMultiSelect,
+                        selectionMode = vm.isRightMultiSelect,
                         selectedLocations = selectedLocationsRight,
                         onSelectLocations = { locs ->
                             vm.selectLocationsRight(locs)
