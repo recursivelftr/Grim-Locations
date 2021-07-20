@@ -16,10 +16,7 @@ import androidx.compose.ui.unit.dp
 import io.grimlocations.data.dto.LocationDTO
 import io.grimlocations.data.dto.RESERVED_PROFILES
 import io.grimlocations.framework.util.extension.isSequential
-import io.grimlocations.ui.view.component.LocationListComponent
-import io.grimlocations.ui.view.component.PMDChooserComponent
-import io.grimlocations.ui.view.component.Tooltip
-import io.grimlocations.ui.view.component.openOkCancelPopup
+import io.grimlocations.ui.view.component.*
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.EditorState
@@ -49,6 +46,9 @@ private val logger = LogManager.getLogger()
 fun EditorLocationListPanel(
     state: EditorState,
     vm: EditorViewModel,
+    captureFocusLeft: () -> Unit,
+    captureFocusRight: () -> Unit,
+    editorFocusManager: EditorFocusManager,
 ) {
     with(state) {
 
@@ -166,12 +166,13 @@ fun EditorLocationListPanel(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
                         locations = locationsLeft,
-                        selectionMode = vm.isLeftMultiSelect,
+                        getSelectionMode = editorFocusManager::selectionMode,
                         selectedLocations = selectedLocationsLeft,
                         onSelectLocations = { locs ->
                             vm.selectLocationsLeft(locs)
                         },
-                        stateVertical = stateVerticalLeft
+                        stateVertical = stateVerticalLeft,
+                        captureFocus = captureFocusLeft,
                     )
                     Spacer(Modifier.width(horizontalSpacerWidth))
                     Column {
@@ -260,12 +261,13 @@ fun EditorLocationListPanel(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
                         locations = locationsRight,
-                        selectionMode = vm.isRightMultiSelect,
+                        getSelectionMode = editorFocusManager::selectionMode,
                         selectedLocations = selectedLocationsRight,
                         onSelectLocations = { locs ->
                             vm.selectLocationsRight(locs)
                         },
-                        stateVertical = stateVerticalRight
+                        stateVertical = stateVerticalRight,
+                        captureFocus = captureFocusRight,
                     )
                     Spacer(Modifier.width(horizontalSpacerWidth))
                     Column {

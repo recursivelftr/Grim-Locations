@@ -29,10 +29,11 @@ fun LocationListComponent(
     locations: Set<LocationDTO>,
     selectedLocations: Set<LocationDTO>,
     onSelectLocations: (Set<LocationDTO>) -> Unit,
-    selectionMode: SelectionMode,
+    getSelectionMode: () -> SelectionMode,
     rowHeight: Dp,
     rowWidth: Dp,
     stateVertical: LazyListState,
+    captureFocus: () -> Unit,
 ) {
     val primaryColor = MaterialTheme.colors.primary
 
@@ -44,10 +45,11 @@ fun LocationListComponent(
             )
         }
     }
-    Box(modifier = Modifier.width(rowWidth)
-        .border(width = 3.dp, color = Color.DarkGray)
+    Box(
+        modifier = Modifier.width(rowWidth)
+            .border(width = 3.dp, color = Color.DarkGray).clickable(onClick = captureFocus)
     ) {
-        if(locations.isEmpty()) {
+        if (locations.isEmpty()) {
             Text(
                 "No Locations",
                 modifier = Modifier.align(Alignment.Center)
@@ -65,35 +67,40 @@ fun LocationListComponent(
                         rowWidth = rowWidth,
                         location = location,
                         isSelected = selectedLocations.contains(location),
+                        captureFocus = captureFocus,
                         onClick = { l ->
-                            when(selectionMode) {
+                            when (getSelectionMode()) {
                                 SelectionMode.SINGLE -> {
                                     onSelectLocations(setOf(l))
                                 }
                                 SelectionMode.MULTIPLE -> { //holding ctrl
-                                    if(selectedLocations.contains(l))
+                                    if (selectedLocations.contains(l))
                                         onSelectLocations(selectedLocations.filter { ll -> ll != l }.toSet())
                                     else
                                         onSelectLocations(selectedLocations.toMutableSet().apply { add(l) })
                                 }
                                 SelectionMode.RANGE -> { //holding shift
-                                    if(selectedLocations.isEmpty()){
+                                    if (selectedLocations.isEmpty()) {
                                         onSelectLocations(setOf(l))
-                                    } else if(!selectedLocations.contains(l)) {
+                                    } else if (!selectedLocations.contains(l)) {
                                         val firstLoc = selectedLocations.first()
 
-                                        if(firstLoc.order > l.order){
-                                            selectedLocations.toMutableSet().addAll(
-                                                locations.filter { aLoc ->
-                                                    aLoc.order < firstLoc.order && aLoc.order >= l.order
-                                                }
-                                            )
+                                        if (firstLoc.order > l.order) {
+                                            onSelectLocations(selectedLocations.toMutableSet().apply {
+                                                addAll(
+                                                    locations.filter { aLoc ->
+                                                        aLoc.order < firstLoc.order && aLoc.order >= l.order
+                                                    }
+                                                )
+                                            })
                                         } else {
-                                            selectedLocations.toMutableSet().addAll(
-                                                locations.filter { aLoc ->
-                                                    aLoc.order > firstLoc.order && aLoc.order <= l.order
-                                                }
-                                            )
+                                            onSelectLocations(selectedLocations.toMutableSet().apply {
+                                                addAll(
+                                                    locations.filter { aLoc ->
+                                                        aLoc.order > firstLoc.order && aLoc.order <= l.order
+                                                    }
+                                                )
+                                            })
                                         }
                                     }
                                 }
@@ -122,6 +129,7 @@ private fun Item(
     location: LocationDTO,
     onClick: (LocationDTO) -> Unit,
     isSelected: Boolean,
+    captureFocus: () -> Unit,
 ) {
 
     val modifier =
@@ -137,11 +145,12 @@ private fun Item(
             .height(rowHeight)
             .width(rowWidth)
             .clickable(onClick = {
+                captureFocus()
                 onClick(location)
             })
 
     ) {
-        Spacer(modifier = Modifier.width(rowWidth *.02f))
+        Spacer(modifier = Modifier.width(rowWidth * .02f))
         Box(modifier.width(rowWidth * .63f)) {
             Text(location.name)
         }
@@ -154,9 +163,11 @@ private fun Item(
 //            Text(location.modified.toString())
 //        }
         Box(modifier.width(rowWidth * .33f)) {
-            Text(DATETIME_FORMATTER.format(location.created),
-            modifier = Modifier.align(Alignment.CenterEnd))
+            Text(
+                DATETIME_FORMATTER.format(location.created),
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
         }
-        Spacer(modifier = Modifier.width(rowWidth *.02f))
+        Spacer(modifier = Modifier.width(rowWidth * .02f))
     }
 }

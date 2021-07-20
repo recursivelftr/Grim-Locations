@@ -3,6 +3,7 @@ package io.grimlocations.ui.view
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.isTypedEvent
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -22,8 +24,10 @@ import androidx.compose.ui.window.rememberWindowState
 import io.grimlocations.constant.APP_ICON
 import io.grimlocations.data.dto.hasOnlyReservedProfiles
 import io.grimlocations.framework.ui.LocalViewModel
+import io.grimlocations.framework.ui.get
 import io.grimlocations.framework.ui.getLazyViewModel
 import io.grimlocations.framework.ui.view.View
+import io.grimlocations.framework.ui.viewmodel.stateFlow
 import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.view.component.SelectionMode
 import io.grimlocations.ui.view.component.openOkCancelPopup
@@ -33,13 +37,14 @@ import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
-private enum class EditorFocus {
+enum class EditorFocus {
     LEFT_LOCATION_LIST, RIGHT_LOCATION_LIST, NONE
 }
 
-private object EditorFocusManager {
-    var currentFocus = EditorFocus.NONE
+object EditorFocusManager {
+    lateinit var editorState: EditorState
     var selectionMode = SelectionMode.SINGLE
+    var currentFocus = EditorFocus.NONE
     var ctrlAActionLeft: (() -> Unit)? = null
     var ctrlAActionRight: (() -> Unit)? = null
 }
@@ -50,11 +55,17 @@ private object EditorFocusManager {
 @Composable
 private fun EditorView(
     vm: EditorViewModel = getLazyViewModel(),
-    captureState: (EditorState) -> Unit,
-    exitApplication: () -> Unit
 ) = View(vm) { state ->
 
-    captureState(state)
+    EditorFocusManager.ctrlAActionLeft = {
+        vm.selectLocationsLeft(state.locationsLeft)
+    }
+
+    EditorFocusManager.ctrlAActionRight = {
+        vm.selectLocationsRight(state.locationsRight)
+    }
+
+    EditorFocusManager.editorState = state
 
     LaunchedEffect(vm) {
         vm.startGDProcessCheckLoop()
@@ -81,7 +92,6 @@ private fun EditorView(
                     HamburgerDropdownMenu(
                         state = state,
                         vm = vm,
-                        exitApplication = exitApplication,
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
@@ -104,6 +114,9 @@ private fun EditorView(
             EditorLocationListPanel(
                 state = state,
                 vm = vm,
+                captureFocusLeft = { EditorFocusManager.currentFocus = EditorFocus.LEFT_LOCATION_LIST },
+                captureFocusRight = { EditorFocusManager.currentFocus = EditorFocus.RIGHT_LOCATION_LIST },
+                editorFocusManager = EditorFocusManager,
             )
         }
     }
@@ -184,7 +197,6 @@ private fun ActiveProfileRow(pmd: PMDContainer?) {
 private fun HamburgerDropdownMenu(
     state: EditorState,
     vm: EditorViewModel,
-    exitApplication: () -> Unit
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -233,10 +245,6 @@ fun openEditorView(
     val state =
         rememberWindowState(size = WindowSize(1500.dp, 950.dp), position = WindowPosition.Aligned(Alignment.Center))
 
-    lateinit var editorState: EditorState
-
-    val captureState = remember<(EditorState) -> Unit> { { editorState = it } }
-
     var isClosingWithGdRunning by remember { mutableStateOf(false) }
 
     Window(
@@ -244,14 +252,28 @@ fun openEditorView(
         icon = APP_ICON,
         state = state,
         onPreviewKeyEvent = {
-             if(it.isCtrlPressed && it.key == Key.A) {
-
-                 println("cntrl+a is pressed")
-             }
+            when {
+                (it.isCtrlPressed && it.key == Key.A) -> {
+                    if (EditorFocusManager.currentFocus == EditorFocus.LEFT_LOCATION_LIST) {
+                        EditorFocusManager.ctrlAActionLeft?.invoke()
+                    } else if (EditorFocusManager.currentFocus == EditorFocus.RIGHT_LOCATION_LIST) {
+                        EditorFocusManager.ctrlAActionRight?.invoke()
+                    }
+                }
+                (it.isShiftPressed) -> {
+                    EditorFocusManager.selectionMode = SelectionMode.RANGE
+                }
+                (it.isCtrlPressed) -> {
+                    EditorFocusManager.selectionMode = SelectionMode.MULTIPLE
+                }
+                else -> {
+                    EditorFocusManager.selectionMode = SelectionMode.SINGLE
+                }
+            }
             true
         },
         onCloseRequest = {
-            if (editorState.isGDRunning) {
+            if (EditorFocusManager.editorState.isGDRunning) {
                 isClosingWithGdRunning = true
             } else {
                 exitApplication()
@@ -260,10 +282,7 @@ fun openEditorView(
     ) {
         CompositionLocalProvider(LocalViewModel provides vmProvider) {
             GrimLocationsTheme {
-                EditorView(
-                    captureState = captureState,
-                    exitApplication = exitApplication,
-                )
+                EditorView()
 
                 if (isClosingWithGdRunning) {
                     openOkCancelPopup(
