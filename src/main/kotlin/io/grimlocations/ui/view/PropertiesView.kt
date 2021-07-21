@@ -132,7 +132,7 @@ fun openInitialPropertiesView(
 
     if (isOpen.value) {
         Window(
-            title = "Properties",
+            title = "Settings",
             icon = APP_ICON,
             state = state,
             onCloseRequest = closeWindow,
@@ -163,7 +163,7 @@ fun openPropertiesView(
         rememberDialogState(size = WindowSize(550.dp, 250.dp), position = WindowPosition.Aligned(Alignment.Center))
 
     Dialog(
-        title = "Properties",
+        title = "Settings",
         icon = APP_ICON,
         state = state,
         onCloseRequest = closeWindow,

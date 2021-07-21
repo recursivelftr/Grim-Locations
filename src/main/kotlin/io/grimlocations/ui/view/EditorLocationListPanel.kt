@@ -140,13 +140,6 @@ fun EditorLocationListPanel(
                     modifier = Modifier.height(listHeight)
                 ) {
                     Column {
-                        SelectRangeButton(
-                            locations = locationsLeft,
-                            toggled = vm.isLeftMultiSelect,
-                            onClick = {
-                                vm.isLeftMultiSelect = it
-                            }
-                        )
                         EditButton(
                             pmdContainer = selectedPMDLeft,
                             selected = selectedLocationsLeft,
@@ -154,6 +147,7 @@ fun EditorLocationListPanel(
                                 vm.openEditLocationLeft()
                             }
                         )
+                        Spacer(Modifier.height(10.dp))
                         DeleteButton(
                             pmdContainer = selectedPMDLeft,
                             locations = locationsLeft,
@@ -271,13 +265,6 @@ fun EditorLocationListPanel(
                     )
                     Spacer(Modifier.width(horizontalSpacerWidth))
                     Column {
-                        SelectRangeButton(
-                            locations = locationsRight,
-                            toggled = vm.isRightMultiSelect,
-                            onClick = {
-                                vm.isRightMultiSelect = it
-                            }
-                        )
                         EditButton(
                             pmdContainer = selectedPMDRight,
                             selected = selectedLocationsRight,
@@ -410,34 +397,6 @@ private fun DeleteButton(
             Icons.Default.Delete,
             "Delete",
             tint = if (disabled) Color.DarkGray else Color.White
-        )
-    }
-}
-
-@Composable
-private fun SelectRangeButton(
-    locations: Set<LocationDTO>,
-    toggled: Boolean,
-    onClick: (Boolean) -> Unit
-) {
-    val disabled = locations.isEmpty()
-    val tint = when {
-        disabled -> Color.DarkGray
-        toggled -> MaterialTheme.colors.primary
-        else -> Color.White
-    }
-
-    IconButton(
-        modifier = Modifier.size(arrowButtonSize),
-        enabled = !disabled,
-        onClick = {
-            onClick(!toggled)
-        },
-    ) {
-        Icon(
-            Icons.Default.List,
-            "Select Multiple",
-            tint = tint,
         )
     }
 }

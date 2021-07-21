@@ -101,7 +101,7 @@ private fun LoadLocationsView(
                     ) {
                         Text("Cancel")
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(20.dp))
                     Button(
                         onClick = {
                             vm.loadLocationsIntoSelectedProfile(
