@@ -1,6 +1,8 @@
 package io.grimlocations.data.repo.action
 
 import io.grimlocations.data.domain.Profile
+import io.grimlocations.data.domain.ProfileOrder
+import io.grimlocations.data.domain.ProfileOrderTable
 import io.grimlocations.data.domain.ProfileTable
 import io.grimlocations.data.dto.*
 import io.grimlocations.data.repo.SqliteRepository
@@ -14,9 +16,18 @@ import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionA
 
 private val logger = LogManager.getLogger()
 
-suspend fun SqliteRepository.getProfilesAsync(): Deferred<List<ProfileDTO>> =
+suspend fun SqliteRepository.getProfilesAsync(includeReservedProfiles: Boolean = true): Deferred<Set<ProfileDTO>> =
     suspendedTransactionAsync(Dispatchers.IO) {
-        Profile.wrapRows(ProfileTable.selectAll()).map { it.toDTO() }
+        val rows = ProfileOrder.wrapRows(
+            ProfileOrderTable.selectAll()
+                .orderBy(ProfileOrderTable.order)
+        )
+
+        if(includeReservedProfiles) {
+            rows.map { it.profile.toDTO() }.toSet()
+        } else {
+            rows.filter { !RESERVED_PROFILES.containsId(it.id.value) }.map { it.profile.toDTO() }.toSet()
+        }
     }
 
 suspend fun SqliteRepository.findOrCreateProfileAsync(name: String): Deferred<ProfileDTO?> =
@@ -44,29 +55,24 @@ suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(
 ): Deferred<ProfileModDifficultyMap> =
     suspendedTransactionAsync(Dispatchers.IO) {
         val map: MutableProfileModDifficultyMap = mutableMapOf()
-        val reservedMap: MutableProfileModDifficultyMap = mutableMapOf()
-        val regularMap: MutableProfileModDifficultyMap = mutableMapOf()
 
-        ProfileTable.selectAll().forEach {
-            val p = Profile.wrapRow(it)
-            if (includeReservedProfiles && RESERVED_PROFILES.containsId(p.id.value)) {
+        ProfileOrder.wrapRows(
+            ProfileOrderTable.selectAll()
+                .orderBy(ProfileOrderTable.order)
+        ).forEach { profileOrder ->
+
+            val profile = profileOrder.profile
+
+            if (includeReservedProfiles || !RESERVED_PROFILES.containsId(profile.id.value)) {
                 val mmap: MutableModDifficultyMap = mutableMapOf()
 
-                p.mods.forEach { m ->
-                    mmap[m.toDTO()] = m.difficulties.map { d -> d.toDTO() } as MutableList<DifficultyDTO>
+                profileOrder.modOrders.sortedBy { it.order }.forEach { m ->
+                    mmap[m.mod.toDTO()] = m.difficultyOrders.sortedBy { it.order }.map { d -> d.difficulty.toDTO() } as MutableList<DifficultyDTO>
                 }
-                reservedMap[p.toDTO()] = mmap
-            } else if (!RESERVED_PROFILES.containsId(p.id.value)) {
-                val mmap: MutableModDifficultyMap = mutableMapOf()
-
-                p.mods.forEach { m ->
-                    mmap[m.toDTO()] = m.difficulties.map { d -> d.toDTO() } as MutableList<DifficultyDTO>
-                }
-                regularMap[p.toDTO()] = mmap
+                map[profileOrder.profile.toDTO()] = mmap
             }
         }
-        map.putAll(reservedMap)
-        map.putAll(regularMap)
+
         map
     }
 

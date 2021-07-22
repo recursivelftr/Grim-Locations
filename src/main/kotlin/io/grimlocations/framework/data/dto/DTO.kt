@@ -2,6 +2,10 @@ package io.grimlocations.framework.data.dto
 
 import java.time.LocalDateTime
 
+interface OrderedDTO: DTO {
+    val order: Int
+}
+
 interface DTO {
     val id: Int
     val created: LocalDateTime

@@ -187,7 +187,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
                 }
 
                 val coordDTO = CoordinateDTO(-1, time, time, coord1, coord2, coord3)
-                locList.add(LocationDTO(-1, time, time, name, 0, coordDTO))
+                locList.add(LocationDTO(-1, time, time, 0, name, coordDTO))
             }
         }
     } catch (e: Exception) {
@@ -319,46 +319,3 @@ suspend fun SqliteRepository.getFileLastModified(file: File): Long? = withContex
         null
     }
 }
-
-suspend fun SqliteRepository.detectAndCreateProfilesAsync(): Deferred<Unit> =
-    withContext(Dispatchers.IO) {
-        async<Unit> {
-            val path = newSuspendedTransaction {
-                MetaTable.slice(MetaTable.saveLocation).selectAll().single()[MetaTable.saveLocation]
-            }
-
-            try {
-                File(path).listFiles { it: File -> it.isDirectory }?.also {
-                    for (file in it) {
-                        val n = file.name.trim().removePrefix("_")
-                        if (n.isNotBlank()) {
-                            try {
-                                var p = newSuspendedTransaction {
-                                    Profile.find { ProfileTable.name eq n }.singleOrNull()
-                                }
-                                if (p == null) {
-                                    p = newSuspendedTransaction {
-                                        Profile.new {
-                                            name = n
-                                        }
-                                    }
-                                    newSuspendedTransaction {
-                                        val mod = Mod.findById(DEFAULT_GAME_MOD.id)!!
-                                        p.mods = SizedCollection(listOf(mod))
-                                    }
-                                } else {
-                                    logger.info("Duplicate profile found: $n")
-                                }
-                            } catch (e: Exception) {
-                                logger.error("", e)
-                            }
-                        }
-                    }
-                } ?: run {
-                    logger.error("Path is either not a directory or an I/O error has occurred.")
-                }
-            } catch (e: SecurityException) {
-                logger.error("Read access is denied to this directory: $path", e)
-            }
-        }
-    }

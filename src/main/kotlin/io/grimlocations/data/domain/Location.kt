@@ -33,8 +33,8 @@ class Location(id: EntityID<Int>) : DTOEntity<LocationTable, LocationDTO>(id, Lo
             id.value,
             created,
             modified,
-            name,
             order,
+            name,
             coordinate.toDTO()
         )
     }

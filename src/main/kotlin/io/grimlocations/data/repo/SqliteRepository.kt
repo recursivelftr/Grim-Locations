@@ -3,7 +3,6 @@ package io.grimlocations.data.repo
 import io.grimlocations.data.domain.*
 import io.grimlocations.data.dto.*
 import io.grimlocations.framework.data.repo.Repository
-import io.grimlocations.framework.util.FiveTuple
 import io.grimlocations.util.extension.glDatabaseDir
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +83,6 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 }
             }
 
-            createDefaultEntities()
             createReservedEntities()
 
             logger.info("Database created")
@@ -105,13 +103,6 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
             deleteAdditionalLocations()
             createActAndOtherReservedEntities()
         }
-
-        val (base_game_mod, normal, veteran, elite, ultimate) = getDefaultEntities()
-        DEFAULT_GAME_MOD = base_game_mod
-        DEFAULT_GAME_NORMAL_DIFFICULTY = normal
-        DEFAULT_GAME_VETERAN_DIFFICULTY = veteran
-        DEFAULT_GAME_ELITE_DIFFICULTY = elite
-        DEFAULT_GAME_ULTIMATE_DIFFICULTY = ultimate
 
         val (newchar_loc_profile, no_mods_mod, no_difficulties_difficulty) = getReservedEntities()
         val actsAndOtherMap = getActAndOtherReservedEntities()
@@ -137,44 +128,21 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 mod = no_mods_mod,
                 difficulty = no_difficulties_difficulty,
             )
+        }
+
+        if(version < 2) {
+            newSuspendedTransaction {
+                SchemaUtils.create(ProfileOrderTable)
+                SchemaUtils.create(ModOrderTable)
+                SchemaUtils.create(DifficultyOrderTable)
+            }
+
+            populateOrderTables()
+
             newSuspendedTransaction {
                 val meta = Meta.wrapRow(MetaTable.selectAll().single())
-                meta.version = 1
+                meta.version = 2
             }
-        }
-    }
-
-    private suspend fun createDefaultEntities() {
-        try {
-            val diffList = newSuspendedTransaction {
-                listOf(
-                    Difficulty.new {
-                        name = DEFAULT_GAME_NORMAL_DIFFICULTY_NAME
-                    },
-                    Difficulty.new {
-                        name = DEFAULT_GAME_VETERAN_DIFFICULTY_NAME
-                    },
-                    Difficulty.new {
-                        name = DEFAULT_GAME_ELITE_DIFFICULTY_NAME
-                    },
-                    Difficulty.new {
-                        name = DEFAULT_GAME_ULTIMATE_DIFFICULTY_NAME
-                    }
-                )
-            }
-
-            val mod = newSuspendedTransaction {
-                Mod.new {
-                    name = DEFAULT_GAME_MOD_NAME
-                }
-            }
-
-            newSuspendedTransaction {
-                mod.difficulties = SizedCollection(diffList)
-            }
-        } catch (e: Exception) {
-            logger.error("Issue creating the default entities.")
-            throw e
         }
     }
 
@@ -278,22 +246,6 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         }
     }
 
-    private suspend fun getDefaultEntities(): FiveTuple<ModDTO, DifficultyDTO, DifficultyDTO, DifficultyDTO, DifficultyDTO> =
-        try {
-            newSuspendedTransaction {
-                FiveTuple(
-                    Mod.find { ModTable.name eq DEFAULT_GAME_MOD_NAME }.single().toDTO(),
-                    Difficulty.find { DifficultyTable.name eq DEFAULT_GAME_NORMAL_DIFFICULTY_NAME }.single().toDTO(),
-                    Difficulty.find { DifficultyTable.name eq DEFAULT_GAME_VETERAN_DIFFICULTY_NAME }.single().toDTO(),
-                    Difficulty.find { DifficultyTable.name eq DEFAULT_GAME_ELITE_DIFFICULTY_NAME }.single().toDTO(),
-                    Difficulty.find { DifficultyTable.name eq DEFAULT_GAME_ULTIMATE_DIFFICULTY_NAME }.single().toDTO()
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("Issue getting the default entities.")
-            throw e
-        }
-
     private suspend fun getReservedEntities(): Triple<ProfileDTO, ModDTO, DifficultyDTO> =
         try {
             newSuspendedTransaction {
@@ -394,6 +346,42 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
     } catch (e: Exception) {
         logger.error("Issue deleting additional locations.")
         throw e
+    }
+
+    private suspend fun populateOrderTables() {
+        val profileOrders = newSuspendedTransaction {
+            val profiles = Profile.wrapRows(ProfileTable.selectAll().orderBy(ProfileTable.id))
+            profiles.mapIndexed { index, profile ->
+                ProfileOrder.new {
+                    this.profile = profile
+                    this.order = index
+                }
+            }
+        }
+
+        profileOrders.forEach { profileOrder ->  
+            val modOrders = newSuspendedTransaction {
+                profileOrder.profile.mods.sortedBy { it.id.value }.mapIndexed { index, mod ->
+                    ModOrder.new {
+                        this.profileOrder = profileOrder
+                        this.mod = mod
+                        this.order = index
+                    }
+                }
+            }
+
+            modOrders.forEach { modOrder ->
+                newSuspendedTransaction {
+                    modOrder.mod.difficulties.sortedBy { it.id.value }.forEachIndexed { index, difficulty ->
+                        DifficultyOrder.new {
+                            this.modOrder = modOrder
+                            this.difficulty = difficulty
+                            this.order = index
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

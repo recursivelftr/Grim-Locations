@@ -7,9 +7,6 @@ import java.time.LocalDateTime
 const val RESERVED_NO_MODS_INDICATOR_NAME = "__RESERVED_NO_MODS__"
 var RESERVED_NO_MODS_INDICATOR: ModDTO by assignOnce()
 
-const val DEFAULT_GAME_MOD_NAME = "None"
-var DEFAULT_GAME_MOD: ModDTO by assignOnce()
-
 data class ModDTO(
     override val id: Int,
     override val created: LocalDateTime,

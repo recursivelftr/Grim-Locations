@@ -13,7 +13,9 @@ object DifficultyTable : BaseTable("difficulty") {
 class Difficulty(id: EntityID<Int>) : DTOEntity<DifficultyTable, DifficultyDTO>(id, DifficultyTable) {
     var name by DifficultyTable.name
 
+    @Deprecated("Use ModOrder entities instead")
     var mods by Mod via ModDifficultyIntermTable
+
     val locations by Location referrersOn LocationTable.difficulty
 
     override fun toDTO(): DifficultyDTO {

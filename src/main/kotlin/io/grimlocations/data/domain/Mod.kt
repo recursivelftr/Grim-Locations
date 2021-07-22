@@ -13,8 +13,12 @@ object ModTable : BaseTable("mod") {
 class Mod(id: EntityID<Int>) : DTOEntity<ModTable, ModDTO>(id, ModTable) {
     var name by ModTable.name
 
+    @Deprecated("Use ProfileOrder entities instead")
     var profiles by Profile via ProfileModIntermTable
+
+    @Deprecated("Use DifficultyOrder entities instead")
     var difficulties by Difficulty via ModDifficultyIntermTable
+
     val locations by Location referrersOn LocationTable.mod
 
     override fun toDTO(): ModDTO {

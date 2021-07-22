@@ -14,7 +14,11 @@ object ProfileTable : BaseTable("profile") {
 class Profile(id: EntityID<Int>) : DTOEntity<ProfileTable, ProfileDTO>(id, ProfileTable) {
     var name by ProfileTable.name
 
+    @Deprecated("Use ModOrder entities instead")
     var mods by Mod via ProfileModIntermTable
+
+//    var profileOrder by ProfileOrder referencedOn ProfileOrderTable.profile
+
     val locations by Location referrersOn LocationTable.profile
 
     override fun toDTO(): ProfileDTO {
