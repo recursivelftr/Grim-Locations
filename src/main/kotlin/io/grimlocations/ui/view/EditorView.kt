@@ -81,6 +81,12 @@ private fun EditorView(
         )
     }
 
+    if(state.isPMDManagerViewOpen) {
+        openPMDManagerView(
+            onClose = vm::closePMDManagerView,
+        )
+    }
+
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
@@ -220,6 +226,16 @@ private fun HamburgerDropdownMenu(
                 },
             ) {
                 Text("Load Locations to Profile")
+            }
+
+            DropdownMenuItem(
+                enabled = !state.profileMap.hasOnlyReservedProfiles(),
+                onClick = {
+                    isMenuExpanded = false
+                    vm.openPMDManagerView()
+                },
+            ) {
+                Text("Editor")
             }
 
             DropdownMenuItem(
