@@ -51,6 +51,7 @@ suspend fun GLStateManager.loadEditorState(
                 isPropertiesPopupOpen = false,
                 isConfirmDeleteLeftPopupOpen = false,
                 isConfirmDeleteRightPopupOpen = false,
+                isPMDManagerViewOpen = false,
             )
         )
     } else {
@@ -157,6 +158,20 @@ suspend fun GLStateManager.closeLoadLocationsView() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
         setState(s.copy(isLoadLocationsPopupOpen = false))
+    }
+}
+
+suspend fun GLStateManager.openPMDManagerView() {
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isPMDManagerViewOpen = true))
+    }
+}
+
+suspend fun GLStateManager.closePMDManagerView() {
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(isPMDManagerViewOpen = false))
     }
 }
 

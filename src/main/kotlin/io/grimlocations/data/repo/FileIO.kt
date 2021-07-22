@@ -3,23 +3,19 @@ package io.grimlocations.data.repo
 import io.grimlocations.data.domain.*
 import io.grimlocations.data.dto.*
 import io.grimlocations.data.repo.action.*
-import io.grimlocations.framework.util.awaitAll
 import io.grimlocations.framework.util.extension.removeAllBlank
 import io.grimlocations.framework.util.guardAlso
-import io.grimlocations.framework.util.guardLet
+import io.grimlocations.ui.viewmodel.state.container.PMContainer
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import io.grimlocations.ui.viewmodel.state.container.namesAreEqual
 import io.grimlocations.util.extension.glDatabaseBackupDir
 import io.grimlocations.util.extension.glDatabaseDir
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.io.BufferedReader
 import java.io.File
@@ -97,7 +93,7 @@ suspend fun SqliteRepository.createAndSetActivePmd(charFile: File, teleportFile:
             if (!pmd.namesAreEqual(p, m, d)) {
                 findOrCreateProfileAsync(p).await()?.also { profileDTO ->
                     findOrCreateModAsync(m, profileDTO).await()?.also { modDTO ->
-                        findOrCreateDifficultyAsync(d, modDTO).await()?.also { difficultyDTO ->
+                        findOrCreateDifficultyAsync(d, PMContainer(profileDTO, modDTO)).await()?.also { difficultyDTO ->
                             val container = PMDContainer(profileDTO, modDTO, difficultyDTO)
                             kotlinx.coroutines.awaitAll(
                                 persistActivePMDAsync(container),
@@ -229,7 +225,7 @@ suspend fun SqliteRepository.createLocationsFromFile(
             val _profile = Profile.findById(profileDTO.id)!!
             val _mod = Mod.findById(modDTO.id)!!
             val _difficulty = Difficulty.findById(difficultyDTO.id)!!
-            var o = getHighestOrderAsync(profileDTO, modDTO, difficultyDTO).await() ?: 0
+            var o = getHighestLocationOrderAsync(profileDTO, modDTO, difficultyDTO).await() ?: 0
 
             locList.forEach {
                 val coord = Coordinate.find {

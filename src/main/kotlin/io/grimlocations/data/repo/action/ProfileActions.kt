@@ -1,15 +1,13 @@
 package io.grimlocations.data.repo.action
 
-import io.grimlocations.data.domain.Profile
-import io.grimlocations.data.domain.ProfileOrder
-import io.grimlocations.data.domain.ProfileOrderTable
-import io.grimlocations.data.domain.ProfileTable
+import io.grimlocations.data.domain.*
 import io.grimlocations.data.dto.*
 import io.grimlocations.data.repo.SqliteRepository
 import io.grimlocations.framework.data.dto.containsId
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import org.apache.logging.log4j.LogManager
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
@@ -42,12 +40,26 @@ suspend fun SqliteRepository.findOrCreateProfileAsync(name: String): Deferred<Pr
                         this.name = name
                     }
                 }
+                val highestProfileOrder = getHighestProfileOrderAsync(p.toDTO()).await() ?: 0
+                newSuspendedTransaction {
+                    ProfileOrder.new {
+                        this.profile = p
+                        this.order = highestProfileOrder + 1
+                    }
+                }
             }
             p.toDTO()
         } catch (e: Exception) {
             logger.error("", e)
             null
         }
+    }
+
+suspend fun SqliteRepository.getHighestProfileOrderAsync(profile: ProfileDTO) =
+    suspendedTransactionAsync(Dispatchers.IO) {
+        ProfileOrderTable.slice(ProfileOrderTable.order).select {
+            (ProfileOrderTable.profile eq profile.id)
+        }.map { it[ProfileOrderTable.order] }.maxOrNull()
     }
 
 suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(

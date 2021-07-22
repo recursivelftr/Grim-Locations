@@ -4,6 +4,11 @@ import io.grimlocations.data.dto.DifficultyDTO
 import io.grimlocations.data.dto.ModDTO
 import io.grimlocations.data.dto.ProfileDTO
 
+data class PMContainer(
+    val profile: ProfileDTO,
+    val mod: ModDTO,
+)
+
 data class PMDContainer(
     val profile: ProfileDTO,
     val mod: ModDTO,

@@ -98,6 +98,17 @@ fun EditorViewModel.closeLoadLocationsView() {
     }
 }
 
+fun EditorViewModel.openPMDManagerView() {
+    viewModelScope.launch {
+        stateManager.openPMDManagerView()
+    }
+}
+
+fun EditorViewModel.closePMDManagerView() {
+    viewModelScope.launch {
+        stateManager.closePMDManagerView()
+    }
+}
 
 fun EditorViewModel.reloadState() {
     viewModelScope.launch {

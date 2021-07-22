@@ -12,6 +12,7 @@ object ModOrderTable : BaseTable("mod_order") {
     val order = integer("order")
 
     init {
+        uniqueIndex(profileOrder, mod)
         uniqueIndex(profileOrder, mod, order)
     }
 }

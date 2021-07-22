@@ -2,6 +2,7 @@ package io.grimlocations.data.dto
 
 import io.grimlocations.framework.data.dto.DTO
 import io.grimlocations.framework.util.assignOnce
+import io.grimlocations.ui.viewmodel.state.container.PMContainer
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import java.time.LocalDateTime
 
@@ -53,4 +54,17 @@ fun ProfileModDifficultyMap.firstContainer(): PMDContainer {
 
 fun ProfileModDifficultyMap.hasOnlyReservedProfiles(): Boolean {
     return this.size == RESERVED_PROFILES.size && this.keys.containsAll(RESERVED_PROFILES)
+}
+
+fun ProfileModDifficultyMap.containsProfile(profileDTO: ProfileDTO) =
+    this.containsKey(profileDTO)
+
+fun ProfileModDifficultyMap.containsProfileMod(pmContainer: PMContainer) =
+    this.getOrElse(pmContainer.profile, { null })?.getOrElse(pmContainer.mod, { null }) != null
+
+fun ProfileModDifficultyMap.containsProfileModDifficulty(pmdContainer: PMDContainer): Boolean {
+    val difficultyList = this.getOrElse(pmdContainer.profile, { null })
+        ?.getOrElse(pmdContainer.mod, { null }) ?: return false
+
+    return difficultyList.contains(pmdContainer.difficulty)
 }

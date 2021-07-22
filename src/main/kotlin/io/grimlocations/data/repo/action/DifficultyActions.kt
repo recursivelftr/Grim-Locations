@@ -1,21 +1,20 @@
 package io.grimlocations.data.repo.action
 
-import io.grimlocations.data.domain.Difficulty
-import io.grimlocations.data.domain.DifficultyTable
-import io.grimlocations.data.domain.Mod
+import io.grimlocations.data.domain.*
 import io.grimlocations.data.dto.DifficultyDTO
-import io.grimlocations.data.dto.ModDTO
 import io.grimlocations.data.repo.SqliteRepository
+import io.grimlocations.ui.viewmodel.state.container.PMContainer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import org.apache.logging.log4j.LogManager
-import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 
 private val logger = LogManager.getLogger()
 
-suspend fun SqliteRepository.findOrCreateDifficultyAsync(name: String, modDTO: ModDTO): Deferred<DifficultyDTO?> =
+suspend fun SqliteRepository.findOrCreateDifficultyAsync(name: String, pmContainer: PMContainer): Deferred<DifficultyDTO?> =
     suspendedTransactionAsync(Dispatchers.IO) {
         try {
             var d = newSuspendedTransaction {
@@ -28,19 +27,32 @@ suspend fun SqliteRepository.findOrCreateDifficultyAsync(name: String, modDTO: M
                         this.name = name
                     }
                 }
-            }
 
-            newSuspendedTransaction {
-                val m = Mod.findById(modDTO.id)!!
+                val profileOrder = ProfileOrder.find { ProfileOrderTable.profile eq pmContainer.profile.id }.single()
+                val modOrder = ModOrder.find {
+                    ModOrderTable.profileOrder eq profileOrder.id and
+                            (ModOrderTable.mod eq pmContainer.mod.id)
+                }.single()
+                val highestDifficultyOrder = getHighestDifficultyOrderAsync(d.toDTO()).await() ?: 0
 
-                if (!d.mods.contains(m)) {
-                    d.mods = SizedCollection(d.mods.toMutableSet().apply { add(m) })
+                newSuspendedTransaction {
+                    DifficultyOrder.new {
+                        this.modOrder = modOrder
+                        this.difficulty = d
+                        this.order = highestDifficultyOrder + 1
+                    }
                 }
-                d.toDTO()
             }
-
+            d.toDTO()
         } catch (e: Exception) {
             logger.error("", e)
             null
         }
+    }
+
+suspend fun SqliteRepository.getHighestDifficultyOrderAsync(difficulty : DifficultyDTO) =
+    suspendedTransactionAsync(Dispatchers.IO) {
+        DifficultyOrderTable.slice(DifficultyOrderTable.order).select {
+            (DifficultyOrderTable.difficulty eq difficulty.id)
+        }.map { it[DifficultyOrderTable.order] }.maxOrNull()
     }

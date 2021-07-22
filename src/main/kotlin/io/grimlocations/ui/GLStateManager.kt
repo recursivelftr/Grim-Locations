@@ -3,10 +3,7 @@ package io.grimlocations.ui
 import io.grimlocations.data.repo.SqliteRepository
 import io.grimlocations.framework.ui.State
 import io.grimlocations.framework.ui.StateManager
-import io.grimlocations.ui.viewmodel.state.EditorState
-import io.grimlocations.ui.viewmodel.state.ActiveChooserState
-import io.grimlocations.ui.viewmodel.state.LoadLocationsState
-import io.grimlocations.ui.viewmodel.state.PropertiesState
+import io.grimlocations.ui.viewmodel.state.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.reflect.KClass
 
@@ -18,5 +15,6 @@ class GLStateManager(override val repository: SqliteRepository) : StateManager<S
         ActiveChooserState::class to MutableStateFlow<ActiveChooserState?>(null),
         EditorState::class to MutableStateFlow<EditorState?>(null),
         LoadLocationsState::class to MutableStateFlow<LoadLocationsState?>(null),
+        PMDManagerState::class to MutableStateFlow<PMDManagerState?>(null),
     )
 }

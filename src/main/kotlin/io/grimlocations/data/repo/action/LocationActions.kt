@@ -43,7 +43,7 @@ suspend fun SqliteRepository.copyLocationsToPMD(
             if (selectedLocations.isNotEmpty()) {
                 var o: Int
                 if (otherSelectedLocations.isEmpty()) {
-                    o = getHighestOrderAsync(pmdContainer).await() ?: 0
+                    o = getHighestLocationOrderAsync(pmdContainer).await() ?: 0
                 } else {
                     o = otherSelectedLocations.maxOf { it.order }
 
@@ -88,10 +88,10 @@ suspend fun SqliteRepository.copyLocationsToPMD(
     }
 }
 
-suspend fun SqliteRepository.getHighestOrderAsync(pmdContainer: PMDContainer) =
-    getHighestOrderAsync(pmdContainer.profile, pmdContainer.mod, pmdContainer.difficulty)
+suspend fun SqliteRepository.getHighestLocationOrderAsync(pmdContainer: PMDContainer) =
+    getHighestLocationOrderAsync(pmdContainer.profile, pmdContainer.mod, pmdContainer.difficulty)
 
-suspend fun SqliteRepository.getHighestOrderAsync(p: ProfileDTO, m: ModDTO, d: DifficultyDTO) =
+suspend fun SqliteRepository.getHighestLocationOrderAsync(p: ProfileDTO, m: ModDTO, d: DifficultyDTO) =
     suspendedTransactionAsync(Dispatchers.IO) {
         LocationTable.slice(LocationTable.order).select {
             (LocationTable.profile eq p.id) and
@@ -107,7 +107,7 @@ suspend fun SqliteRepository.incrementLocationsOrderAsync(
     async {
         try {
             if (locations.isNotEmpty()) {
-                val highestOrder = getHighestOrderAsync(pmdContainer).await()!!
+                val highestOrder = getHighestLocationOrderAsync(pmdContainer).await()!!
                 val locs = locations.sortedBy { it.order }
 
                 if (locs.last().order != highestOrder) {

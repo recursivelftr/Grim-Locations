@@ -128,6 +128,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 mod = no_mods_mod,
                 difficulty = no_difficulties_difficulty,
             )
+            logger.info("Database has been upgraded to version 1")
         }
 
         if(version < 2) {
@@ -143,6 +144,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                 val meta = Meta.wrapRow(MetaTable.selectAll().single())
                 meta.version = 2
             }
+            logger.info("Database has been upgraded to version 2")
         }
     }
 

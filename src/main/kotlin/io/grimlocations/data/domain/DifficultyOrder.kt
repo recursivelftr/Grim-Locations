@@ -12,6 +12,7 @@ object DifficultyOrderTable : BaseTable("difficulty_order") {
     val order = integer("order")
 
     init {
+        uniqueIndex(modOrder, difficulty)
         uniqueIndex(modOrder, difficulty, order)
     }
 }

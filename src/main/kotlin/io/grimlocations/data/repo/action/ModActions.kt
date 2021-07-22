@@ -1,8 +1,6 @@
 package io.grimlocations.data.repo.action
 
-import io.grimlocations.data.domain.Mod
-import io.grimlocations.data.domain.ModTable
-import io.grimlocations.data.domain.Profile
+import io.grimlocations.data.domain.*
 import io.grimlocations.data.dto.ModDTO
 import io.grimlocations.data.dto.ProfileDTO
 import io.grimlocations.data.repo.SqliteRepository
@@ -10,6 +8,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import org.apache.logging.log4j.LogManager
 import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 
@@ -28,19 +28,30 @@ suspend fun SqliteRepository.findOrCreateModAsync(name: String, profileDTO: Prof
                         this.name = name
                     }
                 }
-            }
 
-            newSuspendedTransaction {
-                val p = Profile.findById(profileDTO.id)!!
+                val profileOrder = ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id }.single()
+                val highestModOrder = getHighestModOrderAsync(m.toDTO()).await() ?: 0
 
-                if (!m.profiles.contains(p)) {
-                    m.profiles = SizedCollection(m.profiles.toMutableSet().apply { add(p) })
+                newSuspendedTransaction {
+                    ModOrder.new {
+                        this.profileOrder = profileOrder
+                        this.mod = m
+                        this.order = highestModOrder + 1
+                    }
                 }
-                m.toDTO()
+
             }
 
+            m.toDTO()
         } catch (e: Exception) {
             logger.error("", e)
             null
         }
+    }
+
+suspend fun SqliteRepository.getHighestModOrderAsync(mod: ModDTO) =
+    suspendedTransactionAsync(Dispatchers.IO) {
+        ModOrderTable.slice(ModOrderTable.order).select {
+            (ModOrderTable.mod eq mod.id)
+        }.map { it[ModOrderTable.order] }.maxOrNull()
     }
