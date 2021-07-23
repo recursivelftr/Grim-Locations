@@ -28,7 +28,7 @@ suspend fun SqliteRepository.getProfilesAsync(includeReservedProfiles: Boolean =
         }
     }
 
-suspend fun SqliteRepository.findOrCreateProfileAsync(name: String): Deferred<ProfileDTO?> =
+suspend fun SqliteRepository.findOrCreateProfileAsync(name: String, skipOrderCreation: Boolean = false): Deferred<ProfileDTO?> =
     suspendedTransactionAsync(Dispatchers.IO) {
         try {
             var p = newSuspendedTransaction {
@@ -40,15 +40,37 @@ suspend fun SqliteRepository.findOrCreateProfileAsync(name: String): Deferred<Pr
                         this.name = name
                     }
                 }
-                val highestProfileOrder = getHighestProfileOrderAsync(p.toDTO()).await() ?: 0
-                newSuspendedTransaction {
-                    ProfileOrder.new {
-                        this.profile = p
-                        this.order = highestProfileOrder + 1
+                if(skipOrderCreation) {
+                    val highestProfileOrder = getHighestProfileOrderAsync(p.toDTO()).await() ?: 0
+                    newSuspendedTransaction {
+                        ProfileOrder.new {
+                            this.profile = p
+                            this.order = highestProfileOrder + 1
+                        }
                     }
                 }
             }
             p.toDTO()
+        } catch (e: Exception) {
+            logger.error("", e)
+            null
+        }
+    }
+
+suspend fun SqliteRepository.modifyOrCreateProfileAsync(name: String, profileDTO: ProfileDTO): Deferred<ProfileDTO?> =
+    suspendedTransactionAsync(Dispatchers.IO) {
+        try {
+            val profileOrder = newSuspendedTransaction {
+                ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id}
+            }.single()
+
+            val p = findOrCreateProfileAsync(name, skipOrderCreation = true).await()!!
+
+            newSuspendedTransaction {
+                val profile = Profile.find { ProfileTable.id eq p.id}.single()
+                profileOrder.profile = profile
+            }
+            p
         } catch (e: Exception) {
             logger.error("", e)
             null

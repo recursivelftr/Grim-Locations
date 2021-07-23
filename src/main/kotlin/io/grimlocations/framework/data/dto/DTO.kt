@@ -2,8 +2,14 @@ package io.grimlocations.framework.data.dto
 
 import java.time.LocalDateTime
 
+interface OrderedNameDTO: OrderedDTO, NameDTO
+
 interface OrderedDTO: DTO {
     val order: Int
+}
+
+interface NameDTO: DTO {
+    val name: String
 }
 
 interface DTO {
@@ -19,6 +25,18 @@ fun <T: DTO> Set<T>.replaceDTO(dto: T): Set<T> {
     for (item in this) {
         if (dto.id == item.id) {
             newSet.add(dto)
+        } else {
+            newSet.add(item)
+        }
+    }
+    return newSet
+}
+
+fun <T: DTO> Set<T>.replaceDTO(dto: T, newDTO: T): Set<T> {
+    val newSet = mutableSetOf<T>()
+    for (item in this) {
+        if (dto.id == item.id) {
+            newSet.add(newDTO)
         } else {
             newSet.add(item)
         }

@@ -1,6 +1,7 @@
 package io.grimlocations.data.dto
 
 import io.grimlocations.framework.data.dto.OrderedDTO
+import io.grimlocations.framework.data.dto.OrderedNameDTO
 import java.time.LocalDateTime
 
 data class LocationDTO(
@@ -8,9 +9,9 @@ data class LocationDTO(
     override val created: LocalDateTime,
     override val modified: LocalDateTime,
     override val order: Int,
-    val name: String,
+    override val name: String,
     val coordinate: CoordinateDTO
-) : OrderedDTO {
+) : OrderedNameDTO {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

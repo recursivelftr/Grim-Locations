@@ -19,3 +19,5 @@ fun PMDContainer.namesAreEqual(profileName: String, modName: String, difficultyN
     profileName == profile.name
             && modName == mod.name
             && difficultyName == difficulty.name
+
+fun PMDContainer.toPMContainer() = PMContainer(profile, mod)

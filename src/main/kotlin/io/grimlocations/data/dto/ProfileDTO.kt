@@ -1,6 +1,6 @@
 package io.grimlocations.data.dto
 
-import io.grimlocations.framework.data.dto.DTO
+import io.grimlocations.framework.data.dto.NameDTO
 import io.grimlocations.framework.util.assignOnce
 import io.grimlocations.ui.viewmodel.state.container.PMContainer
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
@@ -23,8 +23,8 @@ data class ProfileDTO(
     override val id: Int,
     override val created: LocalDateTime,
     override val modified: LocalDateTime,
-    val name: String
-) : DTO
+    override val name: String
+) : NameDTO
 
 typealias ProfileModDifficultyMap = Map<ProfileDTO, ModDifficultyMap>
 typealias MutableProfileModDifficultyMap = MutableMap<ProfileDTO, MutableModDifficultyMap>

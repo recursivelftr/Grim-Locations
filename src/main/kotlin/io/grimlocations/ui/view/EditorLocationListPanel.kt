@@ -25,7 +25,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.apache.logging.log4j.LogManager
 
 private val listHeight = 400.dp
-private val arrowButtonSize = 50.dp
+val arrowButtonSize = 50.dp
 private val rowHeight = 50.dp
 private val rowWidth = 550.dp
 private val horizontalSpacerWidth = 10.dp
@@ -156,13 +156,13 @@ fun EditorLocationListPanel(
                         )
                     }
                     Spacer(Modifier.width(horizontalSpacerWidth))
-                    LocationListComponent(
+                    NameDTOListComponent(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
-                        locations = locationsLeft,
+                        dtos = locationsLeft,
                         getSelectionMode = editorFocusManager::selectionMode,
-                        selectedLocations = selectedLocationsLeft,
-                        onSelectLocations = { locs ->
+                        selectedDTOS = selectedLocationsLeft,
+                        onSelectDTOS = { locs ->
                             vm.selectLocationsLeft(locs)
                         },
                         stateVertical = stateVerticalLeft,
@@ -251,13 +251,13 @@ fun EditorLocationListPanel(
                     }
 
                     Spacer(Modifier.width(horizontalSpacerWidth))
-                    LocationListComponent(
+                    NameDTOListComponent(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
-                        locations = locationsRight,
+                        dtos = locationsRight,
                         getSelectionMode = editorFocusManager::selectionMode,
-                        selectedLocations = selectedLocationsRight,
-                        onSelectLocations = { locs ->
+                        selectedDTOS = selectedLocationsRight,
+                        onSelectDTOS = { locs ->
                             vm.selectLocationsRight(locs)
                         },
                         stateVertical = stateVerticalRight,

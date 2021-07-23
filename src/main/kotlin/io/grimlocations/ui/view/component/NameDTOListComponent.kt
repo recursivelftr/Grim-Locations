@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.grimlocations.constant.DATETIME_FORMATTER
-import io.grimlocations.data.dto.LocationDTO
+import io.grimlocations.framework.data.dto.NameDTO
 
 enum class SelectionMode {
     SINGLE, MULTIPLE, RANGE
@@ -25,10 +25,10 @@ enum class SelectionMode {
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @Composable
-fun LocationListComponent(
-    locations: Set<LocationDTO>,
-    selectedLocations: Set<LocationDTO>,
-    onSelectLocations: (Set<LocationDTO>) -> Unit,
+fun <T: NameDTO> NameDTOListComponent(
+    dtos: Set<T>,
+    selectedDTOS: Set<T>,
+    onSelectDTOS: (Set<T>) -> Unit,
     getSelectionMode: () -> SelectionMode,
     rowHeight: Dp,
     rowWidth: Dp,
@@ -49,7 +49,7 @@ fun LocationListComponent(
         modifier = Modifier.width(rowWidth)
             .border(width = 3.dp, color = Color.DarkGray).clickable(onClick = captureFocus)
     ) {
-        if (locations.isEmpty()) {
+        if (dtos.isEmpty()) {
             Text(
                 "No Locations",
                 modifier = Modifier.align(Alignment.Center)
@@ -58,46 +58,49 @@ fun LocationListComponent(
         } else {
             LazyColumn(state = stateVertical) {
                 items(
-                    locations.size,
-                    { locations.elementAt(it).id }
+                    dtos.size,
+                    { dtos.elementAt(it).id }
                 ) {
-                    val location = locations.elementAt(it)
+                    val dto = dtos.elementAt(it)
                     Item(
                         rowHeight = rowHeight,
                         rowWidth = rowWidth,
-                        location = location,
-                        isSelected = selectedLocations.contains(location),
+                        dto = dto,
+                        isSelected = selectedDTOS.contains(dto),
                         captureFocus = captureFocus,
                         onClick = { l ->
                             when (getSelectionMode()) {
                                 SelectionMode.SINGLE -> {
-                                    onSelectLocations(setOf(l))
+                                    onSelectDTOS(setOf(l))
                                 }
                                 SelectionMode.MULTIPLE -> { //holding ctrl
-                                    if (selectedLocations.contains(l))
-                                        onSelectLocations(selectedLocations.filter { ll -> ll != l }.toSet())
+                                    if (selectedDTOS.contains(l))
+                                        onSelectDTOS(selectedDTOS.filter { ll -> ll != l }.toSet())
                                     else
-                                        onSelectLocations(selectedLocations.toMutableSet().apply { add(l) })
+                                        onSelectDTOS(selectedDTOS.toMutableSet().apply { add(l) })
                                 }
                                 SelectionMode.RANGE -> { //holding shift
-                                    if (selectedLocations.isEmpty()) {
-                                        onSelectLocations(setOf(l))
-                                    } else if (!selectedLocations.contains(l)) {
-                                        val firstLoc = selectedLocations.first()
+                                    if (selectedDTOS.isEmpty()) {
+                                        onSelectDTOS(setOf(l))
+                                    } else if (!selectedDTOS.contains(l)) {
+                                        val firstLocIndex = dtos.indexOf(selectedDTOS.first())
+                                        val lIndex = dtos.indexOf(l)
 
-                                        if (firstLoc.order > l.order) {
-                                            onSelectLocations(selectedLocations.toMutableSet().apply {
+                                        if (firstLocIndex > lIndex) {
+                                            onSelectDTOS(selectedDTOS.toMutableSet().apply {
                                                 addAll(
-                                                    locations.filter { aLoc ->
-                                                        aLoc.order < firstLoc.order && aLoc.order >= l.order
+                                                    dtos.filter { aLoc ->
+                                                        val aLocIndex = dtos.indexOf(aLoc)
+                                                        aLocIndex in lIndex until firstLocIndex
                                                     }
                                                 )
                                             })
                                         } else {
-                                            onSelectLocations(selectedLocations.toMutableSet().apply {
+                                            onSelectDTOS(selectedDTOS.toMutableSet().apply {
                                                 addAll(
-                                                    locations.filter { aLoc ->
-                                                        aLoc.order > firstLoc.order && aLoc.order <= l.order
+                                                    dtos.filter { aLoc ->
+                                                        val aLocIndex = dtos.indexOf(aLoc)
+                                                        aLocIndex in (firstLocIndex + 1)..lIndex
                                                     }
                                                 )
                                             })
@@ -123,11 +126,11 @@ fun LocationListComponent(
 
 @ExperimentalComposeUiApi
 @Composable
-private fun Item(
+private fun <T: NameDTO> Item(
     rowHeight: Dp,
     rowWidth: Dp,
-    location: LocationDTO,
-    onClick: (LocationDTO) -> Unit,
+    dto: T,
+    onClick: (T) -> Unit,
     isSelected: Boolean,
     captureFocus: () -> Unit,
 ) {
@@ -146,13 +149,13 @@ private fun Item(
             .width(rowWidth)
             .clickable(onClick = {
                 captureFocus()
-                onClick(location)
+                onClick(dto)
             })
 
     ) {
         Spacer(modifier = Modifier.width(rowWidth * .02f))
         Box(modifier.width(rowWidth * .63f)) {
-            Text(location.name)
+            Text(dto.name)
         }
 //        Box(modifier.width(rowWidth * .2f)) {
 //            with(location.coordinate) {
@@ -164,7 +167,7 @@ private fun Item(
 //        }
         Box(modifier.width(rowWidth * .33f)) {
             Text(
-                DATETIME_FORMATTER.format(location.created),
+                DATETIME_FORMATTER.format(dto.created),
                 modifier = Modifier.align(Alignment.CenterEnd)
             )
         }
