@@ -7,6 +7,7 @@ import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 
 suspend fun SqliteRepository.persistMetaInstallAndSavePathAsync(installPath: String, savePath: String): Deferred<Unit> =
@@ -32,3 +33,12 @@ suspend fun SqliteRepository.persistActivePMDAsync(pmd: PMDContainer) =
         meta.activeMod = Mod.findById(pmd.mod.id)
         meta.activeDifficulty = Difficulty.findById(pmd.difficulty.id)
     }
+
+suspend fun SqliteRepository.clearActivePMD() {
+    newSuspendedTransaction(Dispatchers.IO) {
+        val meta = Meta.wrapRow(MetaTable.selectAll().single())
+        meta.activeProfile = null
+        meta.activeMod = null
+        meta.activeDifficulty = null
+    }
+}

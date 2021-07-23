@@ -115,6 +115,18 @@ private fun EditorView(
                 }
             }
             Spacer(Modifier.height(30.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    enabled = !state.isGDRunning && state.activePMD != null,
+                    onClick = vm::clearActivePMD
+                ) {
+                    Text("Clear Active")
+                }
+            }
+            Spacer(Modifier.height(20.dp))
             ActiveProfileRow(state.activePMD)
             Spacer(Modifier.height(10.dp))
             EditorLocationListPanel(

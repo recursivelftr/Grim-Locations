@@ -28,9 +28,9 @@ fun PMDManagerViewModel.selectDifficulties(difficulties: Set<DifficultyDTO>) {
     }
 }
 
-fun PMDManagerViewModel.editProfile(name: String, profile: ProfileDTO) {
+fun PMDManagerViewModel.editProfileAndClosePopup(name: String, profile: ProfileDTO) {
     viewModelScope.launch {
-        stateManager.editProfile(name, profile)
+        stateManager.editProfileAndClosePopup(name, profile)
     }
 }
 

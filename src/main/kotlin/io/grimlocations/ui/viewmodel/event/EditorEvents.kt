@@ -2,12 +2,15 @@ package io.grimlocations.ui.viewmodel.event
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import io.grimlocations.data.dto.LocationDTO
+import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.viewmodel.EditorViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 
 fun EditorViewModel.openConfirmDeleteLeft() {
@@ -206,5 +209,11 @@ fun EditorViewModel.deleteSelectedLeft() {
 fun EditorViewModel.deleteSelectedRight() {
     viewModelScope.launch {
         stateManager.deleteSelectedRight()
+    }
+}
+
+fun EditorViewModel.clearActivePMD() {
+    viewModelScope.launch {
+        stateManager.clearActivePMD()
     }
 }

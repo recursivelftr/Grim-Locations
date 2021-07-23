@@ -25,21 +25,27 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowSize
 import androidx.compose.ui.window.rememberDialogState
-import io.grimlocations.data.dto.LocationDTO
 import io.grimlocations.framework.data.dto.NameDTO
-import io.grimlocations.framework.ui.getLazyViewModel
+import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.framework.util.extension.isSequential
+import io.grimlocations.ui.view.component.NameDTOListComponent
 import io.grimlocations.ui.view.component.SelectionMode
+import io.grimlocations.ui.view.component.openEditNameDTOPopup
 import io.grimlocations.ui.viewmodel.PMDManagerViewModel
-import io.grimlocations.ui.viewmodel.event.selectDifficulties
-import io.grimlocations.ui.viewmodel.event.selectMods
-import io.grimlocations.ui.viewmodel.event.selectProfiles
+import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.PMDManagerStatePopups.*
+import io.grimlocations.ui.viewmodel.state.container.PMContainer
+import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
+
+private val rowHeight = 50.dp
+private val rowWidth = 550.dp
+private val horizontalSpacerWidth = 10.dp
+private val verticalSpacerHeight = 20.dp
 
 enum class PMDManagerFocus {
     NONE, PROFILE_LIST, MOD_LIST, DIFFICULTY_LIST
@@ -58,7 +64,7 @@ object PMDManagerFocusManager {
 @ExperimentalCoroutinesApi
 @Composable
 fun PMDManagerView(
-    vm: PMDManagerViewModel = getLazyViewModel(),
+    vm: PMDManagerViewModel = getFactoryViewModel(),
 ) = View(vm) { state ->
 
     PMDManagerFocusManager.ctrlAActionProfiles = {
@@ -80,9 +86,36 @@ fun PMDManagerView(
     }
 
     when (state.popupOpen) {
-        EDIT_PROFILE -> Unit
-        EDIT_MOD -> Unit
-        EDIT_DIFFICULTY -> Unit
+        EDIT_PROFILE -> openEditNameDTOPopup(
+            dto = state.selectedProfiles.single(),
+            onOkClicked = vm::editProfileAndClosePopup,
+            onCancelClicked = { vm.setPopupState(NONE) }
+        )
+        EDIT_MOD -> openEditNameDTOPopup(
+            dto = state.selectedMods.single(),
+            onOkClicked = { name, mod ->
+                vm.editMod(
+                    name, PMContainer(
+                        profile = state.selectedProfiles.single(),
+                        mod = mod
+                    )
+                )
+            },
+            onCancelClicked = { vm.setPopupState(NONE) }
+        )
+        EDIT_DIFFICULTY -> openEditNameDTOPopup(
+            dto = state.selectedDifficulties.single(),
+            onOkClicked = { name, difficulty ->
+                vm.editDifficulty(
+                    name, PMDContainer(
+                        profile = state.selectedProfiles.single(),
+                        mod = state.selectedMods.single(),
+                        difficulty = difficulty
+                    )
+                )
+            },
+            onCancelClicked = { vm.setPopupState(NONE) }
+        )
         DELETE_PROFILE -> Unit
         DELETE_MOD -> Unit
         DELETE_DIFFICULTY -> Unit
@@ -96,8 +129,20 @@ fun PMDManagerView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Row {
-
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                NameDTOListComponent(
+                    dtos = state.profiles,
+                    selectedDTOS = state.selectedProfiles,
+                    onSelectDTOS = vm::selectProfiles,
+                    rowHeight = rowHeight,
+                    rowWidth = rowWidth,
+                    getSelectionMode = PMDManagerFocusManager::selectionMode,
+                    captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.PROFILE_LIST }
+                )
+                EditButton(
+                    selected = state.selectedProfiles,
+                    onClick = { vm.setPopupState(EDIT_PROFILE) }
+                )
             }
         }
     }
@@ -105,8 +150,8 @@ fun PMDManagerView(
 
 @Composable
 private fun EditButton(
-    selected: Set<LocationDTO>,
-    onClick: (LocationDTO) -> Unit
+    selected: Set<NameDTO>,
+    onClick: (NameDTO) -> Unit
 ) {
     val disabled = selected.size != 1
 

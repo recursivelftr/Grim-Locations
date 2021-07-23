@@ -2,6 +2,7 @@ package io.grimlocations.ui.viewmodel.reducer
 
 import io.grimlocations.data.dto.LocationDTO
 import io.grimlocations.data.dto.MetaDTO
+import io.grimlocations.data.dto.containsProfileModDifficulty
 import io.grimlocations.data.dto.firstContainer
 import io.grimlocations.data.repo.*
 import io.grimlocations.data.repo.action.*
@@ -60,8 +61,22 @@ suspend fun GLStateManager.loadEditorState(
             repository.getLocationsAsync(previousState.selectedPMDRight)
         )
 
+        val selectedPMDLeft =
+            if (pmdMap.containsProfileModDifficulty(previousState.selectedPMDLeft))
+                previousState.selectedPMDLeft
+            else
+                pmdMap.firstContainer()
+
+        val selectedPMDRight =
+            if (pmdMap.containsProfileModDifficulty(previousState.selectedPMDRight))
+                previousState.selectedPMDRight
+            else
+                pmdMap.firstContainer()
+
         setState(
             previousState.copy(
+                selectedPMDLeft = selectedPMDLeft,
+                selectedPMDRight = selectedPMDRight,
                 profileMap = pmdMap,
                 locationsLeft = locList1,
                 selectedLocationsLeft = locList1.filter {
@@ -171,7 +186,7 @@ suspend fun GLStateManager.openPMDManagerView() {
 suspend fun GLStateManager.closePMDManagerView() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {
-        setState(s.copy(isPMDManagerViewOpen = false))
+        loadEditorState(s.copy(isPMDManagerViewOpen = false))
     }
 }
 
@@ -219,18 +234,18 @@ private suspend fun GLStateManager.performLocationsFileCheckAndLoad(meta: MetaDT
 }
 
 private suspend fun GLStateManager.performActivePmdFileCheckAndLoad(meta: MetaDTO) {
-    guardLet(meta.installLocation, meta.activePMD) { loc, pmd ->
-            val charFile = File(loc.asPathToFile(CHAR_FILENAME))
-            val lastModified = repository.getFileLastModified(charFile)
+    meta.installLocation?.let { loc ->
+        val charFile = File(loc.asPathToFile(CHAR_FILENAME))
+        val lastModified = repository.getFileLastModified(charFile)
 
-            if (lastModified != null && char_file_last_modified != lastModified) {
-                val teleportFile = File(loc.asPathToFile(TELEPORT_LIST_FILENAME))
+        if (lastModified != null && char_file_last_modified != lastModified) {
+            val teleportFile = File(loc.asPathToFile(TELEPORT_LIST_FILENAME))
 
-                repository.createAndSetActivePmd(charFile, teleportFile, pmd)
-                char_file_last_modified = lastModified
-                locations_file_last_modified = repository.getFileLastModified(teleportFile)
-                reloadEditorState()
-            }
+            repository.createAndSetActivePmd(charFile, teleportFile, meta.activePMD)
+            char_file_last_modified = lastModified
+            locations_file_last_modified = repository.getFileLastModified(teleportFile)
+            reloadEditorState()
+        }
     }
 }
 
@@ -432,5 +447,12 @@ private suspend fun GLStateManager.updateAndCloseLocation(location: LocationDTO,
                 )
             )
         }
+    }
+}
+
+suspend fun GLStateManager.clearActivePMD() {
+    repository.clearActivePMD()
+    withContext(Dispatchers.Main) {
+        loadEditorState(getState())
     }
 }

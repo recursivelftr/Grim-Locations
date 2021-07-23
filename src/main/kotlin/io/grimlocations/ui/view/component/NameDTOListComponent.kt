@@ -32,10 +32,17 @@ fun <T: NameDTO> NameDTOListComponent(
     getSelectionMode: () -> SelectionMode,
     rowHeight: Dp,
     rowWidth: Dp,
-    stateVertical: LazyListState,
+    stateVertical: LazyListState? = null,
     captureFocus: () -> Unit,
 ) {
     val primaryColor = MaterialTheme.colors.primary
+
+    val actualStateVertical = stateVertical ?: remember(dtos) {
+        LazyListState(
+            0,
+            0
+        )
+    }
 
     val scrollBarStyle = LocalScrollbarStyle.current.let {
         remember {
@@ -56,7 +63,7 @@ fun <T: NameDTO> NameDTOListComponent(
             )
 
         } else {
-            LazyColumn(state = stateVertical) {
+            LazyColumn(state = actualStateVertical) {
                 items(
                     dtos.size,
                     { dtos.elementAt(it).id }
@@ -117,7 +124,7 @@ fun <T: NameDTO> NameDTOListComponent(
         VerticalScrollbar(
             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
             adapter = rememberScrollbarAdapter(
-                scrollState = stateVertical,
+                scrollState = actualStateVertical,
             ),
             style = scrollBarStyle
         )

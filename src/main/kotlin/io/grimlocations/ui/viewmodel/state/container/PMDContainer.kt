@@ -9,6 +9,8 @@ data class PMContainer(
     val mod: ModDTO,
 )
 
+fun PMContainer.toPMDContainer(difficulty: DifficultyDTO) = PMDContainer(profile, mod, difficulty)
+
 data class PMDContainer(
     val profile: ProfileDTO,
     val mod: ModDTO,

@@ -7,13 +7,11 @@ import io.grimlocations.framework.ui.getState
 import io.grimlocations.framework.ui.setState
 import io.grimlocations.framework.util.awaitAll
 import io.grimlocations.ui.GLStateManager
-import io.grimlocations.ui.viewmodel.PMDManagerViewModel
 import io.grimlocations.ui.viewmodel.state.PMDManagerState
 import io.grimlocations.ui.viewmodel.state.PMDManagerStatePopups
 import io.grimlocations.ui.viewmodel.state.container.PMContainer
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 suspend fun GLStateManager.loadPMDManagerState(previousState: PMDManagerState? = null) {
@@ -100,22 +98,43 @@ suspend fun GLStateManager.selectDifficulties(difficulties: Set<DifficultyDTO>) 
     }
 }
 
-suspend fun GLStateManager.editProfile(name: String, profile: ProfileDTO) {
+suspend fun GLStateManager.editProfileAndClosePopup(name: String, profile: ProfileDTO) {
     val p = repository.modifyOrCreateProfileAsync(name, profile).await()!!
     val s = getState<PMDManagerState>()
-    selectProfiles(s.selectedProfiles.replaceDTO(profile, p))
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(
+            s.copy(
+                selectedProfiles = s.selectedProfiles.replaceDTO(profile, p),
+                popupOpen = PMDManagerStatePopups.NONE
+            )
+        )
+    }
 }
 
 suspend fun GLStateManager.editMod(name: String, pmContainer: PMContainer) {
     val m = repository.modifyOrCreateModAsync(name, pmContainer).await()!!
     val s = getState<PMDManagerState>()
-    selectMods(s.selectedMods.replaceDTO(pmContainer.mod, m))
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(
+            s.copy(
+                selectedMods = s.selectedMods.replaceDTO(pmContainer.mod, m),
+                popupOpen = PMDManagerStatePopups.NONE
+            )
+        )
+    }
 }
 
 suspend fun GLStateManager.editDifficulty(name: String, pmdContainer: PMDContainer) {
     val d = repository.modifyOrCreateDifficultyAsync(name, pmdContainer).await()!!
     val s = getState<PMDManagerState>()
-    selectDifficulties(s.selectedDifficulties.replaceDTO(pmdContainer.difficulty, d))
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(
+            s.copy(
+                selectedDifficulties = s.selectedDifficulties.replaceDTO(pmdContainer.difficulty, d),
+                popupOpen = PMDManagerStatePopups.NONE
+            )
+        )
+    }
 }
 
 suspend fun GLStateManager.setPopupState(popup: PMDManagerStatePopups) {

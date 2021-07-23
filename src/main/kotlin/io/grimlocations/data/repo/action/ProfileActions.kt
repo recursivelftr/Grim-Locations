@@ -6,6 +6,8 @@ import io.grimlocations.data.repo.SqliteRepository
 import io.grimlocations.framework.data.dto.containsId
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
@@ -29,19 +31,22 @@ suspend fun SqliteRepository.getProfilesAsync(includeReservedProfiles: Boolean =
     }
 
 suspend fun SqliteRepository.findOrCreateProfileAsync(name: String, skipOrderCreation: Boolean = false): Deferred<ProfileDTO?> =
-    suspendedTransactionAsync(Dispatchers.IO) {
-        try {
-            var p = newSuspendedTransaction {
-                Profile.find { ProfileTable.name eq name }.singleOrNull()
-            }
-            if (p == null) {
-                p = newSuspendedTransaction {
-                    Profile.new {
-                        this.name = name
+    withContext(Dispatchers.IO) {
+        async {
+            try {
+                var p = newSuspendedTransaction {
+                    Profile.find { ProfileTable.name eq name }.singleOrNull()
+                }
+                if (p == null) {
+                    p = newSuspendedTransaction {
+                        Profile.new {
+                            this.name = name
+                        }
                     }
                 }
-                if(skipOrderCreation) {
-                    val highestProfileOrder = getHighestProfileOrderAsync(p.toDTO()).await() ?: 0
+
+                if (!skipOrderCreation && isProfileDetachedAsync(p.toDTO()).await()) {
+                    val highestProfileOrder = getHighestProfileOrderAsync().await() ?: 0
                     newSuspendedTransaction {
                         ProfileOrder.new {
                             this.profile = p
@@ -49,26 +54,35 @@ suspend fun SqliteRepository.findOrCreateProfileAsync(name: String, skipOrderCre
                         }
                     }
                 }
+                p.toDTO()
+            } catch (e: Exception) {
+                logger.error("", e)
+                null
             }
-            p.toDTO()
-        } catch (e: Exception) {
-            logger.error("", e)
-            null
         }
+    }
+
+suspend fun SqliteRepository.isProfileDetachedAsync(profileDTO: ProfileDTO): Deferred<Boolean> =
+    suspendedTransactionAsync(Dispatchers.IO) {
+        ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id }.singleOrNull() == null
     }
 
 suspend fun SqliteRepository.modifyOrCreateProfileAsync(name: String, profileDTO: ProfileDTO): Deferred<ProfileDTO?> =
     suspendedTransactionAsync(Dispatchers.IO) {
         try {
             val profileOrder = newSuspendedTransaction {
-                ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id}
-            }.single()
+                ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id}.single()
+            }
 
             val p = findOrCreateProfileAsync(name, skipOrderCreation = true).await()!!
 
             newSuspendedTransaction {
                 val profile = Profile.find { ProfileTable.id eq p.id}.single()
                 profileOrder.profile = profile
+
+                Location.find { LocationTable.profile eq profileDTO.id }.forEach {
+                    it.profile = profile
+                }
             }
             p
         } catch (e: Exception) {
@@ -77,11 +91,10 @@ suspend fun SqliteRepository.modifyOrCreateProfileAsync(name: String, profileDTO
         }
     }
 
-suspend fun SqliteRepository.getHighestProfileOrderAsync(profile: ProfileDTO) =
+suspend fun SqliteRepository.getHighestProfileOrderAsync() =
     suspendedTransactionAsync(Dispatchers.IO) {
-        ProfileOrderTable.slice(ProfileOrderTable.order).select {
-            (ProfileOrderTable.profile eq profile.id)
-        }.map { it[ProfileOrderTable.order] }.maxOrNull()
+        ProfileOrderTable.slice(ProfileOrderTable.order).selectAll()
+            .map { it[ProfileOrderTable.order] }.maxOrNull()
     }
 
 suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(

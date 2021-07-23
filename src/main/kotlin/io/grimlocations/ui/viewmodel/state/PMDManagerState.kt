@@ -19,6 +19,21 @@ data class PMDManagerState(
     val selectedDifficulties: Set<DifficultyDTO>,
     val popupOpen: PMDManagerStatePopups
 ) : State {
+
+    val profiles: Set<ProfileDTO>
+        get() = profileMap.keys
+
+    val mods: Set<ModDTO>
+        get() = selectedProfiles.singleOrNull()?.let {
+            profileMap[it]!!.keys
+        } ?: emptySet()
+
+    val difficulties: Set<DifficultyDTO>
+        get() = selectedMods.singleOrNull()?.let {
+            val profile = selectedProfiles.single()
+            profileMap[profile]!![it]!!.toSet()
+        } ?: emptySet()
+
     override fun equals(other: Any?): Boolean {
         return this === other
     }

@@ -14,6 +14,6 @@ class GLViewModelProvider(stateManager: GLStateManager) : ViewModelProvider {
         ActiveChooserViewModel::class to factoryViewModel { ActiveChooserViewModel(stateManager) },
         EditorViewModel::class to lazyViewModel { EditorViewModel(stateManager) },
         LoadLocationsViewModel::class to factoryViewModel { LoadLocationsViewModel(stateManager) },
-        PMDManagerViewModel::class to lazyViewModel { PMDManagerViewModel(stateManager) },
+        PMDManagerViewModel::class to factoryViewModel { PMDManagerViewModel(stateManager) },
     )
 }

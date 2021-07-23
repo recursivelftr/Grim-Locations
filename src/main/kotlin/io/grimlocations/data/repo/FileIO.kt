@@ -60,7 +60,7 @@ fun SqliteRepository.createRollingBackup(maxBackups: Int) {
     }
 }
 
-suspend fun SqliteRepository.createAndSetActivePmd(charFile: File, teleportFile: File, pmd: PMDContainer) =
+suspend fun SqliteRepository.createAndSetActivePmd(charFile: File, teleportFile: File, pmd: PMDContainer?) =
     withContext<Unit>(Dispatchers.IO) {
         var profile: String? = null //line 0
         var difficulty: String? = null //line 1
@@ -90,7 +90,7 @@ suspend fun SqliteRepository.createAndSetActivePmd(charFile: File, teleportFile:
         }
 
         guardAlso(profile, mod, difficulty) { p, m, d ->
-            if (!pmd.namesAreEqual(p, m, d)) {
+            if (pmd == null || !pmd.namesAreEqual(p, m, d)) {
                 findOrCreateProfileAsync(p).await()?.also { profileDTO ->
                     findOrCreateModAsync(m, profileDTO).await()?.also { modDTO ->
                         findOrCreateDifficultyAsync(d, PMContainer(profileDTO, modDTO)).await()?.also { difficultyDTO ->
