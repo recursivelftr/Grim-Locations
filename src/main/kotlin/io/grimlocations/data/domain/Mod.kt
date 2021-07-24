@@ -8,10 +8,12 @@ import org.jetbrains.exposed.dao.id.EntityID
 
 object ModTable : BaseTable("mod") {
     val name = text("name").uniqueIndex()
+    val isUserCreated = integer("is_user_created").default(0)
 }
 
 class Mod(id: EntityID<Int>) : DTOEntity<ModTable, ModDTO>(id, ModTable) {
     var name by ModTable.name
+    var isUserCreated by ModTable.isUserCreated
 
     @Deprecated("Use ProfileOrder entities instead")
     var profiles by Profile via ProfileModIntermTable
@@ -22,7 +24,7 @@ class Mod(id: EntityID<Int>) : DTOEntity<ModTable, ModDTO>(id, ModTable) {
     val locations by Location referrersOn LocationTable.mod
 
     override fun toDTO(): ModDTO {
-        return ModDTO(id.value, created, modified, name)
+        return ModDTO(id.value, created, modified, name, isUserCreated == 1)
     }
 
     companion object : IntEntityClass<Mod>(ModTable)

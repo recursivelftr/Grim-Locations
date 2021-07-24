@@ -99,6 +99,14 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
             throw e
         }
 
+        if(version < 2) {
+            newSuspendedTransaction {
+                SchemaUtils.createMissingTablesAndColumns(ProfileTable)
+                SchemaUtils.createMissingTablesAndColumns(ModTable)
+                SchemaUtils.createMissingTablesAndColumns(DifficultyTable)
+            }
+        }
+
         if (version < 1) { //Addition changes for v1 below
             deleteAdditionalLocations()
             createActAndOtherReservedEntities()

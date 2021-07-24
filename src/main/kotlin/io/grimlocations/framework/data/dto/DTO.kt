@@ -4,6 +4,10 @@ import java.time.LocalDateTime
 
 interface OrderedNameDTO: OrderedDTO, NameDTO
 
+interface UserCreatedNameDTO: NameDTO {
+    val isUserCreated: Boolean
+}
+
 interface OrderedDTO: DTO {
     val order: Int
 }

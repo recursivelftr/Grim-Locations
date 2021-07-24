@@ -26,6 +26,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowSize
 import androidx.compose.ui.window.rememberDialogState
 import io.grimlocations.framework.data.dto.NameDTO
+import io.grimlocations.framework.data.dto.UserCreatedNameDTO
 import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.framework.util.extension.isSequential
@@ -150,10 +151,10 @@ fun PMDManagerView(
 
 @Composable
 private fun EditButton(
-    selected: Set<NameDTO>,
-    onClick: (NameDTO) -> Unit
+    selected: Set<UserCreatedNameDTO>,
+    onClick: (UserCreatedNameDTO) -> Unit
 ) {
-    val disabled = selected.size != 1
+    val disabled = selected.size != 1 || !selected.single().isUserCreated
 
     IconButton(
         modifier = Modifier.size(arrowButtonSize),

@@ -102,7 +102,7 @@ private fun EditorView(
                 }
                 Spacer(modifier = Modifier.width(10.dp))
             }
-            Spacer(Modifier.height(20.dp))
+//            Spacer(Modifier.height(20.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -115,17 +115,17 @@ private fun EditorView(
                 }
             }
             Spacer(Modifier.height(30.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Button(
-                    enabled = !state.isGDRunning && state.activePMD != null,
-                    onClick = vm::clearActivePMD
-                ) {
-                    Text("Clear Active")
-                }
-            }
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.Center
+//            ) {
+//                Button(
+//                    enabled = !state.isGDRunning && state.activePMD != null,
+//                    onClick = vm::clearActivePMD
+//                ) {
+//                    Text("Clear Active")
+//                }
+//            }
             Spacer(Modifier.height(20.dp))
             ActiveProfileRow(state.activePMD)
             Spacer(Modifier.height(10.dp))

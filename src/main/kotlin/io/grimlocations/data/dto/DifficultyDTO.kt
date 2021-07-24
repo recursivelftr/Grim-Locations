@@ -1,6 +1,6 @@
 package io.grimlocations.data.dto
 
-import io.grimlocations.framework.data.dto.NameDTO
+import io.grimlocations.framework.data.dto.UserCreatedNameDTO
 import io.grimlocations.framework.util.assignOnce
 import java.time.LocalDateTime
 
@@ -11,5 +11,6 @@ data class DifficultyDTO(
     override val id: Int,
     override val created: LocalDateTime,
     override val modified: LocalDateTime,
-    override val name: String
-) : NameDTO
+    override val name: String,
+    override val isUserCreated: Boolean,
+) : UserCreatedNameDTO

@@ -8,10 +8,12 @@ import org.jetbrains.exposed.dao.id.EntityID
 
 object DifficultyTable : BaseTable("difficulty") {
     val name = text("name").uniqueIndex()
+    val isUserCreated = integer("is_user_created").default(0)
 }
 
 class Difficulty(id: EntityID<Int>) : DTOEntity<DifficultyTable, DifficultyDTO>(id, DifficultyTable) {
     var name by DifficultyTable.name
+    var isUserCreated by DifficultyTable.isUserCreated
 
     @Deprecated("Use ModOrder entities instead")
     var mods by Mod via ModDifficultyIntermTable
@@ -19,7 +21,7 @@ class Difficulty(id: EntityID<Int>) : DTOEntity<DifficultyTable, DifficultyDTO>(
     val locations by Location referrersOn LocationTable.difficulty
 
     override fun toDTO(): DifficultyDTO {
-        return DifficultyDTO(id.value, created, modified, name)
+        return DifficultyDTO(id.value, created, modified, name, isUserCreated == 1)
     }
 
     companion object : IntEntityClass<Difficulty>(DifficultyTable)
