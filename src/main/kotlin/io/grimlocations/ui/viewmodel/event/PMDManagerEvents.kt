@@ -51,3 +51,9 @@ fun PMDManagerViewModel.setPopupState(popup: PMDManagerStatePopups) {
         stateManager.setPopupState(popup)
     }
 }
+
+fun PMDManagerViewModel.moveProfiles(selected: ProfileDTO, moveUp: Boolean) {
+    viewModelScope.launch {
+        stateManager.moveProfiles(selected, moveUp)
+    }
+}

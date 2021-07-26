@@ -45,8 +45,7 @@ private val logger = LogManager.getLogger()
 
 private val rowHeight = 50.dp
 private val rowWidth = 550.dp
-private val horizontalSpacerWidth = 10.dp
-private val verticalSpacerHeight = 20.dp
+private val buttonSpacerHeight = 10.dp
 
 enum class PMDManagerFocus {
     NONE, PROFILE_LIST, MOD_LIST, DIFFICULTY_LIST
@@ -130,20 +129,84 @@ fun PMDManagerView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.height(500.dp)) {
+                Column() {
+                    ArrowUpButton(
+                        dtos = state.profiles,
+                        selected = state.selectedProfiles,
+                        onClick = { }
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
+                    ArrowDownButton(
+                        dtos = state.profiles,
+                        selected = state.selectedProfiles,
+                        onClick = {}
+                    )
+                }
+                        NameDTOListComponent(
+                            dtos = state.profiles,
+                            selectedDTOS = state.selectedProfiles,
+                            onSelectDTOS = vm::selectProfiles,
+                            rowHeight = rowHeight,
+                            rowWidth = rowWidth,
+                            getSelectionMode = PMDManagerFocusManager::selectionMode,
+                            captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.PROFILE_LIST }
+                        )
+                Column() {
+                    EditButton(
+                        selected = state.selectedProfiles,
+                        onClick = { vm.setPopupState(EDIT_PROFILE) }
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
+                    DeleteButton(
+                        dtos = state.profiles,
+                        selected = state.selectedProfiles,
+                        onClick = { vm.setPopupState(DELETE_PROFILE)}
+                    )
+                }
                 NameDTOListComponent(
-                    dtos = state.profiles,
-                    selectedDTOS = state.selectedProfiles,
-                    onSelectDTOS = vm::selectProfiles,
+                    dtos = state.mods,
+                    selectedDTOS = state.selectedMods,
+                    onSelectDTOS = vm::selectMods,
                     rowHeight = rowHeight,
                     rowWidth = rowWidth,
                     getSelectionMode = PMDManagerFocusManager::selectionMode,
-                    captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.PROFILE_LIST }
+                    captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.MOD_LIST }
                 )
-                EditButton(
-                    selected = state.selectedProfiles,
-                    onClick = { vm.setPopupState(EDIT_PROFILE) }
+                Column() {
+                    EditButton(
+                        selected = state.selectedMods,
+                        onClick = { vm.setPopupState(EDIT_MOD) }
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
+                    DeleteButton(
+                        dtos = state.mods,
+                        selected = state.selectedMods,
+                        onClick = { vm.setPopupState(DELETE_MOD)}
+                    )
+                }
+                NameDTOListComponent(
+                    dtos = state.difficulties,
+                    selectedDTOS = state.selectedDifficulties,
+                    onSelectDTOS = vm::selectDifficulties,
+                    rowHeight = rowHeight,
+                    rowWidth = rowWidth,
+                    getSelectionMode = PMDManagerFocusManager::selectionMode,
+                    captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.DIFFICULTY_LIST }
                 )
+                Column() {
+                    EditButton(
+                        selected = state.selectedDifficulties,
+                        onClick = { vm.setPopupState(EDIT_DIFFICULTY) }
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
+                    DeleteButton(
+                        dtos = state.difficulties,
+                        selected = state.selectedDifficulties,
+                        onClick = { vm.setPopupState(DELETE_DIFFICULTY)}
+                    )
+                }
             }
         }
     }
@@ -253,7 +316,7 @@ fun openPMDManagerView(
 ) {
 
     val dialogState =
-        rememberDialogState(size = WindowSize(1500.dp, 950.dp), position = WindowPosition.Aligned(Alignment.Center))
+        rememberDialogState(size = WindowSize(2000.dp, 950.dp), position = WindowPosition.Aligned(Alignment.Center))
 
     Dialog(
         title = "Grim Locations",

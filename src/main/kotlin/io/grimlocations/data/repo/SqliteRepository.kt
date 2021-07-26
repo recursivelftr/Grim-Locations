@@ -364,7 +364,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
             profiles.mapIndexed { index, profile ->
                 ProfileOrder.new {
                     this.profile = profile
-                    this.order = index
+                    this.order = index + 1
                 }
             }
         }
@@ -375,7 +375,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                     ModOrder.new {
                         this.profileOrder = profileOrder
                         this.mod = mod
-                        this.order = index
+                        this.order = index + 1
                     }
                 }
             }
@@ -386,7 +386,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
                         DifficultyOrder.new {
                             this.modOrder = modOrder
                             this.difficulty = difficulty
-                            this.order = index
+                            this.order = index + 1
                         }
                     }
                 }

@@ -142,3 +142,7 @@ suspend fun GLStateManager.setPopupState(popup: PMDManagerStatePopups) {
         setState(getState<PMDManagerState>().copy(popupOpen = popup))
     }
 }
+
+fun GLStateManager.moveProfiles(selected: ProfileDTO, moveUp: Boolean) {
+
+}

@@ -23,14 +23,17 @@ suspend fun SqliteRepository.getProfilesAsync(includeReservedProfiles: Boolean =
                 .orderBy(ProfileOrderTable.order)
         )
 
-        if(includeReservedProfiles) {
+        if (includeReservedProfiles) {
             rows.map { it.profile.toDTO() }.toSet()
         } else {
             rows.filter { !RESERVED_PROFILES.containsId(it.id.value) }.map { it.profile.toDTO() }.toSet()
         }
     }
 
-suspend fun SqliteRepository.findOrCreateProfileAsync(name: String, skipOrderCreation: Boolean = false): Deferred<ProfileDTO?> =
+suspend fun SqliteRepository.findOrCreateProfileAsync(
+    name: String,
+    skipOrderCreation: Boolean = false
+): Deferred<ProfileDTO?> =
     withContext(Dispatchers.IO) {
         async {
             try {
@@ -71,13 +74,13 @@ suspend fun SqliteRepository.modifyOrCreateProfileAsync(name: String, profileDTO
     suspendedTransactionAsync(Dispatchers.IO) {
         try {
             val profileOrder = newSuspendedTransaction {
-                ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id}.single()
+                ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id }.single()
             }
 
             val p = findOrCreateProfileAsync(name, skipOrderCreation = true).await()!!
 
             newSuspendedTransaction {
-                val profile = Profile.find { ProfileTable.id eq p.id}.single()
+                val profile = Profile.find { ProfileTable.id eq p.id }.single()
                 profileOrder.profile = profile
 
                 Location.find { LocationTable.profile eq profileDTO.id }.forEach {
@@ -114,7 +117,8 @@ suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(
                 val mmap: MutableModDifficultyMap = mutableMapOf()
 
                 profileOrder.modOrders.sortedBy { it.order }.forEach { m ->
-                    mmap[m.mod.toDTO()] = m.difficultyOrders.sortedBy { it.order }.map { d -> d.difficulty.toDTO() } as MutableList<DifficultyDTO>
+                    mmap[m.mod.toDTO()] = m.difficultyOrders.sortedBy { it.order }
+                        .map { d -> d.difficulty.toDTO() } as MutableList<DifficultyDTO>
                 }
                 map[profileOrder.profile.toDTO()] = mmap
             }
@@ -123,3 +127,55 @@ suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(
         map
     }
 
+suspend fun SqliteRepository.decrementProfilesOrder(profiles: Set<ProfileDTO>) = withContext(Dispatchers.IO) {
+    if (profiles.isNotEmpty()) {
+        val profileOrders = newSuspendedTransaction {
+            ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }.sortedBy { it.order }
+        }
+
+        val po = newSuspendedTransaction {
+            ProfileOrder.find { ProfileOrderTable.order eq profileOrders.first().order - 1 }.single().apply {
+                this.order = -1
+            }
+        }
+
+        val lastOrder = profileOrders.last().order
+
+        newSuspendedTransaction {
+            profileOrders.forEach {
+                it.order = it.order - 1
+            }
+        }
+
+        newSuspendedTransaction {
+            po.order = lastOrder
+        }
+    }
+}
+
+suspend fun SqliteRepository.incrementProfilesOrder(profiles: Set<ProfileDTO>) = withContext(Dispatchers.IO) {
+    if (profiles.isNotEmpty()) {
+        val profileOrders = newSuspendedTransaction {
+            ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }.sortedBy { it.order }
+        }
+
+        val po = newSuspendedTransaction {
+            ProfileOrder.find { ProfileOrderTable.order eq profileOrders.last().order + 1 }.single().apply {
+                this.order = -1
+            }
+        }
+
+        val firstOrder = profileOrders.first().order
+
+        newSuspendedTransaction {
+            profileOrders.forEach {
+                it.order = it.order + 1
+            }
+        }
+
+        newSuspendedTransaction {
+            po.order = firstOrder
+        }
+
+    }
+}
