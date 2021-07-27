@@ -33,6 +33,7 @@ import io.grimlocations.framework.util.extension.isSequential
 import io.grimlocations.ui.view.component.NameDTOListComponent
 import io.grimlocations.ui.view.component.SelectionMode
 import io.grimlocations.ui.view.component.openEditNameDTOPopup
+import io.grimlocations.ui.view.component.openOkCancelPopup
 import io.grimlocations.ui.viewmodel.PMDManagerViewModel
 import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.PMDManagerStatePopups.*
@@ -85,11 +86,13 @@ fun PMDManagerView(
         }
     }
 
+    val closePopup = { vm.setPopupState(NONE) }
+
     when (state.popupOpen) {
         EDIT_PROFILE -> openEditNameDTOPopup(
             dto = state.selectedProfiles.single(),
             onOkClicked = vm::editProfileAndClosePopup,
-            onCancelClicked = { vm.setPopupState(NONE) }
+            onCancelClicked = closePopup,
         )
         EDIT_MOD -> openEditNameDTOPopup(
             dto = state.selectedMods.single(),
@@ -101,7 +104,7 @@ fun PMDManagerView(
                     )
                 )
             },
-            onCancelClicked = { vm.setPopupState(NONE) }
+            onCancelClicked = closePopup,
         )
         EDIT_DIFFICULTY -> openEditNameDTOPopup(
             dto = state.selectedDifficulties.single(),
@@ -114,9 +117,15 @@ fun PMDManagerView(
                     )
                 )
             },
-            onCancelClicked = { vm.setPopupState(NONE) }
+            onCancelClicked = closePopup,
         )
-        DELETE_PROFILE -> Unit
+        DELETE_PROFILE -> openConfirmDeletePopup(
+            msgMultiple = "Are you sure you want to delete these profiles?",
+            msgSingle = "Are you sure you want to delete this profile?",
+            isMultiple = state.selectedProfiles.size > 1,
+            onOkClicked = {  },
+            onCancelClicked = closePopup,
+        )
         DELETE_MOD -> Unit
         DELETE_DIFFICULTY -> Unit
         NONE -> Unit
@@ -129,30 +138,32 @@ fun PMDManagerView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.height(500.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.height(500.dp)
+            ) {
                 Column() {
                     ArrowUpButton(
                         dtos = state.profiles,
                         selected = state.selectedProfiles,
-                        onClick = { }
+                        onClick = { vm.moveProfiles(state.selectedProfiles, moveUp = true) }
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
                     ArrowDownButton(
                         dtos = state.profiles,
                         selected = state.selectedProfiles,
-                        onClick = {}
+                        onClick = { vm.moveProfiles(state.selectedProfiles, moveUp = false) }
                     )
                 }
-                        NameDTOListComponent(
-                            dtos = state.profiles,
-                            selectedDTOS = state.selectedProfiles,
-                            onSelectDTOS = vm::selectProfiles,
-                            rowHeight = rowHeight,
-                            rowWidth = rowWidth,
-                            getSelectionMode = PMDManagerFocusManager::selectionMode,
-                            captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.PROFILE_LIST }
-                        )
+                NameDTOListComponent(
+                    dtos = state.profiles,
+                    selectedDTOS = state.selectedProfiles,
+                    onSelectDTOS = vm::selectProfiles,
+                    rowHeight = rowHeight,
+                    rowWidth = rowWidth,
+                    getSelectionMode = PMDManagerFocusManager::selectionMode,
+                    captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.PROFILE_LIST }
+                )
                 Column() {
                     EditButton(
                         selected = state.selectedProfiles,
@@ -162,7 +173,7 @@ fun PMDManagerView(
                     DeleteButton(
                         dtos = state.profiles,
                         selected = state.selectedProfiles,
-                        onClick = { vm.setPopupState(DELETE_PROFILE)}
+                        onClick = { vm.setPopupState(DELETE_PROFILE) }
                     )
                 }
                 NameDTOListComponent(
@@ -183,7 +194,7 @@ fun PMDManagerView(
                     DeleteButton(
                         dtos = state.mods,
                         selected = state.selectedMods,
-                        onClick = { vm.setPopupState(DELETE_MOD)}
+                        onClick = { vm.setPopupState(DELETE_MOD) }
                     )
                 }
                 NameDTOListComponent(
@@ -204,7 +215,7 @@ fun PMDManagerView(
                     DeleteButton(
                         dtos = state.difficulties,
                         selected = state.selectedDifficulties,
-                        onClick = { vm.setPopupState(DELETE_DIFFICULTY)}
+                        onClick = { vm.setPopupState(DELETE_DIFFICULTY) }
                     )
                 }
             }
@@ -305,6 +316,27 @@ private fun ArrowDownButton(
             tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
         )
     }
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalFoundationApi
+@ExperimentalCoroutinesApi
+@Composable
+private fun openConfirmDeletePopup(
+    msgMultiple: String,
+    msgSingle: String,
+    onOkClicked: () -> Unit,
+    onCancelClicked: () -> Unit,
+    isMultiple: Boolean
+) {
+    openOkCancelPopup(
+        message = if (isMultiple)
+            "Are you sure you want to delete these locations?"
+        else
+            "Are you sure you want to delete this location?",
+        onCancelClicked = onCancelClicked,
+        onOkClicked = onOkClicked,
+    )
 }
 
 @ExperimentalComposeUiApi

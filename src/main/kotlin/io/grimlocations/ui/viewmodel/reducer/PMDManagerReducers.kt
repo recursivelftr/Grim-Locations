@@ -143,6 +143,17 @@ suspend fun GLStateManager.setPopupState(popup: PMDManagerStatePopups) {
     }
 }
 
-fun GLStateManager.moveProfiles(selected: ProfileDTO, moveUp: Boolean) {
+suspend fun GLStateManager.moveProfiles(selected: Set<ProfileDTO>, moveUp: Boolean) {
+    if(moveUp) {
+        repository.decrementProfilesOrder(selected)
+    } else {
+        repository.incrementProfilesOrder(selected)
+    }
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(getState())
+    }
+}
+
+fun GLStateManager.deleteProfiles(selected: Set<ProfileDTO>) {
 
 }

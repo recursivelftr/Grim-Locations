@@ -34,9 +34,9 @@ fun PMDChooserComponent(
     controlsOnLeft: Boolean = false,
 ) {
     val primaryColor = MaterialTheme.colors.primary
-    val profiles = remember(map) { map.keys.map { Triple(it.id, it.name, if (it.isReserved) primaryColor else null ) } }
-    val mods = remember(map, selected) { map[selected.profile]!!.keys.map { Triple(it.id, it.name, null) } }
-    val difficulties = remember(map, selected) { map[selected.profile]!![selected.mod]!!.map { Triple(it.id, it.name, null) } }
+    val profiles = map.keys.map { Triple(it.id, it.name, if (it.isReserved) primaryColor else null) }
+    val mods = map[selected.profile]!!.keys.map { Triple(it.id, it.name, null) }
+    val difficulties = map[selected.profile]!![selected.mod]!!.map { Triple(it.id, it.name, null) }
 
     val selectedProfile = selected.profile
     val selectedMod =
@@ -58,7 +58,11 @@ fun PMDChooserComponent(
             "Profile",
             items = profiles,
             emptyItemsMessage = "No Profiles",
-            selected = Triple(selectedProfile.id, selectedProfile.name, if (selectedProfile.isReserved) primaryColor else null),
+            selected = Triple(
+                selectedProfile.id,
+                selectedProfile.name,
+                if (selectedProfile.isReserved) primaryColor else null
+            ),
             width = textBoxWidth,
             controlOnLeft = controlsOnLeft,
             onSelect = {

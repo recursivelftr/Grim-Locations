@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
@@ -177,5 +176,13 @@ suspend fun SqliteRepository.incrementProfilesOrder(profiles: Set<ProfileDTO>) =
             po.order = firstOrder
         }
 
+    }
+}
+
+suspend fun SqliteRepository.deleteProfiles(profiles: Set<ProfileDTO>) = withContext(Dispatchers.IO) {
+    newSuspendedTransaction {
+        val profileOrders = ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }
+
+        //need to delete mod orders and difficulty orders as well
     }
 }
