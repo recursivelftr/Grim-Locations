@@ -34,15 +34,15 @@ fun PMDManagerViewModel.editProfileAndClosePopup(name: String, profile: ProfileD
     }
 }
 
-fun PMDManagerViewModel.editMod(name: String, pmContainer: PMContainer) {
+fun PMDManagerViewModel.editModAndClosePopup(name: String, pmContainer: PMContainer) {
     viewModelScope.launch {
-        stateManager.editMod(name, pmContainer)
+        stateManager.editModAndClosePopup(name, pmContainer)
     }
 }
 
-fun PMDManagerViewModel.editDifficulty(name: String, pmdContainer: PMDContainer) {
+fun PMDManagerViewModel.editDifficultyAndClosePopup(name: String, pmdContainer: PMDContainer) {
     viewModelScope.launch {
-        stateManager.editDifficulty(name, pmdContainer)
+        stateManager.editDifficultyAndClosePopup(name, pmdContainer)
     }
 }
 
@@ -53,6 +53,12 @@ fun PMDManagerViewModel.setPopupState(popup: PMDManagerStatePopups) {
 }
 
 fun PMDManagerViewModel.moveProfiles(selected: Set<ProfileDTO>, moveUp: Boolean) {
+    viewModelScope.launch {
+        stateManager.moveProfiles(selected, moveUp)
+    }
+}
+
+fun PMDManagerViewModel.moveMods(selected: Set<ProfileDTO>, moveUp: Boolean) {
     viewModelScope.launch {
         stateManager.moveProfiles(selected, moveUp)
     }

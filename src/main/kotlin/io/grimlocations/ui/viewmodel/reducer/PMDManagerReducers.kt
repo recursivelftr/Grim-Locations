@@ -111,7 +111,7 @@ suspend fun GLStateManager.editProfileAndClosePopup(name: String, profile: Profi
     }
 }
 
-suspend fun GLStateManager.editMod(name: String, pmContainer: PMContainer) {
+suspend fun GLStateManager.editModAndClosePopup(name: String, pmContainer: PMContainer) {
     val m = repository.modifyOrCreateModAsync(name, pmContainer).await()!!
     val s = getState<PMDManagerState>()
     withContext(Dispatchers.Main) {
@@ -124,7 +124,7 @@ suspend fun GLStateManager.editMod(name: String, pmContainer: PMContainer) {
     }
 }
 
-suspend fun GLStateManager.editDifficulty(name: String, pmdContainer: PMDContainer) {
+suspend fun GLStateManager.editDifficultyAndClosePopup(name: String, pmdContainer: PMDContainer) {
     val d = repository.modifyOrCreateDifficultyAsync(name, pmdContainer).await()!!
     val s = getState<PMDManagerState>()
     withContext(Dispatchers.Main) {
@@ -154,6 +154,14 @@ suspend fun GLStateManager.moveProfiles(selected: Set<ProfileDTO>, moveUp: Boole
     }
 }
 
-fun GLStateManager.deleteProfiles(selected: Set<ProfileDTO>) {
+suspend fun GLStateManager.deleteProfiles(selected: Set<ProfileDTO>) {
+    repository.deleteProfiles(selected)
+}
 
+suspend fun GLStateManager.deleteMods(selected: Set<ModDTO>, profile: ProfileDTO) {
+    repository.deleteMods(selected, profile)
+}
+
+suspend fun GLStateManager.deleteDifficulties(selected: Set<DifficultyDTO>, pmContainer: PMContainer) {
+    repository.deleteDifficulties(selected, pmContainer)
 }

@@ -2,6 +2,7 @@ package io.grimlocations.data.repo.action
 
 import io.grimlocations.data.domain.*
 import io.grimlocations.data.dto.DifficultyDTO
+import io.grimlocations.data.dto.ProfileDTO
 import io.grimlocations.data.repo.SqliteRepository
 import io.grimlocations.ui.viewmodel.state.container.PMContainer
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
@@ -129,4 +130,23 @@ suspend fun SqliteRepository.getHighestDifficultyOrderAsync(pmdContainer: PMDCon
             (DifficultyOrderTable.modOrder eq modOrder.id) and
                     (DifficultyOrderTable.difficulty eq pmdContainer.difficulty.id)
         }.map { it[DifficultyOrderTable.order] }.maxOrNull()
+    }
+
+suspend fun SqliteRepository.deleteDifficulties(difficulties: Set<DifficultyDTO>, pmContainer: PMContainer) =
+    withContext(Dispatchers.IO) {
+        newSuspendedTransaction {
+            val profileOrder =
+                ProfileOrder.find { ProfileOrderTable.profile eq pmContainer.profile.id }.single()
+            val modOrder = ModOrder.find {
+                ModOrderTable.profileOrder eq profileOrder.id and
+                        (ModOrderTable.mod eq pmContainer.mod.id)
+            }.single()
+
+            difficulties.forEach {
+                DifficultyOrder.find {
+                    (DifficultyOrderTable.modOrder eq modOrder.id) and
+                            (DifficultyOrderTable.difficulty eq it.id)
+                }.single().delete()
+            }
+        }
     }

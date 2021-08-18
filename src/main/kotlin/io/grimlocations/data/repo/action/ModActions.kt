@@ -104,3 +104,22 @@ suspend fun SqliteRepository.getHighestModOrderAsync(profileDTO: ProfileDTO) =
             (ModOrderTable.profileOrder eq profileOrder.id)
         }.map { it[ModOrderTable.order] }.maxOrNull()
     }
+
+suspend fun SqliteRepository.deleteMods(mods: Set<ModDTO>, profile: ProfileDTO) = withContext(Dispatchers.IO) {
+    newSuspendedTransaction {
+        val profileOrder = ProfileOrder.find { ProfileOrderTable.profile eq profile.id }.single()
+
+        mods.forEach {
+            val modOrder = ModOrder.find {
+                ModOrderTable.profileOrder eq profileOrder.id and
+                        (ModOrderTable.mod eq it.id)
+
+            }.single()
+
+            modOrder.difficultyOrders.forEach { d ->
+                d.delete()
+            }
+            modOrder.delete()
+        }
+    }
+}

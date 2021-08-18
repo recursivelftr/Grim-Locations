@@ -97,7 +97,7 @@ fun PMDManagerView(
         EDIT_MOD -> openEditNameDTOPopup(
             dto = state.selectedMods.single(),
             onOkClicked = { name, mod ->
-                vm.editMod(
+                vm.editModAndClosePopup(
                     name, PMContainer(
                         profile = state.selectedProfiles.single(),
                         mod = mod
@@ -109,7 +109,7 @@ fun PMDManagerView(
         EDIT_DIFFICULTY -> openEditNameDTOPopup(
             dto = state.selectedDifficulties.single(),
             onOkClicked = { name, difficulty ->
-                vm.editDifficulty(
+                vm.editDifficultyAndClosePopup(
                     name, PMDContainer(
                         profile = state.selectedProfiles.single(),
                         mod = state.selectedMods.single(),
@@ -123,11 +123,23 @@ fun PMDManagerView(
             msgMultiple = "Are you sure you want to delete these profiles?",
             msgSingle = "Are you sure you want to delete this profile?",
             isMultiple = state.selectedProfiles.size > 1,
+            onOkClicked = { vm.deleteProfiles(state.selectedProfiles) },
+            onCancelClicked = closePopup,
+        )
+        DELETE_MOD -> openConfirmDeletePopup(
+            msgMultiple = "Are you sure you want to delete these mods?",
+            msgSingle = "Are you sure you want to delete this mod?",
+            isMultiple = state.selectedProfiles.size > 1,
             onOkClicked = {  },
             onCancelClicked = closePopup,
         )
-        DELETE_MOD -> Unit
-        DELETE_DIFFICULTY -> Unit
+        DELETE_DIFFICULTY -> openConfirmDeletePopup(
+            msgMultiple = "Are you sure you want to delete these difficulties?",
+            msgSingle = "Are you sure you want to delete this difficulty?",
+            isMultiple = state.selectedProfiles.size > 1,
+            onOkClicked = {  },
+            onCancelClicked = closePopup,
+        )
         NONE -> Unit
     }
 

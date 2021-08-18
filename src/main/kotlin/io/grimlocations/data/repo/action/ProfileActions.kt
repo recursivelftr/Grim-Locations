@@ -181,8 +181,20 @@ suspend fun SqliteRepository.incrementProfilesOrder(profiles: Set<ProfileDTO>) =
 
 suspend fun SqliteRepository.deleteProfiles(profiles: Set<ProfileDTO>) = withContext(Dispatchers.IO) {
     newSuspendedTransaction {
-        val profileOrders = ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }
+        try {
+            val profileOrders = ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }
 
-        //need to delete mod orders and difficulty orders as well
+            profileOrders.forEach { p ->
+                p.modOrders.forEach { m ->
+                    m.difficultyOrders.forEach { d ->
+                        d.delete()
+                    }
+                    m.delete()
+                }
+                p.delete()
+            }
+        } catch (e: Exception) {
+            logger.error("", e)
+        }
     }
 }
