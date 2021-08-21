@@ -156,12 +156,21 @@ suspend fun GLStateManager.moveProfiles(selected: Set<ProfileDTO>, moveUp: Boole
 
 suspend fun GLStateManager.deleteProfiles(selected: Set<ProfileDTO>) {
     repository.deleteProfiles(selected)
+    loadPMDManagerState(getState<PMDManagerState>().copy(
+        popupOpen = PMDManagerStatePopups.NONE
+    ))
 }
 
 suspend fun GLStateManager.deleteMods(selected: Set<ModDTO>, profile: ProfileDTO) {
     repository.deleteMods(selected, profile)
+    loadPMDManagerState(getState<PMDManagerState>().copy(
+        popupOpen = PMDManagerStatePopups.NONE
+    ))
 }
 
 suspend fun GLStateManager.deleteDifficulties(selected: Set<DifficultyDTO>, pmContainer: PMContainer) {
     repository.deleteDifficulties(selected, pmContainer)
+    loadPMDManagerState(getState<PMDManagerState>().copy(
+        popupOpen = PMDManagerStatePopups.NONE
+    ))
 }

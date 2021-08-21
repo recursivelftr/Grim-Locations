@@ -69,3 +69,15 @@ fun PMDManagerViewModel.deleteProfiles(selected: Set<ProfileDTO>) {
         stateManager.deleteProfiles(selected)
     }
 }
+
+fun PMDManagerViewModel.deleteMods(selected: Set<ModDTO>, profile: ProfileDTO) {
+    viewModelScope.launch {
+        stateManager.deleteMods(selected, profile)
+    }
+}
+
+fun PMDManagerViewModel.deleteDifficulties(selected: Set<DifficultyDTO>, pmContainer: PMContainer) {
+    viewModelScope.launch {
+        stateManager.deleteDifficulties(selected, pmContainer)
+    }
+}

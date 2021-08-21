@@ -14,6 +14,7 @@ import io.grimlocations.framework.util.extension.asPathToFile
 import io.grimlocations.framework.util.guardLet
 import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.viewmodel.state.EditorState
+import io.grimlocations.ui.viewmodel.state.PMDManagerState
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -56,11 +57,6 @@ suspend fun GLStateManager.loadEditorState(
             )
         )
     } else {
-        val (locList1, locList2) = awaitAll(
-            repository.getLocationsAsync(previousState.selectedPMDLeft),
-            repository.getLocationsAsync(previousState.selectedPMDRight)
-        )
-
         val selectedPMDLeft =
             if (pmdMap.containsProfileModDifficulty(previousState.selectedPMDLeft))
                 previousState.selectedPMDLeft
@@ -72,6 +68,11 @@ suspend fun GLStateManager.loadEditorState(
                 previousState.selectedPMDRight
             else
                 pmdMap.firstContainer()
+
+        val (locList1, locList2) = awaitAll(
+            repository.getLocationsAsync(selectedPMDLeft),
+            repository.getLocationsAsync(selectedPMDRight)
+        )
 
         setState(
             previousState.copy(
@@ -238,7 +239,7 @@ private suspend fun GLStateManager.performActivePmdFileCheckAndLoad(meta: MetaDT
         val charFile = File(loc.asPathToFile(CHAR_FILENAME))
         val lastModified = repository.getFileLastModified(charFile)
 
-        if (lastModified != null && char_file_last_modified != lastModified) {
+        if (lastModified != null && (meta.activePMD == null || char_file_last_modified != lastModified)) {
             val teleportFile = File(loc.asPathToFile(TELEPORT_LIST_FILENAME))
 
             repository.createAndSetActivePmd(charFile, teleportFile, meta.activePMD)

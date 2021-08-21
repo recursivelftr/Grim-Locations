@@ -129,15 +129,23 @@ fun PMDManagerView(
         DELETE_MOD -> openConfirmDeletePopup(
             msgMultiple = "Are you sure you want to delete these mods?",
             msgSingle = "Are you sure you want to delete this mod?",
-            isMultiple = state.selectedProfiles.size > 1,
-            onOkClicked = {  },
+            isMultiple = state.selectedMods.size > 1,
+            onOkClicked = { vm.deleteMods(state.selectedMods, state.selectedProfiles.single()) },
             onCancelClicked = closePopup,
         )
         DELETE_DIFFICULTY -> openConfirmDeletePopup(
             msgMultiple = "Are you sure you want to delete these difficulties?",
             msgSingle = "Are you sure you want to delete this difficulty?",
-            isMultiple = state.selectedProfiles.size > 1,
-            onOkClicked = {  },
+            isMultiple = state.selectedDifficulties.size > 1,
+            onOkClicked = {
+                vm.deleteDifficulties(
+                    selected = state.selectedDifficulties,
+                    pmContainer = PMContainer(
+                        profile = state.selectedProfiles.single(),
+                        mod = state.selectedMods.single()
+                    )
+                )
+            },
             onCancelClicked = closePopup,
         )
         NONE -> Unit
@@ -184,7 +192,7 @@ fun PMDManagerView(
                     Spacer(Modifier.height(buttonSpacerHeight))
                     DeleteButton(
                         dtos = state.profiles,
-                        selected = state.selectedProfiles,
+                        disabled = state.profiles.isEmpty() || state.selectedProfiles.isEmpty(),
                         onClick = { vm.setPopupState(DELETE_PROFILE) }
                     )
                 }
@@ -205,7 +213,7 @@ fun PMDManagerView(
                     Spacer(Modifier.height(buttonSpacerHeight))
                     DeleteButton(
                         dtos = state.mods,
-                        selected = state.selectedMods,
+                        disabled = state.mods.isEmpty() || state.selectedMods.isEmpty() || state.selectedProfiles.size != 1,
                         onClick = { vm.setPopupState(DELETE_MOD) }
                     )
                 }
@@ -226,7 +234,7 @@ fun PMDManagerView(
                     Spacer(Modifier.height(buttonSpacerHeight))
                     DeleteButton(
                         dtos = state.difficulties,
-                        selected = state.selectedDifficulties,
+                        disabled = state.difficulties.isEmpty() || state.selectedDifficulties.isEmpty() || state.selectedMods.size != 1,
                         onClick = { vm.setPopupState(DELETE_DIFFICULTY) }
                     )
                 }
@@ -265,11 +273,9 @@ private fun EditButton(
 @Composable
 private fun DeleteButton(
     dtos: Set<NameDTO>,
-    selected: Set<NameDTO>,
+    disabled: Boolean,
     onClick: () -> Unit
 ) {
-    val disabled = selected.isEmpty() || dtos.isEmpty()
-
     IconButton(
         modifier = Modifier.size(arrowButtonSize),
         enabled = !disabled,
@@ -343,9 +349,9 @@ private fun openConfirmDeletePopup(
 ) {
     openOkCancelPopup(
         message = if (isMultiple)
-            "Are you sure you want to delete these locations?"
+            msgMultiple
         else
-            "Are you sure you want to delete this location?",
+            msgSingle,
         onCancelClicked = onCancelClicked,
         onOkClicked = onOkClicked,
     )

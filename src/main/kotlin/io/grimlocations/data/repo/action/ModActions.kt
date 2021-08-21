@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 
@@ -108,6 +109,7 @@ suspend fun SqliteRepository.getHighestModOrderAsync(profileDTO: ProfileDTO) =
 suspend fun SqliteRepository.deleteMods(mods: Set<ModDTO>, profile: ProfileDTO) = withContext(Dispatchers.IO) {
     newSuspendedTransaction {
         val profileOrder = ProfileOrder.find { ProfileOrderTable.profile eq profile.id }.single()
+        val meta = Meta.wrapRow(MetaTable.selectAll().single())
 
         mods.forEach {
             val modOrder = ModOrder.find {
@@ -116,7 +118,21 @@ suspend fun SqliteRepository.deleteMods(mods: Set<ModDTO>, profile: ProfileDTO) 
 
             }.single()
 
+            if (profileOrder.profile == meta.activeProfile && modOrder.mod == meta.activeMod) {
+                meta.activeProfile = null
+                meta.activeMod = null
+                meta.activeDifficulty = null
+            }
+
+            Location.find {
+                LocationTable.profile eq profileOrder.profile.id and
+                        (LocationTable.mod eq modOrder.mod.id)
+            }.forEach {
+                it.delete()
+            }
+
             modOrder.difficultyOrders.forEach { d ->
+
                 d.delete()
             }
             modOrder.delete()

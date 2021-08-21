@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 
@@ -142,11 +143,32 @@ suspend fun SqliteRepository.deleteDifficulties(difficulties: Set<DifficultyDTO>
                         (ModOrderTable.mod eq pmContainer.mod.id)
             }.single()
 
+            val meta = Meta.wrapRow(MetaTable.selectAll().single())
+
             difficulties.forEach {
-                DifficultyOrder.find {
+                val difficultyOrder = DifficultyOrder.find {
                     (DifficultyOrderTable.modOrder eq modOrder.id) and
                             (DifficultyOrderTable.difficulty eq it.id)
-                }.single().delete()
+                }.single()
+
+                if (profileOrder.profile == meta.activeProfile
+                    && modOrder.mod == meta.activeMod
+                    && difficultyOrder.difficulty == meta.activeDifficulty
+                ) {
+                    meta.activeProfile = null
+                    meta.activeMod = null
+                    meta.activeDifficulty = null
+                }
+
+                Location.find {
+                    LocationTable.profile eq profileOrder.profile.id and
+                            (LocationTable.mod eq modOrder.mod.id) and
+                            (LocationTable.difficulty eq difficultyOrder.difficulty.id)
+                }.forEach {
+                    it.delete()
+                }
+
+                difficultyOrder.delete()
             }
         }
     }

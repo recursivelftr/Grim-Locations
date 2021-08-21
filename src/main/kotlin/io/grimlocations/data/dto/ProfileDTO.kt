@@ -69,3 +69,7 @@ fun ProfileModDifficultyMap.containsProfileModDifficulty(pmdContainer: PMDContai
 
     return difficultyList.contains(pmdContainer.difficulty)
 }
+
+fun ProfileModDifficultyMap.removeProfileInPlace(profileDTO: ProfileDTO) {
+    (this as MutableProfileModDifficultyMap).remove(profileDTO)
+}

@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
@@ -183,8 +184,21 @@ suspend fun SqliteRepository.deleteProfiles(profiles: Set<ProfileDTO>) = withCon
     newSuspendedTransaction {
         try {
             val profileOrders = ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }
+            val meta = Meta.wrapRow(MetaTable.selectAll().single())
 
             profileOrders.forEach { p ->
+                if (p.profile == meta.activeProfile) {
+                    meta.activeProfile = null
+                    meta.activeMod = null
+                    meta.activeDifficulty = null
+                }
+
+                Location.find {
+                    LocationTable.profile eq p.profile.id
+                }.forEach {
+                    it.delete()
+                }
+
                 p.modOrders.forEach { m ->
                     m.difficultyOrders.forEach { d ->
                         d.delete()

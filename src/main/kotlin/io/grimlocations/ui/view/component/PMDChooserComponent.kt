@@ -35,8 +35,8 @@ fun PMDChooserComponent(
 ) {
     val primaryColor = MaterialTheme.colors.primary
     val profiles = map.keys.map { Triple(it.id, it.name, if (it.isReserved) primaryColor else null) }
-    val mods = map[selected.profile]!!.keys.map { Triple(it.id, it.name, null) }
-    val difficulties = map[selected.profile]!![selected.mod]!!.map { Triple(it.id, it.name, null) }
+    val mods = map[selected.profile]?.keys?.map { Triple(it.id, it.name, null) } ?: emptyList()
+    val difficulties = map[selected.profile]?.get(selected.mod)?.map { Triple(it.id, it.name, null) } ?: emptyList()
 
     val selectedProfile = selected.profile
     val selectedMod =
@@ -44,6 +44,7 @@ fun PMDChooserComponent(
             selected.mod.copy(name = "None")
         else
             selected.mod
+
     val selectedDifficulty =
         if (selected.difficulty == RESERVED_NO_DIFFICULTIES_INDICATOR)
             selected.difficulty.copy(name = "None")
@@ -57,7 +58,7 @@ fun PMDChooserComponent(
         ComboPopup(
             "Profile",
             items = profiles,
-            emptyItemsMessage = "No Profiles",
+            emptyItemsMessage = "None",
             selected = Triple(
                 selectedProfile.id,
                 selectedProfile.name,
@@ -67,8 +68,8 @@ fun PMDChooserComponent(
             controlOnLeft = controlsOnLeft,
             onSelect = {
                 val profile = map.keys.find { item -> item.id == it.first }!!
-                val mod = map[profile]!!.keys.first()
-                val difficulty = map[profile]!![mod]!!.first()
+                val mod = map[profile]!!.keys.firstOrNull() ?: RESERVED_NO_MODS_INDICATOR
+                val difficulty = map[profile]!![mod]?.firstOrNull() ?: RESERVED_NO_DIFFICULTIES_INDICATOR
 
                 onSelect(
                     PMDContainer(
@@ -83,14 +84,14 @@ fun PMDChooserComponent(
         ComboPopup(
             "Mod",
             items = mods,
-            emptyItemsMessage = "No Mods",
+            emptyItemsMessage = "None",
             disabled = selected.mod == RESERVED_NO_MODS_INDICATOR,
             selected = Triple(selectedMod.id, selectedMod.name, null),
             width = textBoxWidth,
             controlOnLeft = controlsOnLeft,
             onSelect = {
                 val mod = map[selected.profile]!!.keys.find { item -> item.id == it.first }!!
-                val difficulty = map[selected.profile]!![mod]!!.first()
+                val difficulty = map[selected.profile]?.get(mod)?.firstOrNull() ?: RESERVED_NO_DIFFICULTIES_INDICATOR
 
                 onSelect(
                     PMDContainer(
@@ -105,7 +106,7 @@ fun PMDChooserComponent(
         ComboPopup(
             "Difficulty",
             items = difficulties,
-            emptyItemsMessage = "No Difficulties",
+            emptyItemsMessage = "None",
             disabled = selected.difficulty == RESERVED_NO_DIFFICULTIES_INDICATOR,
             selected = Triple(selectedDifficulty.id, selectedDifficulty.name, null),
             width = textBoxWidth,
