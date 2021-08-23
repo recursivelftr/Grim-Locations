@@ -74,7 +74,12 @@ suspend fun SqliteRepository.modifyOrCreateModAsync(name: String, pmContainer: P
         async {
             try {
                 val modOrder = newSuspendedTransaction {
-                    ModOrder.find { ModOrderTable.mod eq pmContainer.mod.id }.single()
+                    val profileOrder =
+                        ProfileOrder.find { ProfileOrderTable.profile eq pmContainer.profile.id }.single()
+                    ModOrder.find {
+                        ModOrderTable.mod eq pmContainer.mod.id and
+                                (ModOrderTable.profileOrder eq profileOrder.id)
+                    }.single()
                 }
 
                 val m = findOrCreateModAsync(name, pmContainer.profile, skipOrderCreation = true).await()!!
@@ -151,8 +156,8 @@ suspend fun SqliteRepository.incrementModsOrder(mods: Set<ModDTO>, profile: Prof
         val mo = modifyDatabase {
             ModOrder.find { ModOrderTable.profileOrder eq profileOrder.id and (ModOrderTable.order eq modOrders.last().order + 1) }
                 .single().apply {
-                this.order = -1
-            }
+                    this.order = -1
+                }
         }
 
         val firstOrder = newSuspendedTransaction { modOrders.first().order }

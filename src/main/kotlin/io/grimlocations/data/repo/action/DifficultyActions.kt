@@ -96,7 +96,17 @@ suspend fun SqliteRepository.modifyOrCreateDifficultyAsync(
             try {
 
                 val difficultyOrder = newSuspendedTransaction {
-                    DifficultyOrder.find { DifficultyOrderTable.difficulty eq pmdContainer.difficulty.id }.single()
+                    val profileOrder =
+                        ProfileOrder.find { ProfileOrderTable.profile eq pmdContainer.profile.id }.single()
+                    val modOrder = ModOrder.find {
+                        ModOrderTable.profileOrder eq profileOrder.id and
+                                (ModOrderTable.mod eq pmdContainer.mod.id)
+                    }.single()
+
+                    DifficultyOrder.find {
+                        DifficultyOrderTable.difficulty eq pmdContainer.difficulty.id and
+                                (DifficultyOrderTable.modOrder eq modOrder.id)
+                    }.single()
                 }
 
                 val d =
@@ -163,8 +173,8 @@ suspend fun SqliteRepository.decrementDifficultiesOrder(difficulties: Set<Diffic
         val dio = modifyDatabase {
             DifficultyOrder.find { DifficultyOrderTable.order eq difficultyOrders.first().order - 1 and (DifficultyOrderTable.modOrder eq modOrder.id) }
                 .single().apply {
-                this.order = -1
-            }
+                    this.order = -1
+                }
         }
 
         val lastOrder = newSuspendedTransaction { difficultyOrders.last().order }

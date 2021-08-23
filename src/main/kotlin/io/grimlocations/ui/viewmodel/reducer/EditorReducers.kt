@@ -93,6 +93,32 @@ suspend fun GLStateManager.loadEditorState(
     }
 }
 
+suspend fun GLStateManager.resetSelectedPMDLeft() {
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(selectedPMDLeft = s.profileMap.firstContainer()))
+    }
+}
+
+suspend fun GLStateManager.resetSelectedPMDRight() {
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(s.copy(selectedPMDRight = s.profileMap.firstContainer()))
+    }
+}
+
+suspend fun GLStateManager.resetSelectedPMDs() {
+    val s = getState<EditorState>()
+    withContext(Dispatchers.Main) {
+        setState(
+            s.copy(
+                selectedPMDLeft = s.profileMap.firstContainer(),
+                selectedPMDRight = s.profileMap.firstContainer(),
+            )
+        )
+    }
+}
+
 suspend fun GLStateManager.openConfirmDeleteLeft() {
     val s = getState<EditorState>()
     withContext(Dispatchers.Main) {

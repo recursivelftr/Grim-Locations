@@ -7,10 +7,12 @@ import io.grimlocations.framework.ui.getState
 import io.grimlocations.framework.ui.setState
 import io.grimlocations.framework.util.awaitAll
 import io.grimlocations.ui.GLStateManager
+import io.grimlocations.ui.viewmodel.state.EditorState
 import io.grimlocations.ui.viewmodel.state.PMDManagerState
 import io.grimlocations.ui.viewmodel.state.PMDManagerStatePopups
 import io.grimlocations.ui.viewmodel.state.container.PMContainer
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
+import io.grimlocations.ui.viewmodel.state.container.toPMContainer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -123,6 +125,20 @@ suspend fun GLStateManager.createProfileAndClosePopup(name: String) {
 
 suspend fun GLStateManager.editProfileAndClosePopup(name: String, profile: ProfileDTO) {
     val p = repository.modifyOrCreateProfileAsync(name, profile).await()!!
+
+    repository.getMetaAsync().await().activePMD?.also {
+        if (it.profile == profile && it.profile.name != name) {
+            repository.clearActivePMD()
+
+            val editorState = getState<EditorState>()
+            when {
+                editorState.selectedPMDLeft.profile == it.profile && editorState.selectedPMDRight.profile == it.profile -> resetSelectedPMDs()
+                editorState.selectedPMDLeft.profile == it.profile -> resetSelectedPMDLeft()
+                editorState.selectedPMDRight.profile == it.profile -> resetSelectedPMDRight()
+            }
+        }
+    }
+
     val s = getState<PMDManagerState>()
     withContext(Dispatchers.Main) {
         loadPMDManagerState(
@@ -136,6 +152,23 @@ suspend fun GLStateManager.editProfileAndClosePopup(name: String, profile: Profi
 
 suspend fun GLStateManager.editModAndClosePopup(name: String, pmContainer: PMContainer) {
     val m = repository.modifyOrCreateModAsync(name, pmContainer).await()!!
+
+    repository.getMetaAsync().await().activePMD?.also {
+        val activePMContainer = it.toPMContainer()
+        if (activePMContainer == pmContainer && it.mod.name != name) {
+            repository.clearActivePMD()
+
+            val editorState = getState<EditorState>()
+            val selectedPMContainerLeft = editorState.selectedPMDLeft.toPMContainer()
+            val selectedPMContainerRight = editorState.selectedPMDRight.toPMContainer()
+            when {
+                selectedPMContainerLeft == activePMContainer && selectedPMContainerRight == activePMContainer -> resetSelectedPMDs()
+                selectedPMContainerLeft == activePMContainer -> resetSelectedPMDLeft()
+                selectedPMContainerRight == activePMContainer -> resetSelectedPMDRight()
+            }
+        }
+    }
+
     val s = getState<PMDManagerState>()
     withContext(Dispatchers.Main) {
         loadPMDManagerState(
@@ -149,6 +182,20 @@ suspend fun GLStateManager.editModAndClosePopup(name: String, pmContainer: PMCon
 
 suspend fun GLStateManager.editDifficultyAndClosePopup(name: String, pmdContainer: PMDContainer) {
     val d = repository.modifyOrCreateDifficultyAsync(name, pmdContainer).await()!!
+
+    repository.getMetaAsync().await().activePMD?.also {
+        if (it == pmdContainer && it.difficulty.name != name) {
+            repository.clearActivePMD()
+
+            val editorState = getState<EditorState>()
+            when {
+                editorState.selectedPMDLeft == it && editorState.selectedPMDRight == it -> resetSelectedPMDs()
+                editorState.selectedPMDLeft == it -> resetSelectedPMDLeft()
+                editorState.selectedPMDRight == it -> resetSelectedPMDRight()
+            }
+        }
+    }
+
     val s = getState<PMDManagerState>()
     withContext(Dispatchers.Main) {
         loadPMDManagerState(
