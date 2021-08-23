@@ -41,7 +41,7 @@ suspend fun SqliteRepository.findOrCreateProfileAsync(
                     Profile.find { ProfileTable.name eq name }.singleOrNull()
                 }
                 if (p == null) {
-                    p = newSuspendedTransaction {
+                    p = modifyDatabase {
                         Profile.new {
                             this.name = name
                         }
@@ -50,7 +50,7 @@ suspend fun SqliteRepository.findOrCreateProfileAsync(
 
                 if (!skipOrderCreation && isProfileDetachedAsync(p.toDTO()).await()) {
                     val highestProfileOrder = getHighestProfileOrderAsync().await() ?: 0
-                    newSuspendedTransaction {
+                    modifyDatabase {
                         ProfileOrder.new {
                             this.profile = p
                             this.order = highestProfileOrder + 1
@@ -71,26 +71,28 @@ suspend fun SqliteRepository.isProfileDetachedAsync(profileDTO: ProfileDTO): Def
     }
 
 suspend fun SqliteRepository.modifyOrCreateProfileAsync(name: String, profileDTO: ProfileDTO): Deferred<ProfileDTO?> =
-    suspendedTransactionAsync(Dispatchers.IO) {
-        try {
-            val profileOrder = newSuspendedTransaction {
-                ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id }.single()
-            }
-
-            val p = findOrCreateProfileAsync(name, skipOrderCreation = true).await()!!
-
-            newSuspendedTransaction {
-                val profile = Profile.find { ProfileTable.id eq p.id }.single()
-                profileOrder.profile = profile
-
-                Location.find { LocationTable.profile eq profileDTO.id }.forEach {
-                    it.profile = profile
+    withContext(Dispatchers.IO) {
+        async {
+            try {
+                val profileOrder = newSuspendedTransaction {
+                    ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id }.single()
                 }
+
+                val p = findOrCreateProfileAsync(name, skipOrderCreation = true).await()!!
+
+                modifyDatabase {
+                    val profile = Profile.find { ProfileTable.id eq p.id }.single()
+                    profileOrder.profile = profile
+
+                    Location.find { LocationTable.profile eq profileDTO.id }.forEach {
+                        it.profile = profile
+                    }
+                }
+                p
+            } catch (e: Exception) {
+                logger.error("", e)
+                null
             }
-            p
-        } catch (e: Exception) {
-            logger.error("", e)
-            null
         }
     }
 
@@ -133,21 +135,21 @@ suspend fun SqliteRepository.decrementProfilesOrder(profiles: Set<ProfileDTO>) =
             ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }.sortedBy { it.order }
         }
 
-        val po = newSuspendedTransaction {
+        val po = modifyDatabase {
             ProfileOrder.find { ProfileOrderTable.order eq profileOrders.first().order - 1 }.single().apply {
                 this.order = -1
             }
         }
 
-        val lastOrder = profileOrders.last().order
+        val lastOrder = newSuspendedTransaction { profileOrders.last().order }
 
-        newSuspendedTransaction {
+        modifyDatabase {
             profileOrders.forEach {
                 it.order = it.order - 1
             }
         }
 
-        newSuspendedTransaction {
+        modifyDatabase {
             po.order = lastOrder
         }
     }
@@ -159,21 +161,21 @@ suspend fun SqliteRepository.incrementProfilesOrder(profiles: Set<ProfileDTO>) =
             ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }.sortedBy { it.order }
         }
 
-        val po = newSuspendedTransaction {
+        val po = modifyDatabase {
             ProfileOrder.find { ProfileOrderTable.order eq profileOrders.last().order + 1 }.single().apply {
                 this.order = -1
             }
         }
 
-        val firstOrder = profileOrders.first().order
+        val firstOrder = newSuspendedTransaction { profileOrders.first().order }
 
-        newSuspendedTransaction {
+        modifyDatabase {
             profileOrders.forEach {
                 it.order = it.order + 1
             }
         }
 
-        newSuspendedTransaction {
+        modifyDatabase {
             po.order = firstOrder
         }
 
@@ -181,7 +183,7 @@ suspend fun SqliteRepository.incrementProfilesOrder(profiles: Set<ProfileDTO>) =
 }
 
 suspend fun SqliteRepository.deleteProfiles(profiles: Set<ProfileDTO>) = withContext(Dispatchers.IO) {
-    newSuspendedTransaction {
+    modifyDatabase {
         try {
             val profileOrders = ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }
             val meta = Meta.wrapRow(MetaTable.selectAll().single())

@@ -22,7 +22,6 @@ import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.ui.GLViewModelProvider
 import io.grimlocations.ui.viewmodel.PropertiesViewModel
-import io.grimlocations.ui.viewmodel.event.getGdInstallLocation
 import io.grimlocations.ui.viewmodel.event.persistState
 import io.grimlocations.ui.viewmodel.event.updateInstallPath
 import io.grimlocations.ui.viewmodel.state.PropertiesState
@@ -54,7 +53,7 @@ private fun PropertiesView(
                 TextField(
 //                    textStyle = TextStyle.Default.copy(color = Color.White),
 //                    textColor = Color.White,
-                    value = it.installPath ?: vm.getGdInstallLocation() ?: "",
+                    value = it.installPath ?:  "",
                     onValueChange = vm::updateInstallPath,
                     label = {
                         Text("GD Installation Folder", style = TextStyle(fontSize = 15.sp))

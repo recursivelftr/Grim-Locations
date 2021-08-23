@@ -167,6 +167,7 @@ fun EditorLocationListPanel(
                         },
                         stateVertical = stateVerticalLeft,
                         captureFocus = captureFocusLeft,
+                        noDtosMessage = "No Locations"
                     )
                     Spacer(Modifier.width(horizontalSpacerWidth))
                     Column {
@@ -262,6 +263,7 @@ fun EditorLocationListPanel(
                         },
                         stateVertical = stateVerticalRight,
                         captureFocus = captureFocusRight,
+                        noDtosMessage = "No Locations"
                     )
                     Spacer(Modifier.width(horizontalSpacerWidth))
                     Column {

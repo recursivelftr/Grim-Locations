@@ -82,19 +82,42 @@ suspend fun GLStateManager.loadPMDManagerState(previousState: PMDManagerState? =
 
 suspend fun GLStateManager.selectProfiles(profiles: Set<ProfileDTO>) {
     withContext(Dispatchers.Main) {
-        loadPMDManagerState(getState<PMDManagerState>().copy(selectedProfiles = profiles))
+        loadPMDManagerState(
+            getState<PMDManagerState>().copy(
+                selectedProfiles = profiles,
+                selectedMods = emptySet(),
+                selectedDifficulties = emptySet()
+            )
+        )
     }
 }
 
 suspend fun GLStateManager.selectMods(mods: Set<ModDTO>) {
     withContext(Dispatchers.Main) {
-        loadPMDManagerState(getState<PMDManagerState>().copy(selectedMods = mods))
+        loadPMDManagerState(
+            getState<PMDManagerState>().copy(
+                selectedMods = mods,
+                selectedDifficulties = emptySet()
+            )
+        )
     }
 }
 
 suspend fun GLStateManager.selectDifficulties(difficulties: Set<DifficultyDTO>) {
     withContext(Dispatchers.Main) {
         loadPMDManagerState(getState<PMDManagerState>().copy(selectedDifficulties = difficulties))
+    }
+}
+
+suspend fun GLStateManager.createProfileAndClosePopup(name: String) {
+    val p = repository.findOrCreateProfileAsync(name).await()!!
+    val s = getState<PMDManagerState>()
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(
+            s.copy(
+                popupOpen = PMDManagerStatePopups.NONE
+            )
+        )
     }
 }
 
@@ -144,7 +167,7 @@ suspend fun GLStateManager.setPopupState(popup: PMDManagerStatePopups) {
 }
 
 suspend fun GLStateManager.moveProfiles(selected: Set<ProfileDTO>, moveUp: Boolean) {
-    if(moveUp) {
+    if (moveUp) {
         repository.decrementProfilesOrder(selected)
     } else {
         repository.incrementProfilesOrder(selected)
@@ -154,23 +177,51 @@ suspend fun GLStateManager.moveProfiles(selected: Set<ProfileDTO>, moveUp: Boole
     }
 }
 
+suspend fun GLStateManager.moveMods(selected: Set<ModDTO>, profile: ProfileDTO, moveUp: Boolean) {
+    if (moveUp) {
+        repository.decrementModsOrder(selected, profile)
+    } else {
+        repository.incrementModsOrder(selected, profile)
+    }
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(getState())
+    }
+}
+
+suspend fun GLStateManager.moveDifficulties(selected: Set<DifficultyDTO>, pmContainer: PMContainer, moveUp: Boolean) {
+    if (moveUp) {
+        repository.decrementDifficultiesOrder(selected, pmContainer)
+    } else {
+        repository.incrementDifficultiesOrder(selected, pmContainer)
+    }
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(getState())
+    }
+}
+
 suspend fun GLStateManager.deleteProfiles(selected: Set<ProfileDTO>) {
     repository.deleteProfiles(selected)
-    loadPMDManagerState(getState<PMDManagerState>().copy(
-        popupOpen = PMDManagerStatePopups.NONE
-    ))
+    loadPMDManagerState(
+        getState<PMDManagerState>().copy(
+            popupOpen = PMDManagerStatePopups.NONE
+        )
+    )
 }
 
 suspend fun GLStateManager.deleteMods(selected: Set<ModDTO>, profile: ProfileDTO) {
     repository.deleteMods(selected, profile)
-    loadPMDManagerState(getState<PMDManagerState>().copy(
-        popupOpen = PMDManagerStatePopups.NONE
-    ))
+    loadPMDManagerState(
+        getState<PMDManagerState>().copy(
+            popupOpen = PMDManagerStatePopups.NONE
+        )
+    )
 }
 
 suspend fun GLStateManager.deleteDifficulties(selected: Set<DifficultyDTO>, pmContainer: PMContainer) {
     repository.deleteDifficulties(selected, pmContainer)
-    loadPMDManagerState(getState<PMDManagerState>().copy(
-        popupOpen = PMDManagerStatePopups.NONE
-    ))
+    loadPMDManagerState(
+        getState<PMDManagerState>().copy(
+            popupOpen = PMDManagerStatePopups.NONE
+        )
+    )
 }

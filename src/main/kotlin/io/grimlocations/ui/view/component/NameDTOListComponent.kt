@@ -34,6 +34,7 @@ fun <T: NameDTO> NameDTOListComponent(
     rowWidth: Dp,
     stateVertical: LazyListState? = null,
     captureFocus: () -> Unit,
+    noDtosMessage: String,
 ) {
     val primaryColor = MaterialTheme.colors.primary
 
@@ -58,7 +59,7 @@ fun <T: NameDTO> NameDTOListComponent(
     ) {
         if (dtos.isEmpty()) {
             Text(
-                "No Locations",
+                noDtosMessage,
                 modifier = Modifier.align(Alignment.Center)
             )
 

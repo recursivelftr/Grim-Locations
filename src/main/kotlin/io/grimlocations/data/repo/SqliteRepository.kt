@@ -36,7 +36,7 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
     }
 
     suspend fun <T> modifyDatabaseAsync(statement: suspend Transaction.() -> T): Deferred<T> {
-        logger.info("Modify database action")
+        logger.info("Modify database async action")
         if (!wasBackupMade) {
             logger.info("Database backup started")
             wasBackupMade = true
@@ -45,6 +45,18 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         }
 
         return suspendedTransactionAsync(Dispatchers.IO, statement = statement)
+    }
+
+    suspend fun <T> modifyDatabase(statement: suspend Transaction.() -> T): T {
+        logger.info("Modify database action")
+        if (!wasBackupMade) {
+            logger.info("Database backup started")
+            wasBackupMade = true
+            withContext(Dispatchers.IO) { createRollingBackup(MAX_BACKUPS) }
+            logger.info("Database backup made")
+        }
+
+        return newSuspendedTransaction(Dispatchers.IO, statement = statement)
     }
 
     //DB v0 = GL 0.1.0

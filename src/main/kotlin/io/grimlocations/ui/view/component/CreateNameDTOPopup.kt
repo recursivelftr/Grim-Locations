@@ -30,13 +30,16 @@ private val TEXT_FIELD_WIDTH = 480.dp
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 @Composable
-private fun <T: NameDTO> EditNameDTOPopup(
+private fun <T: NameDTO> CreateNameDTOPopup(
     dto: T,
+    dtos: Set<T>,
+    duplicateNameMessage: String,
     onOkClicked: (String, T) -> Unit,
     onCancelClicked: (() -> Unit),
 ) {
     val dtoName = remember { mutableStateOf(dto.name) }
     val containsCommas = dtoName.value.contains(",")
+    val duplicateName = dtos.find { it.name == dtoName.value } != null
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -59,6 +62,12 @@ private fun <T: NameDTO> EditNameDTOPopup(
                     color = Color.Red,
                     modifier = Modifier.width(TEXT_FIELD_WIDTH)
                 )
+            } else if(duplicateName) {
+                Text(
+                    duplicateNameMessage,
+                    color = Color.Red,
+                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
+                )
             }
             Spacer(Modifier.height(20.dp))
             Row(
@@ -73,7 +82,7 @@ private fun <T: NameDTO> EditNameDTOPopup(
                 Spacer(modifier = Modifier.width(20.dp))
                 Button(
                     onClick = { onOkClicked(dtoName.value, dto) },
-                    enabled = !containsCommas
+                    enabled = !(containsCommas || duplicateName)
                 ) {
                     Text("Ok")
                 }
@@ -86,14 +95,16 @@ private fun <T: NameDTO> EditNameDTOPopup(
 @ExperimentalFoundationApi
 @ExperimentalCoroutinesApi
 @Composable
-fun <T: NameDTO> openEditNameDTOPopup(
+fun <T: NameDTO> openCreateNameDTOPopup(
     dto: T,
+    dtos: Set<T>,
+    duplicateNameMessage: String,
     onCancelClicked: () -> Unit,
     onOkClicked: (String, T) -> Unit,
     title: String = "Grim Locations",
 ) {
     val dialogState =
-        rememberDialogState(size = WindowSize(400.dp, 275.dp), position = WindowPosition.Aligned(Alignment.Center))
+        rememberDialogState(size = WindowSize(550.dp, 275.dp), position = WindowPosition.Aligned(Alignment.Center))
 
     Dialog(
         state = dialogState,
@@ -101,8 +112,10 @@ fun <T: NameDTO> openEditNameDTOPopup(
         onCloseRequest = onCancelClicked,
     ) {
         GrimLocationsTheme {
-            EditNameDTOPopup(
+            CreateNameDTOPopup(
                 dto = dto,
+                dtos = dtos,
+                duplicateNameMessage = duplicateNameMessage,
                 onCancelClicked = onCancelClicked,
                 onOkClicked = onOkClicked,
             )

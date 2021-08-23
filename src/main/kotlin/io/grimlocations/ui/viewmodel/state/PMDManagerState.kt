@@ -8,7 +8,10 @@ import io.grimlocations.framework.ui.State
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 
 enum class PMDManagerStatePopups {
-    NONE, EDIT_PROFILE, EDIT_MOD, EDIT_DIFFICULTY, DELETE_PROFILE, DELETE_MOD, DELETE_DIFFICULTY
+    NONE,
+    NEW_PROFILE, NEW_MOD, NEW_DIFFICULTY,
+    EDIT_PROFILE, EDIT_MOD, EDIT_DIFFICULTY, 
+    DELETE_PROFILE, DELETE_MOD, DELETE_DIFFICULTY
 }
 
 data class PMDManagerState(

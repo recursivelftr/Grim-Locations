@@ -35,7 +35,7 @@ suspend fun SqliteRepository.persistActivePMDAsync(pmd: PMDContainer) =
     }
 
 suspend fun SqliteRepository.clearActivePMD() {
-    newSuspendedTransaction(Dispatchers.IO) {
+    modifyDatabase {
         val meta = Meta.wrapRow(MetaTable.selectAll().single())
         meta.activeProfile = null
         meta.activeMod = null

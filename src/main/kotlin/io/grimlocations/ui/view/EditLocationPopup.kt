@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +31,7 @@ private fun EditLocationPopup(
     onCancelClicked: (() -> Unit),
 ) {
     val locName = remember { mutableStateOf(location.name) }
+    val containsCommas = locName.value.contains(",")
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -46,6 +48,13 @@ private fun EditLocationPopup(
                 singleLine = true,
                 modifier = Modifier.width(TEXT_FIELD_WIDTH)
             )
+            if (containsCommas) {
+                Text(
+                    "Commas are not allowed",
+                    color = Color.Red,
+                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
+                )
+            }
             Spacer(Modifier.height(20.dp))
             CoordianteRow(location)
             Spacer(Modifier.height(20.dp))
@@ -61,6 +70,7 @@ private fun EditLocationPopup(
                 Spacer(modifier = Modifier.width(20.dp))
                 Button(
                     onClick = { onOkClicked(location.copy(name = locName.value)) },
+                    enabled = !containsCommas
                 ) {
                     Text("Ok")
                 }

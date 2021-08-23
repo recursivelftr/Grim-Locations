@@ -31,7 +31,7 @@ suspend fun SqliteRepository.findOrCreateModAsync(
                 }
 
                 if (m == null) {
-                    m = newSuspendedTransaction {
+                    m = modifyDatabase {
                         Mod.new {
                             this.name = name
                         }
@@ -39,7 +39,7 @@ suspend fun SqliteRepository.findOrCreateModAsync(
                 }
 
                 if (!skipOrderCreation && isModDetachedFromProfileAsync(m.toDTO(), profileDTO).await()) {
-                    newSuspendedTransaction {
+                    modifyDatabase {
                         val profileOrder = ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id }.single()
                         val highestModOrder = getHighestModOrderAsync(profileDTO).await() ?: 0
 
@@ -70,30 +70,31 @@ suspend fun SqliteRepository.isModDetachedFromProfileAsync(modDTO: ModDTO, profi
     }
 
 suspend fun SqliteRepository.modifyOrCreateModAsync(name: String, pmContainer: PMContainer): Deferred<ModDTO?> =
-    suspendedTransactionAsync(Dispatchers.IO) {
-        try {
-
-            val modOrder = newSuspendedTransaction {
-                ModOrder.find { ModOrderTable.mod eq pmContainer.mod.id }
-            }.single()
-
-            val m = findOrCreateModAsync(name, pmContainer.profile, skipOrderCreation = true).await()!!
-
-            newSuspendedTransaction {
-                val mod = Mod.find { ModTable.id eq m.id }.single()
-                modOrder.mod = mod
-
-                Location.find {
-                    (LocationTable.profile eq pmContainer.profile.id) and
-                            (LocationTable.mod eq pmContainer.mod.id)
-                }.forEach {
-                    it.mod = mod
+    withContext(Dispatchers.IO) {
+        async {
+            try {
+                val modOrder = newSuspendedTransaction {
+                    ModOrder.find { ModOrderTable.mod eq pmContainer.mod.id }.single()
                 }
+
+                val m = findOrCreateModAsync(name, pmContainer.profile, skipOrderCreation = true).await()!!
+
+                modifyDatabase {
+                    val mod = Mod.find { ModTable.id eq m.id }.single()
+                    modOrder.mod = mod
+
+                    Location.find {
+                        (LocationTable.profile eq pmContainer.profile.id) and
+                                (LocationTable.mod eq pmContainer.mod.id)
+                    }.forEach {
+                        it.mod = mod
+                    }
+                }
+                m
+            } catch (e: Exception) {
+                logger.error("", e)
+                null
             }
-            m
-        } catch (e: Exception) {
-            logger.error("", e)
-            null
         }
     }
 
@@ -106,8 +107,70 @@ suspend fun SqliteRepository.getHighestModOrderAsync(profileDTO: ProfileDTO) =
         }.map { it[ModOrderTable.order] }.maxOrNull()
     }
 
+suspend fun SqliteRepository.decrementModsOrder(mods: Set<ModDTO>, profile: ProfileDTO) = withContext(Dispatchers.IO) {
+    if (mods.isNotEmpty()) {
+        val profileOrder = newSuspendedTransaction {
+            ProfileOrder.find { ProfileOrderTable.profile eq profile.id }.single()
+        }
+
+        val modOrders = newSuspendedTransaction {
+            ModOrder.find { ModOrderTable.mod inList mods.map { it.id } and (ModOrderTable.profileOrder eq profileOrder.id) }
+        }
+
+        val mo = modifyDatabase {
+            ModOrder.find { ModOrderTable.profileOrder eq profileOrder.id and (ModOrderTable.order eq modOrders.first().order - 1) }
+                .single().apply {
+                    this.order = -1
+                }
+        }
+
+        val lastOrder = newSuspendedTransaction { modOrders.last().order }
+
+        modifyDatabase {
+            modOrders.forEach {
+                it.order = it.order - 1
+            }
+        }
+
+        modifyDatabase {
+            mo.order = lastOrder
+        }
+    }
+}
+
+suspend fun SqliteRepository.incrementModsOrder(mods: Set<ModDTO>, profile: ProfileDTO) = withContext(Dispatchers.IO) {
+    if (mods.isNotEmpty()) {
+        val profileOrder = newSuspendedTransaction {
+            ProfileOrder.find { ProfileOrderTable.profile eq profile.id }.single()
+        }
+
+        val modOrders = newSuspendedTransaction {
+            ModOrder.find { ModOrderTable.mod inList mods.map { it.id } and (ModOrderTable.profileOrder eq profileOrder.id) }
+        }
+
+        val mo = modifyDatabase {
+            ModOrder.find { ModOrderTable.profileOrder eq profileOrder.id and (ModOrderTable.order eq modOrders.last().order + 1) }
+                .single().apply {
+                this.order = -1
+            }
+        }
+
+        val firstOrder = newSuspendedTransaction { modOrders.first().order }
+
+        modifyDatabase {
+            modOrders.forEach {
+                it.order = it.order + 1
+            }
+        }
+
+        modifyDatabase {
+            mo.order = firstOrder
+        }
+    }
+}
+
 suspend fun SqliteRepository.deleteMods(mods: Set<ModDTO>, profile: ProfileDTO) = withContext(Dispatchers.IO) {
-    newSuspendedTransaction {
+    modifyDatabase {
         val profileOrder = ProfileOrder.find { ProfileOrderTable.profile eq profile.id }.single()
         val meta = Meta.wrapRow(MetaTable.selectAll().single())
 
@@ -132,7 +195,6 @@ suspend fun SqliteRepository.deleteMods(mods: Set<ModDTO>, profile: ProfileDTO) 
             }
 
             modOrder.difficultyOrders.forEach { d ->
-
                 d.delete()
             }
             modOrder.delete()

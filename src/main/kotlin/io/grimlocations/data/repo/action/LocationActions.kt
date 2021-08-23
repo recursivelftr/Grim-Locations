@@ -15,19 +15,24 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 
 private val logger: Logger = LogManager.getLogger()
 
 suspend fun SqliteRepository.getLocationsAsync(profile: ProfileDTO, mod: ModDTO, difficulty: DifficultyDTO) =
-    suspendedTransactionAsync(Dispatchers.IO) {
-        Location.wrapRows(
-            LocationTable.select {
-                LocationTable.profile eq profile.id and
-                        (LocationTable.mod eq mod.id) and
-                        (LocationTable.difficulty eq difficulty.id)
-            }.orderBy(LocationTable.order)
-        ).map { it.toDTO() }.toSet()
+    withContext(Dispatchers.IO) {
+        async {
+            newSuspendedTransaction {
+                Location.wrapRows(
+                    LocationTable.select {
+                        LocationTable.profile eq profile.id and
+                                (LocationTable.mod eq mod.id) and
+                                (LocationTable.difficulty eq difficulty.id)
+                    }.orderBy(LocationTable.order)
+                ).map { it.toDTO() }.toSet()
+            }
+        }
     }
 
 suspend fun SqliteRepository.getLocationsAsync(container: PMDContainer) =
@@ -58,7 +63,7 @@ suspend fun SqliteRepository.copyLocationsToPMD(
                     }
                 }
 
-                modifyDatabaseAsync {
+                modifyDatabase {
                     val p = Profile.findById(pmdContainer.profile.id)!!
                     val m = Mod.findById(pmdContainer.mod.id)!!
                     val d = Difficulty.findById(pmdContainer.difficulty.id)!!
@@ -75,7 +80,7 @@ suspend fun SqliteRepository.copyLocationsToPMD(
                         }
                     }
                     null
-                }.await()
+                }
             } else {
                 logger.info("No selected locations.")
                 null
@@ -92,12 +97,16 @@ suspend fun SqliteRepository.getHighestLocationOrderAsync(pmdContainer: PMDConta
     getHighestLocationOrderAsync(pmdContainer.profile, pmdContainer.mod, pmdContainer.difficulty)
 
 suspend fun SqliteRepository.getHighestLocationOrderAsync(p: ProfileDTO, m: ModDTO, d: DifficultyDTO) =
-    suspendedTransactionAsync(Dispatchers.IO) {
-        LocationTable.slice(LocationTable.order).select {
-            (LocationTable.profile eq p.id) and
-                    (LocationTable.mod eq m.id) and
-                    (LocationTable.difficulty eq d.id)
-        }.map { it[LocationTable.order] }.maxOrNull()
+    withContext(Dispatchers.IO) {
+        async {
+            newSuspendedTransaction {
+                LocationTable.slice(LocationTable.order).select {
+                    (LocationTable.profile eq p.id) and
+                            (LocationTable.mod eq m.id) and
+                            (LocationTable.difficulty eq d.id)
+                }.map { it[LocationTable.order] }.maxOrNull()
+            }
+        }
     }
 
 suspend fun SqliteRepository.incrementLocationsOrderAsync(
@@ -111,7 +120,7 @@ suspend fun SqliteRepository.incrementLocationsOrderAsync(
                 val locs = locations.sortedBy { it.order }
 
                 if (locs.last().order != highestOrder) {
-                    val loc = modifyDatabaseAsync {
+                    val loc = modifyDatabase {
                         Location.find {
                             (LocationTable.profile eq pmdContainer.profile.id) and
                                     (LocationTable.mod eq pmdContainer.mod.id) and
@@ -120,18 +129,18 @@ suspend fun SqliteRepository.incrementLocationsOrderAsync(
                         }.single().apply {
                             order = -1
                         }
-                    }.await()
+                    }
 
-                    modifyDatabaseAsync {
+                    modifyDatabase {
                         locs.reversed().forEach {
                             val l = Location.findById(it.id)!!
                             l.order = l.order + 1
                         }
-                    }.await()
+                    }
 
-                    modifyDatabaseAsync {
+                    modifyDatabase {
                         loc.order = locs.first().order
-                    }.await()
+                    }
                 }
 
             }
@@ -151,7 +160,7 @@ suspend fun SqliteRepository.decrementLocationsOrderAsync(
                 val locs = locations.sortedBy { it.order }
 
                 if (locs.first().order != 1) {
-                    val loc = modifyDatabaseAsync {
+                    val loc = modifyDatabase {
                         Location.find {
                             (LocationTable.profile eq pmdContainer.profile.id) and
                                     (LocationTable.mod eq pmdContainer.mod.id) and
@@ -160,18 +169,18 @@ suspend fun SqliteRepository.decrementLocationsOrderAsync(
                         }.single().apply {
                             order = -1
                         }
-                    }.await()
+                    }
 
-                    modifyDatabaseAsync {
+                    modifyDatabase {
                         locs.forEach {
                             val l = Location.findById(it.id)!!
                             l.order = l.order - 1
                         }
-                    }.await()
+                    }
 
-                    modifyDatabaseAsync {
+                    modifyDatabase {
                         loc.order = locs.last().order
-                    }.await()
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -181,23 +190,27 @@ suspend fun SqliteRepository.decrementLocationsOrderAsync(
 }
 
 suspend fun SqliteRepository.deleteLocationsAsync(pmdContainer: PMDContainer, locations: Set<LocationDTO>) =
-    modifyDatabaseAsync {
-        try {
-            locations.forEach {
-                Location.findById(it.id)!!.delete()
-            }
+    withContext(Dispatchers.IO) {
+        async {
+            modifyDatabase {
+                try {
+                    locations.forEach {
+                        Location.findById(it.id)!!.delete()
+                    }
 
-            Location.wrapRows(
-                LocationTable.select {
-                    (LocationTable.profile eq pmdContainer.profile.id) and
-                            (LocationTable.mod eq pmdContainer.mod.id) and
-                            (LocationTable.difficulty eq pmdContainer.difficulty.id)
-                }.orderBy(LocationTable.order)
-            ).forEachIndexed { i, loc ->
-                loc.order = i + 1
+                    Location.wrapRows(
+                        LocationTable.select {
+                            (LocationTable.profile eq pmdContainer.profile.id) and
+                                    (LocationTable.mod eq pmdContainer.mod.id) and
+                                    (LocationTable.difficulty eq pmdContainer.difficulty.id)
+                        }.orderBy(LocationTable.order)
+                    ).forEachIndexed { i, loc ->
+                        loc.order = i + 1
+                    }
+                } catch (e: Exception) {
+                    logger.error("Could not delete locations", e)
+                }
             }
-        } catch (e: Exception) {
-            logger.error("Could not delete locations", e)
         }
     }
 

@@ -2,15 +2,9 @@ package io.grimlocations.ui.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -21,6 +15,7 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowSize
@@ -46,7 +41,9 @@ private val logger = LogManager.getLogger()
 
 private val rowHeight = 50.dp
 private val rowWidth = 550.dp
-private val buttonSpacerHeight = 10.dp
+private val buttonSpacerHeight = 5.dp
+private val buttonSeparatorHeight = 75.dp
+private val horizontalSeparatorWidth = 35.dp
 
 enum class PMDManagerFocus {
     NONE, PROFILE_LIST, MOD_LIST, DIFFICULTY_LIST
@@ -66,6 +63,7 @@ object PMDManagerFocusManager {
 @Composable
 fun PMDManagerView(
     vm: PMDManagerViewModel = getFactoryViewModel(),
+    onClose: (() -> Unit),
 ) = View(vm) { state ->
 
     PMDManagerFocusManager.ctrlAActionProfiles = {
@@ -89,6 +87,36 @@ fun PMDManagerView(
     val closePopup = { vm.setPopupState(NONE) }
 
     when (state.popupOpen) {
+        EDIT_PROFILE -> openEditNameDTOPopup(
+            dto = state.selectedProfiles.single(),
+            onOkClicked = vm::editProfileAndClosePopup,
+            onCancelClicked = closePopup,
+        )
+        EDIT_MOD -> openEditNameDTOPopup(
+            dto = state.selectedMods.single(),
+            onOkClicked = { name, mod ->
+                vm.editModAndClosePopup(
+                    name, PMContainer(
+                        profile = state.selectedProfiles.single(),
+                        mod = mod
+                    )
+                )
+            },
+            onCancelClicked = closePopup,
+        )
+        EDIT_DIFFICULTY -> openEditNameDTOPopup(
+            dto = state.selectedDifficulties.single(),
+            onOkClicked = { name, difficulty ->
+                vm.editDifficultyAndClosePopup(
+                    name, PMDContainer(
+                        profile = state.selectedProfiles.single(),
+                        mod = state.selectedMods.single(),
+                        difficulty = difficulty
+                    )
+                )
+            },
+            onCancelClicked = closePopup,
+        )
         EDIT_PROFILE -> openEditNameDTOPopup(
             dto = state.selectedProfiles.single(),
             onOkClicked = vm::editProfileAndClosePopup,
@@ -160,9 +188,23 @@ fun PMDManagerView(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.height(500.dp)
+                modifier = Modifier.height(650.dp)
             ) {
-                Column() {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Profiles")
+                    Spacer(Modifier.height(10.dp))
+                    NameDTOListComponent(
+                        dtos = state.profiles,
+                        selectedDTOS = state.selectedProfiles,
+                        onSelectDTOS = vm::selectProfiles,
+                        rowHeight = rowHeight,
+                        rowWidth = rowWidth,
+                        getSelectionMode = PMDManagerFocusManager::selectionMode,
+                        captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.PROFILE_LIST },
+                        noDtosMessage = "No Profiles"
+                    )
+                }
+                Column {
                     ArrowUpButton(
                         dtos = state.profiles,
                         selected = state.selectedProfiles,
@@ -174,17 +216,11 @@ fun PMDManagerView(
                         selected = state.selectedProfiles,
                         onClick = { vm.moveProfiles(state.selectedProfiles, moveUp = false) }
                     )
-                }
-                NameDTOListComponent(
-                    dtos = state.profiles,
-                    selectedDTOS = state.selectedProfiles,
-                    onSelectDTOS = vm::selectProfiles,
-                    rowHeight = rowHeight,
-                    rowWidth = rowWidth,
-                    getSelectionMode = PMDManagerFocusManager::selectionMode,
-                    captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.PROFILE_LIST }
-                )
-                Column() {
+                    Spacer(Modifier.height(buttonSeparatorHeight))
+                    NewButton(
+                        onClick = {}
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
                     EditButton(
                         selected = state.selectedProfiles,
                         onClick = { vm.setPopupState(EDIT_PROFILE) }
@@ -196,16 +232,40 @@ fun PMDManagerView(
                         onClick = { vm.setPopupState(DELETE_PROFILE) }
                     )
                 }
-                NameDTOListComponent(
-                    dtos = state.mods,
-                    selectedDTOS = state.selectedMods,
-                    onSelectDTOS = vm::selectMods,
-                    rowHeight = rowHeight,
-                    rowWidth = rowWidth,
-                    getSelectionMode = PMDManagerFocusManager::selectionMode,
-                    captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.MOD_LIST }
-                )
+                Spacer(Modifier.width(horizontalSeparatorWidth))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Mods")
+                    Spacer(Modifier.height(10.dp))
+                    NameDTOListComponent(
+                        dtos = state.mods,
+                        selectedDTOS = state.selectedMods,
+                        onSelectDTOS = vm::selectMods,
+                        rowHeight = rowHeight,
+                        rowWidth = rowWidth,
+                        getSelectionMode = PMDManagerFocusManager::selectionMode,
+                        captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.MOD_LIST },
+                        noDtosMessage = "No Mods"
+                    )
+                }
                 Column() {
+                    ArrowUpButton(
+                        dtos = state.mods,
+                        selected = state.selectedMods,
+                        onClick = { vm.moveMods(state.selectedMods, state.selectedProfiles.single(), moveUp = true) },
+                        additionalDisabledCheck = state.selectedProfiles.size != 1
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
+                    ArrowDownButton(
+                        dtos = state.mods,
+                        selected = state.selectedMods,
+                        onClick = { vm.moveMods(state.selectedMods, state.selectedProfiles.single(), moveUp = false) },
+                        additionalDisabledCheck = state.selectedProfiles.size != 1
+                    )
+                    Spacer(Modifier.height(buttonSeparatorHeight))
+                    NewButton(
+                        onClick = {}
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
                     EditButton(
                         selected = state.selectedMods,
                         onClick = { vm.setPopupState(EDIT_MOD) }
@@ -217,16 +277,52 @@ fun PMDManagerView(
                         onClick = { vm.setPopupState(DELETE_MOD) }
                     )
                 }
-                NameDTOListComponent(
-                    dtos = state.difficulties,
-                    selectedDTOS = state.selectedDifficulties,
-                    onSelectDTOS = vm::selectDifficulties,
-                    rowHeight = rowHeight,
-                    rowWidth = rowWidth,
-                    getSelectionMode = PMDManagerFocusManager::selectionMode,
-                    captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.DIFFICULTY_LIST }
-                )
+                Spacer(Modifier.width(horizontalSeparatorWidth))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Difficulties")
+                    Spacer(Modifier.height(10.dp))
+                    NameDTOListComponent(
+                        dtos = state.difficulties,
+                        selectedDTOS = state.selectedDifficulties,
+                        onSelectDTOS = vm::selectDifficulties,
+                        rowHeight = rowHeight,
+                        rowWidth = rowWidth,
+                        getSelectionMode = PMDManagerFocusManager::selectionMode,
+                        captureFocus = { PMDManagerFocusManager.currentFocus = PMDManagerFocus.DIFFICULTY_LIST },
+                        noDtosMessage = "No Difficulties"
+                    )
+                }
                 Column() {
+                    ArrowUpButton(
+                        dtos = state.difficulties,
+                        selected = state.selectedDifficulties,
+                        onClick = {
+                            vm.moveDifficulties(
+                                state.selectedDifficulties,
+                                PMContainer(state.selectedProfiles.single(), state.selectedMods.single()),
+                                moveUp = true
+                            )
+                        },
+                        additionalDisabledCheck = state.selectedProfiles.size != 1 || state.selectedMods.size != 1
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
+                    ArrowDownButton(
+                        dtos = state.difficulties,
+                        selected = state.selectedDifficulties,
+                        onClick = {
+                            vm.moveDifficulties(
+                                state.selectedDifficulties,
+                                PMContainer(state.selectedProfiles.single(), state.selectedMods.single()),
+                                moveUp = false
+                            )
+                        },
+                        additionalDisabledCheck = state.selectedProfiles.size != 1 || state.selectedMods.size != 1
+                    )
+                    Spacer(Modifier.height(buttonSeparatorHeight))
+                    NewButton(
+                        onClick = {}
+                    )
+                    Spacer(Modifier.height(buttonSpacerHeight))
                     EditButton(
                         selected = state.selectedDifficulties,
                         onClick = { vm.setPopupState(EDIT_DIFFICULTY) }
@@ -239,6 +335,16 @@ fun PMDManagerView(
                     )
                 }
             }
+            Spacer(Modifier.height(40.dp))
+            Row {
+                Button(
+                    modifier = Modifier.width(200.dp),
+                    onClick = onClose
+                ) {
+                    Text("Back", fontSize = 15.sp)
+                }
+                Spacer(Modifier.width(40.dp))
+            }
         }
     }
 }
@@ -248,17 +354,13 @@ private fun EditButton(
     selected: Set<UserCreatedNameDTO>,
     onClick: (UserCreatedNameDTO) -> Unit
 ) {
-    val disabled = selected.size != 1 || !selected.single().isUserCreated
+    val disabled = selected.size != 1
 
     IconButton(
         modifier = Modifier.size(arrowButtonSize),
         enabled = !disabled,
         onClick = {
-            try {
-                onClick(selected.single())
-            } catch (e: Exception) {
-                logger.error("Could not open location edit popup.", e)
-            }
+            onClick(selected.single())
         },
     ) {
         Icon(
@@ -293,9 +395,10 @@ private fun DeleteButton(
 private fun ArrowUpButton(
     dtos: Set<NameDTO>,
     selected: Set<NameDTO>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    additionalDisabledCheck: Boolean = false,
 ) {
-    val disabled = selected.isEmpty() || dtos.isEmpty() ||
+    val disabled = additionalDisabledCheck || selected.isEmpty() || dtos.size < 2 ||
             selected.contains(dtos.first()) ||
             !selected.map { dtos.indexOf(it) }.isSequential(sortFirst = true)
 
@@ -316,9 +419,10 @@ private fun ArrowUpButton(
 private fun ArrowDownButton(
     dtos: Set<NameDTO>,
     selected: Set<NameDTO>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    additionalDisabledCheck: Boolean = false,
 ) {
-    val disabled = selected.isEmpty() || dtos.isEmpty() ||
+    val disabled = additionalDisabledCheck || selected.isEmpty() || dtos.size < 2 ||
             selected.contains(dtos.last()) ||
             !selected.map { dtos.indexOf(it) }.isSequential(sortFirst = true)
 
@@ -332,6 +436,21 @@ private fun ArrowDownButton(
             Icons.Default.KeyboardArrowDown,
             "Move Down",
             tint = if (disabled) Color.DarkGray else MaterialTheme.colors.primary
+        )
+    }
+}
+
+@Composable
+private fun NewButton(
+    onClick: () -> Unit,
+) {
+    IconButton(
+        modifier = Modifier.size(arrowButtonSize),
+        onClick = onClick,
+    ) {
+        Icon(
+            Icons.Default.AddCircle,
+            "New",
         )
     }
 }
@@ -396,7 +515,7 @@ fun openPMDManagerView(
         },
     ) {
         GrimLocationsTheme {
-            PMDManagerView()
+            PMDManagerView(onClose = onClose)
         }
     }
 }

@@ -8,16 +8,27 @@ import io.grimlocations.framework.util.guardLet
 import io.grimlocations.ui.GLStateManager
 import io.grimlocations.ui.viewmodel.state.PropertiesState
 import io.grimlocations.ui.viewmodel.state.PropertiesStateError
+import io.grimlocations.ui.viewmodel.state.PropertiesStateError.GRIM_INTERNALS_NOT_FOUND
 import io.grimlocations.ui.viewmodel.state.PropertiesStateWarning
 import io.grimlocations.util.extension.gdInstallLocation
 import io.grimlocations.util.extension.gdSaveLocation
+import org.apache.logging.log4j.LogManager
+import java.io.File
+
+private val logger = LogManager.getLogger()
 
 suspend fun GLStateManager.loadPropertiesState() {
     val meta = repository.getMetaAsync().await()
+    val installLoc = meta.installLocation ?: getGdInstallLocation()
+
     setState(
         PropertiesState(
             savePath = meta.saveLocation,
-            installPath = meta.installLocation
+            installPath = installLoc,
+            errors = if (!isValidInstallPath(installLoc))
+                setOf(GRIM_INTERNALS_NOT_FOUND)
+            else
+                emptySet()
         )
     )
 }
@@ -32,7 +43,17 @@ suspend fun GLStateManager.persistPropertiesState() {
 }
 
 suspend fun GLStateManager.updatePropertiesInstallPath(path: String) {
-    setState(getState<PropertiesState>().copy(installPath = path))
+    val state = getState<PropertiesState>()
+
+    setState(
+        state.copy(
+            installPath = path,
+            errors = if (!isValidInstallPath(path))
+                setOf(GRIM_INTERNALS_NOT_FOUND, *state.errors.toTypedArray())
+            else
+                state.errors.filter { it != GRIM_INTERNALS_NOT_FOUND }.toSet()
+        ),
+    )
 }
 
 suspend fun GLStateManager.updatePropertiesSavePath(path: String) {
@@ -59,6 +80,34 @@ suspend fun GLStateManager.removePropertiesStateWarnings(vararg warnings: Proper
     setState(state.copy(warnings = state.warnings.filter { !warnings.contains(it) }.toSet()))
 }
 
-fun GLStateManager.getGdInstallLocation(): String? = repository.appDirs.gdInstallLocation
+fun GLStateManager.getGdInstallLocation(): String = repository.appDirs.gdInstallLocation ?: ""
 
 fun GLStateManager.getGdSaveLocation(): String? = repository.appDirs.gdSaveLocation
+
+private fun isValidInstallPath(path: String): Boolean {
+    try {
+        File(path).listFiles { it: File -> it.isFile }?.let {
+            return it.any { f -> f.name.equals("GrimInternals64.exe", ignoreCase = true) }
+        } ?: run {
+            logger.error("Path is either not a directory or an I/O error has occurred.")
+        }
+    } catch (e: SecurityException) {
+        logger.error("Read access is denied to this directory: $path", e)
+    }
+
+    return false
+}
+
+private fun isValidSavePath(path: String): Boolean {
+    try {
+        File(path).listFiles { it: File -> it.isDirectory }?.let {
+            return it.any { f -> f.name.startsWith("_") }
+        } ?: run {
+            logger.error("Path is either not a directory or an I/O error has occurred.")
+        }
+    } catch (e: SecurityException) {
+        logger.error("Read access is denied to this directory: $path", e)
+    }
+
+    return false
+}

@@ -58,9 +58,15 @@ fun PMDManagerViewModel.moveProfiles(selected: Set<ProfileDTO>, moveUp: Boolean)
     }
 }
 
-fun PMDManagerViewModel.moveMods(selected: Set<ProfileDTO>, moveUp: Boolean) {
+fun PMDManagerViewModel.moveMods(selected: Set<ModDTO>, profile: ProfileDTO, moveUp: Boolean) {
     viewModelScope.launch {
-        stateManager.moveProfiles(selected, moveUp)
+        stateManager.moveMods(selected, profile, moveUp)
+    }
+}
+
+fun PMDManagerViewModel.moveDifficulties(selected: Set<DifficultyDTO>, pmContainer: PMContainer, moveUp: Boolean) {
+    viewModelScope.launch {
+        stateManager.moveDifficulties(selected, pmContainer, moveUp)
     }
 }
 
