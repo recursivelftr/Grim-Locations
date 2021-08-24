@@ -186,15 +186,8 @@ suspend fun SqliteRepository.deleteProfiles(profiles: Set<ProfileDTO>) = withCon
     modifyDatabase {
         try {
             val profileOrders = ProfileOrder.find { ProfileOrderTable.profile inList profiles.map { it.id } }
-            val meta = Meta.wrapRow(MetaTable.selectAll().single())
 
             profileOrders.forEach { p ->
-                if (p.profile == meta.activeProfile) {
-                    meta.activeProfile = null
-                    meta.activeMod = null
-                    meta.activeDifficulty = null
-                }
-
                 Location.find {
                     LocationTable.profile eq p.profile.id
                 }.forEach {

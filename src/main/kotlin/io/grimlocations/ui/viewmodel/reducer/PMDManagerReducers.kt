@@ -248,6 +248,22 @@ suspend fun GLStateManager.moveDifficulties(selected: Set<DifficultyDTO>, pmCont
 
 suspend fun GLStateManager.deleteProfiles(selected: Set<ProfileDTO>) {
     repository.deleteProfiles(selected)
+
+    repository.getMetaAsync().await().activePMD?.also {
+        for(p in selected) {
+            if (it.profile == p) {
+                repository.clearActivePMD()
+
+                val editorState = getState<EditorState>()
+                when {
+                    editorState.selectedPMDLeft.profile == it.profile && editorState.selectedPMDRight.profile == it.profile -> resetSelectedPMDs()
+                    editorState.selectedPMDLeft.profile == it.profile -> resetSelectedPMDLeft()
+                    editorState.selectedPMDRight.profile == it.profile -> resetSelectedPMDRight()
+                }
+                break
+            }
+        }
+    }
     loadPMDManagerState(
         getState<PMDManagerState>().copy(
             popupOpen = PMDManagerStatePopups.NONE
@@ -257,6 +273,25 @@ suspend fun GLStateManager.deleteProfiles(selected: Set<ProfileDTO>) {
 
 suspend fun GLStateManager.deleteMods(selected: Set<ModDTO>, profile: ProfileDTO) {
     repository.deleteMods(selected, profile)
+    repository.getMetaAsync().await().activePMD?.also {
+        for(m in selected) {
+            if (it.profile == profile && it.mod == m) {
+                repository.clearActivePMD()
+
+                val editorState = getState<EditorState>()
+                val activePMContainer = it.toPMContainer()
+                val selectedPMContainerLeft = editorState.selectedPMDLeft.toPMContainer()
+                val selectedPMContainerRight = editorState.selectedPMDRight.toPMContainer()
+
+                when {
+                    selectedPMContainerLeft == activePMContainer && selectedPMContainerRight == activePMContainer -> resetSelectedPMDs()
+                    selectedPMContainerLeft == activePMContainer -> resetSelectedPMDLeft()
+                    selectedPMContainerRight == activePMContainer -> resetSelectedPMDRight()
+                }
+                break
+            }
+        }
+    }
     loadPMDManagerState(
         getState<PMDManagerState>().copy(
             popupOpen = PMDManagerStatePopups.NONE
@@ -266,6 +301,23 @@ suspend fun GLStateManager.deleteMods(selected: Set<ModDTO>, profile: ProfileDTO
 
 suspend fun GLStateManager.deleteDifficulties(selected: Set<DifficultyDTO>, pmContainer: PMContainer) {
     repository.deleteDifficulties(selected, pmContainer)
+    repository.getMetaAsync().await().activePMD?.also {
+        val activePMContainer = it.toPMContainer()
+        for(d in selected) {
+            if (activePMContainer == pmContainer && it.difficulty == d) {
+                repository.clearActivePMD()
+
+                val editorState = getState<EditorState>()
+                when {
+                    editorState.selectedPMDLeft == it && editorState.selectedPMDRight == it -> resetSelectedPMDs()
+                    editorState.selectedPMDLeft == it -> resetSelectedPMDLeft()
+                    editorState.selectedPMDRight == it -> resetSelectedPMDRight()
+                }
+                break
+            }
+        }
+    }
+
     loadPMDManagerState(
         getState<PMDManagerState>().copy(
             popupOpen = PMDManagerStatePopups.NONE

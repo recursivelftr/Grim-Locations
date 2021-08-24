@@ -238,22 +238,11 @@ suspend fun SqliteRepository.deleteDifficulties(difficulties: Set<DifficultyDTO>
                         (ModOrderTable.mod eq pmContainer.mod.id)
             }.single()
 
-            val meta = Meta.wrapRow(MetaTable.selectAll().single())
-
             difficulties.forEach {
                 val difficultyOrder = DifficultyOrder.find {
                     (DifficultyOrderTable.modOrder eq modOrder.id) and
                             (DifficultyOrderTable.difficulty eq it.id)
                 }.single()
-
-                if (profileOrder.profile == meta.activeProfile
-                    && modOrder.mod == meta.activeMod
-                    && difficultyOrder.difficulty == meta.activeDifficulty
-                ) {
-                    meta.activeProfile = null
-                    meta.activeMod = null
-                    meta.activeDifficulty = null
-                }
 
                 Location.find {
                     LocationTable.profile eq profileOrder.profile.id and

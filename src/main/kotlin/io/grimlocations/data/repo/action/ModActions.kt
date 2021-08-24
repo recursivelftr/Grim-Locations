@@ -177,7 +177,6 @@ suspend fun SqliteRepository.incrementModsOrder(mods: Set<ModDTO>, profile: Prof
 suspend fun SqliteRepository.deleteMods(mods: Set<ModDTO>, profile: ProfileDTO) = withContext(Dispatchers.IO) {
     modifyDatabase {
         val profileOrder = ProfileOrder.find { ProfileOrderTable.profile eq profile.id }.single()
-        val meta = Meta.wrapRow(MetaTable.selectAll().single())
 
         mods.forEach {
             val modOrder = ModOrder.find {
@@ -185,12 +184,6 @@ suspend fun SqliteRepository.deleteMods(mods: Set<ModDTO>, profile: ProfileDTO) 
                         (ModOrderTable.mod eq it.id)
 
             }.single()
-
-            if (profileOrder.profile == meta.activeProfile && modOrder.mod == meta.activeMod) {
-                meta.activeProfile = null
-                meta.activeMod = null
-                meta.activeDifficulty = null
-            }
 
             Location.find {
                 LocationTable.profile eq profileOrder.profile.id and
