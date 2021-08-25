@@ -14,6 +14,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -32,11 +33,14 @@ private val TEXT_FIELD_WIDTH = 480.dp
 @Composable
 private fun <T: NameDTO> EditNameDTOPopup(
     dto: T,
+    otherDtos: Set<T>,
+    duplicateNameMessage: String,
     onOkClicked: (String, T) -> Unit,
     onCancelClicked: (() -> Unit),
 ) {
     val dtoName = remember { mutableStateOf(dto.name) }
     val containsCommas = dtoName.value.contains(",")
+    val isDuplicate = otherDtos.firstOrNull { it.name.equals(dtoName.value, ignoreCase = true) } != null
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -59,8 +63,14 @@ private fun <T: NameDTO> EditNameDTOPopup(
                     color = Color.Red,
                     modifier = Modifier.width(TEXT_FIELD_WIDTH)
                 )
+            } else if(isDuplicate) {
+                Text(
+                    duplicateNameMessage,
+                    color = Color.Red,
+                    modifier = Modifier.width(TEXT_FIELD_WIDTH)
+                )
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(35.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -73,7 +83,7 @@ private fun <T: NameDTO> EditNameDTOPopup(
                 Spacer(modifier = Modifier.width(20.dp))
                 Button(
                     onClick = { onOkClicked(dtoName.value, dto) },
-                    enabled = !containsCommas
+                    enabled = !(containsCommas || isDuplicate)
                 ) {
                     Text("Ok")
                 }
@@ -88,12 +98,14 @@ private fun <T: NameDTO> EditNameDTOPopup(
 @Composable
 fun <T: NameDTO> openEditNameDTOPopup(
     dto: T,
+    otherDtos: Set<T>,
+    duplicateNameMessage: String,
     onCancelClicked: () -> Unit,
     onOkClicked: (String, T) -> Unit,
     title: String = "Grim Locations",
 ) {
     val dialogState =
-        rememberDialogState(size = WindowSize(400.dp, 275.dp), position = WindowPosition.Aligned(Alignment.Center))
+        rememberDialogState(size = WindowSize(550.dp, 275.dp), position = WindowPosition.Aligned(Alignment.Center))
 
     Dialog(
         state = dialogState,
@@ -103,6 +115,8 @@ fun <T: NameDTO> openEditNameDTOPopup(
         GrimLocationsTheme {
             EditNameDTOPopup(
                 dto = dto,
+                otherDtos = otherDtos,
+                duplicateNameMessage = duplicateNameMessage,
                 onCancelClicked = onCancelClicked,
                 onOkClicked = onOkClicked,
             )

@@ -14,7 +14,6 @@ import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 private val logger = LogManager.getLogger()
@@ -42,6 +41,8 @@ suspend fun SqliteRepository.findOrCreateDifficultyAsync(
                 val pmdContainer = pmContainer.toPMDContainer(d.toDTO())
 
                 if (!skipOrderCreation && isDifficultyDetachedFromModAsync(pmdContainer).await()) {
+                    val highestDifficultyOrder = getHighestDifficultyOrderAsync(pmContainer).await() ?: 0
+
                     modifyDatabase {
                         val profileOrder =
                             ProfileOrder.find { ProfileOrderTable.profile eq pmdContainer.profile.id }.single()
@@ -49,7 +50,6 @@ suspend fun SqliteRepository.findOrCreateDifficultyAsync(
                             ModOrderTable.profileOrder eq profileOrder.id and
                                     (ModOrderTable.mod eq pmdContainer.mod.id)
                         }.single()
-                        val highestDifficultyOrder = getHighestDifficultyOrderAsync(pmdContainer).await() ?: 0
 
 
                         DifficultyOrder.new {
@@ -133,20 +133,19 @@ suspend fun SqliteRepository.modifyOrCreateDifficultyAsync(
     }
 
 
-suspend fun SqliteRepository.getHighestDifficultyOrderAsync(pmdContainer: PMDContainer) =
+suspend fun SqliteRepository.getHighestDifficultyOrderAsync(pmContainer: PMContainer) =
     withContext(Dispatchers.IO) {
         async {
             newSuspendedTransaction {
                 val profileOrder =
-                    ProfileOrder.find { ProfileOrderTable.profile eq pmdContainer.profile.id }.single()
+                    ProfileOrder.find { ProfileOrderTable.profile eq pmContainer.profile.id }.single()
                 val modOrder = ModOrder.find {
                     ModOrderTable.profileOrder eq profileOrder.id and
-                            (ModOrderTable.mod eq pmdContainer.mod.id)
+                            (ModOrderTable.mod eq pmContainer.mod.id)
                 }.single()
 
                 DifficultyOrderTable.slice(DifficultyOrderTable.order).select {
-                    (DifficultyOrderTable.modOrder eq modOrder.id) and
-                            (DifficultyOrderTable.difficulty eq pmdContainer.difficulty.id)
+                    (DifficultyOrderTable.modOrder eq modOrder.id)
                 }.map { it[DifficultyOrderTable.order] }.maxOrNull()
             }
         }

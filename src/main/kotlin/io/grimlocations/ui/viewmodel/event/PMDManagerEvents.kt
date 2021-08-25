@@ -28,6 +28,24 @@ fun PMDManagerViewModel.selectDifficulties(difficulties: Set<DifficultyDTO>) {
     }
 }
 
+fun PMDManagerViewModel.createProfileAndClosePopup(name: String) {
+    viewModelScope.launch {
+        stateManager.createProfileAndClosePopup(name)
+    }
+}
+
+fun PMDManagerViewModel.createModAndClosePopup(name: String, profile: ProfileDTO) {
+    viewModelScope.launch {
+        stateManager.createModAndClosePopup(name, profile)
+    }
+}
+
+fun PMDManagerViewModel.createDifficultyAndClosePopup(name: String, pmContainer: PMContainer) {
+    viewModelScope.launch {
+        stateManager.createDifficultyAndClosePopup(name, pmContainer)
+    }
+}
+
 fun PMDManagerViewModel.editProfileAndClosePopup(name: String, profile: ProfileDTO) {
     viewModelScope.launch {
         stateManager.editProfileAndClosePopup(name, profile)

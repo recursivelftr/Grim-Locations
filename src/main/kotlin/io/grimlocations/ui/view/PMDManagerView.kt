@@ -25,10 +25,7 @@ import io.grimlocations.framework.data.dto.UserCreatedNameDTO
 import io.grimlocations.framework.ui.getFactoryViewModel
 import io.grimlocations.framework.ui.view.View
 import io.grimlocations.framework.util.extension.isSequential
-import io.grimlocations.ui.view.component.NameDTOListComponent
-import io.grimlocations.ui.view.component.SelectionMode
-import io.grimlocations.ui.view.component.openEditNameDTOPopup
-import io.grimlocations.ui.view.component.openOkCancelPopup
+import io.grimlocations.ui.view.component.*
 import io.grimlocations.ui.viewmodel.PMDManagerViewModel
 import io.grimlocations.ui.viewmodel.event.*
 import io.grimlocations.ui.viewmodel.state.PMDManagerStatePopups.*
@@ -56,6 +53,10 @@ object PMDManagerFocusManager {
     var ctrlAActionMods: (() -> Unit)? = null
     var ctrlAActionDifficulties: (() -> Unit)? = null
 }
+
+private const val PROFILE_DUPLICATE_MESSAGE = "A profile already exists with that name"
+private const val MOD_DUPLICATE_MESSAGE = "A profile cannot have duplicate mods"
+private const val DIFFICULTY_DUPLICATE_MESSAGE = "A mod cannot have duplicate difficulties"
 
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
@@ -87,66 +88,83 @@ fun PMDManagerView(
     val closePopup = { vm.setPopupState(NONE) }
 
     when (state.popupOpen) {
-        EDIT_PROFILE -> openEditNameDTOPopup(
-            dto = state.selectedProfiles.single(),
-            onOkClicked = vm::editProfileAndClosePopup,
+        CREATE_PROFILE -> openCreateNameDTOPopup(
+            title = "Create Profile",
+            dtos = state.profiles,
+            duplicateNameMessage = PROFILE_DUPLICATE_MESSAGE,
+            onOkClicked = vm::createProfileAndClosePopup,
             onCancelClicked = closePopup,
         )
-        EDIT_MOD -> openEditNameDTOPopup(
-            dto = state.selectedMods.single(),
-            onOkClicked = { name, mod ->
-                vm.editModAndClosePopup(
+        CREATE_MOD -> openCreateNameDTOPopup(
+            title = "Create Mod",
+            dtos = state.mods,
+            duplicateNameMessage = MOD_DUPLICATE_MESSAGE,
+            onOkClicked = { name ->
+                vm.createModAndClosePopup(
+                    name, state.selectedProfiles.single()
+                )
+            },
+            onCancelClicked = closePopup,
+        )
+        CREATE_DIFFICULTY -> openCreateNameDTOPopup(
+            title = "Create Difficulty",
+            dtos = state.difficulties,
+            duplicateNameMessage = DIFFICULTY_DUPLICATE_MESSAGE,
+            onOkClicked = { name ->
+                vm.createDifficultyAndClosePopup(
                     name, PMContainer(
                         profile = state.selectedProfiles.single(),
-                        mod = mod
-                    )
-                )
-            },
-            onCancelClicked = closePopup,
-        )
-        EDIT_DIFFICULTY -> openEditNameDTOPopup(
-            dto = state.selectedDifficulties.single(),
-            onOkClicked = { name, difficulty ->
-                vm.editDifficultyAndClosePopup(
-                    name, PMDContainer(
-                        profile = state.selectedProfiles.single(),
                         mod = state.selectedMods.single(),
-                        difficulty = difficulty
                     )
                 )
             },
             onCancelClicked = closePopup,
         )
-        EDIT_PROFILE -> openEditNameDTOPopup(
-            dto = state.selectedProfiles.single(),
-            onOkClicked = vm::editProfileAndClosePopup,
-            onCancelClicked = closePopup,
-        )
-        EDIT_MOD -> openEditNameDTOPopup(
-            dto = state.selectedMods.single(),
-            onOkClicked = { name, mod ->
-                vm.editModAndClosePopup(
-                    name, PMContainer(
-                        profile = state.selectedProfiles.single(),
-                        mod = mod
+        EDIT_PROFILE -> {
+            openEditNameDTOPopup(
+                title = "Edit Profile",
+                dto = state.selectedProfiles.single(),
+                duplicateNameMessage = PROFILE_DUPLICATE_MESSAGE,
+                otherDtos = state.profiles.filter { it != state.selectedProfiles.single() }.toSet(),
+                onOkClicked = vm::editProfileAndClosePopup,
+                onCancelClicked = closePopup,
+            )
+        }
+        EDIT_MOD -> {
+            openEditNameDTOPopup(
+                title = "Edit Mod",
+                dto = state.selectedMods.single(),
+                duplicateNameMessage = MOD_DUPLICATE_MESSAGE,
+                otherDtos = state.mods.filter { it != state.selectedMods.single() }.toSet(),
+                onOkClicked = { name, mod ->
+                    vm.editModAndClosePopup(
+                        name, PMContainer(
+                            profile = state.selectedProfiles.single(),
+                            mod = mod
+                        )
                     )
-                )
-            },
-            onCancelClicked = closePopup,
-        )
-        EDIT_DIFFICULTY -> openEditNameDTOPopup(
-            dto = state.selectedDifficulties.single(),
-            onOkClicked = { name, difficulty ->
-                vm.editDifficultyAndClosePopup(
-                    name, PMDContainer(
-                        profile = state.selectedProfiles.single(),
-                        mod = state.selectedMods.single(),
-                        difficulty = difficulty
+                },
+                onCancelClicked = closePopup,
+            )
+        }
+        EDIT_DIFFICULTY -> {
+            openEditNameDTOPopup(
+                title = "Edit Difficulty",
+                dto = state.selectedDifficulties.single(),
+                duplicateNameMessage = DIFFICULTY_DUPLICATE_MESSAGE,
+                otherDtos = state.difficulties.filter { it != state.selectedDifficulties.single() }.toSet(),
+                onOkClicked = { name, difficulty ->
+                    vm.editDifficultyAndClosePopup(
+                        name, PMDContainer(
+                            profile = state.selectedProfiles.single(),
+                            mod = state.selectedMods.single(),
+                            difficulty = difficulty
+                        )
                     )
-                )
-            },
-            onCancelClicked = closePopup,
-        )
+                },
+                onCancelClicked = closePopup,
+            )
+        }
         DELETE_PROFILE -> openConfirmDeletePopup(
             msgMultiple = "Are you sure you want to delete these profiles?",
             msgSingle = "Are you sure you want to delete this profile?",
@@ -217,8 +235,8 @@ fun PMDManagerView(
                         onClick = { vm.moveProfiles(state.selectedProfiles, moveUp = false) }
                     )
                     Spacer(Modifier.height(buttonSeparatorHeight))
-                    NewButton(
-                        onClick = {}
+                    CreateButton(
+                        onClick = { vm.setPopupState(CREATE_PROFILE) }
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
                     EditButton(
@@ -262,8 +280,8 @@ fun PMDManagerView(
                         additionalDisabledCheck = state.selectedProfiles.size != 1
                     )
                     Spacer(Modifier.height(buttonSeparatorHeight))
-                    NewButton(
-                        onClick = {}
+                    CreateButton(
+                        onClick = { vm.setPopupState(CREATE_MOD) }
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
                     EditButton(
@@ -319,8 +337,8 @@ fun PMDManagerView(
                         additionalDisabledCheck = state.selectedProfiles.size != 1 || state.selectedMods.size != 1
                     )
                     Spacer(Modifier.height(buttonSeparatorHeight))
-                    NewButton(
-                        onClick = {}
+                    CreateButton(
+                        onClick = { vm.setPopupState(CREATE_DIFFICULTY) }
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
                     EditButton(
@@ -441,7 +459,7 @@ private fun ArrowDownButton(
 }
 
 @Composable
-private fun NewButton(
+private fun CreateButton(
     onClick: () -> Unit,
 ) {
     IconButton(

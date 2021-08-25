@@ -31,15 +31,14 @@ private val TEXT_FIELD_WIDTH = 480.dp
 @ExperimentalCoroutinesApi
 @Composable
 private fun <T: NameDTO> CreateNameDTOPopup(
-    dto: T,
     dtos: Set<T>,
     duplicateNameMessage: String,
-    onOkClicked: (String, T) -> Unit,
+    onOkClicked: (String) -> Unit,
     onCancelClicked: (() -> Unit),
 ) {
-    val dtoName = remember { mutableStateOf(dto.name) }
+    val dtoName = remember { mutableStateOf("") }
     val containsCommas = dtoName.value.contains(",")
-    val duplicateName = dtos.find { it.name == dtoName.value } != null
+    val duplicateName = dtos.firstOrNull { it.name.equals(dtoName.value, ignoreCase = true) } != null
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -69,7 +68,7 @@ private fun <T: NameDTO> CreateNameDTOPopup(
                     modifier = Modifier.width(TEXT_FIELD_WIDTH)
                 )
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(35.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -81,7 +80,7 @@ private fun <T: NameDTO> CreateNameDTOPopup(
                 }
                 Spacer(modifier = Modifier.width(20.dp))
                 Button(
-                    onClick = { onOkClicked(dtoName.value, dto) },
+                    onClick = { onOkClicked(dtoName.value) },
                     enabled = !(containsCommas || duplicateName)
                 ) {
                     Text("Ok")
@@ -96,11 +95,10 @@ private fun <T: NameDTO> CreateNameDTOPopup(
 @ExperimentalCoroutinesApi
 @Composable
 fun <T: NameDTO> openCreateNameDTOPopup(
-    dto: T,
     dtos: Set<T>,
     duplicateNameMessage: String,
     onCancelClicked: () -> Unit,
-    onOkClicked: (String, T) -> Unit,
+    onOkClicked: (String) -> Unit,
     title: String = "Grim Locations",
 ) {
     val dialogState =
@@ -113,7 +111,6 @@ fun <T: NameDTO> openCreateNameDTOPopup(
     ) {
         GrimLocationsTheme {
             CreateNameDTOPopup(
-                dto = dto,
                 dtos = dtos,
                 duplicateNameMessage = duplicateNameMessage,
                 onCancelClicked = onCancelClicked,

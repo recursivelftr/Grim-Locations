@@ -112,7 +112,31 @@ suspend fun GLStateManager.selectDifficulties(difficulties: Set<DifficultyDTO>) 
 }
 
 suspend fun GLStateManager.createProfileAndClosePopup(name: String) {
-    val p = repository.findOrCreateProfileAsync(name).await()!!
+    repository.findOrCreateProfileAsync(name).await()
+    val s = getState<PMDManagerState>()
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(
+            s.copy(
+                popupOpen = PMDManagerStatePopups.NONE
+            )
+        )
+    }
+}
+
+suspend fun GLStateManager.createModAndClosePopup(name: String, profile: ProfileDTO) {
+    repository.findOrCreateModAsync(name, profile).await()
+    val s = getState<PMDManagerState>()
+    withContext(Dispatchers.Main) {
+        loadPMDManagerState(
+            s.copy(
+                popupOpen = PMDManagerStatePopups.NONE
+            )
+        )
+    }
+}
+
+suspend fun GLStateManager.createDifficultyAndClosePopup(name: String, pmContainer: PMContainer) {
+    repository.findOrCreateDifficultyAsync(name, pmContainer).await()
     val s = getState<PMDManagerState>()
     withContext(Dispatchers.Main) {
         loadPMDManagerState(

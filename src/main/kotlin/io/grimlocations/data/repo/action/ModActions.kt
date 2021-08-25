@@ -39,10 +39,10 @@ suspend fun SqliteRepository.findOrCreateModAsync(
                 }
 
                 if (!skipOrderCreation && isModDetachedFromProfileAsync(m.toDTO(), profileDTO).await()) {
+                    val highestModOrder = getHighestModOrderAsync(profileDTO).await() ?: 0
+
                     modifyDatabase {
                         val profileOrder = ProfileOrder.find { ProfileOrderTable.profile eq profileDTO.id }.single()
-                        val highestModOrder = getHighestModOrderAsync(profileDTO).await() ?: 0
-
                         ModOrder.new {
                             this.profileOrder = profileOrder
                             this.mod = m

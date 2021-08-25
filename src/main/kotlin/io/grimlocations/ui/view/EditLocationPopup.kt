@@ -161,7 +161,7 @@ fun openEditLocationPopup(
 
     Dialog(
         state = dialogState,
-        title = "Grim Locations",
+        title = "Edit Location",
         onCloseRequest = onCancelClicked,
     ) {
         GrimLocationsTheme {
