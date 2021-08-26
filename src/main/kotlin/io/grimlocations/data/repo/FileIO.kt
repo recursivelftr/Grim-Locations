@@ -309,7 +309,12 @@ suspend fun SqliteRepository.isGDRunning() = withContext(Dispatchers.IO) {
 //returns null if problem opening file
 suspend fun SqliteRepository.getFileLastModified(file: File): Long? = withContext(Dispatchers.IO) {
     try {
-        file.lastModified()
+        file.lastModified()?.let {
+            if(it == 0L)
+                null
+            else
+                it
+        }
     } catch (e: Exception) {
         logger.error("Problem loading file: ${file.absolutePath}", e)
         null
