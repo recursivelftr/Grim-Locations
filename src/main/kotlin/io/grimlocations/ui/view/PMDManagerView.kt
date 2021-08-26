@@ -245,7 +245,6 @@ fun PMDManagerView(
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
                     DeleteButton(
-                        dtos = state.profiles,
                         disabled = state.profiles.isEmpty() || state.selectedProfiles.isEmpty(),
                         onClick = { vm.setPopupState(DELETE_PROFILE) }
                     )
@@ -281,6 +280,7 @@ fun PMDManagerView(
                     )
                     Spacer(Modifier.height(buttonSeparatorHeight))
                     CreateButton(
+                        disabled = state.selectedProfiles.size != 1,
                         onClick = { vm.setPopupState(CREATE_MOD) }
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
@@ -290,7 +290,6 @@ fun PMDManagerView(
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
                     DeleteButton(
-                        dtos = state.mods,
                         disabled = state.mods.isEmpty() || state.selectedMods.isEmpty() || state.selectedProfiles.size != 1,
                         onClick = { vm.setPopupState(DELETE_MOD) }
                     )
@@ -338,6 +337,7 @@ fun PMDManagerView(
                     )
                     Spacer(Modifier.height(buttonSeparatorHeight))
                     CreateButton(
+                        disabled = state.selectedMods.size != 1,
                         onClick = { vm.setPopupState(CREATE_DIFFICULTY) }
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
@@ -347,7 +347,6 @@ fun PMDManagerView(
                     )
                     Spacer(Modifier.height(buttonSpacerHeight))
                     DeleteButton(
-                        dtos = state.difficulties,
                         disabled = state.difficulties.isEmpty() || state.selectedDifficulties.isEmpty() || state.selectedMods.size != 1,
                         onClick = { vm.setPopupState(DELETE_DIFFICULTY) }
                     )
@@ -392,7 +391,6 @@ private fun EditButton(
 
 @Composable
 private fun DeleteButton(
-    dtos: Set<NameDTO>,
     disabled: Boolean,
     onClick: () -> Unit
 ) {
@@ -460,9 +458,11 @@ private fun ArrowDownButton(
 
 @Composable
 private fun CreateButton(
+    disabled: Boolean = false,
     onClick: () -> Unit,
 ) {
     IconButton(
+        enabled = !disabled,
         modifier = Modifier.size(arrowButtonSize),
         onClick = onClick,
     ) {

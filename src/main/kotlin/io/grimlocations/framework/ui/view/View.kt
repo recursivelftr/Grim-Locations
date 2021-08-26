@@ -1,10 +1,13 @@
 package io.grimlocations.framework.ui.view
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.grimlocations.framework.ui.State
 import io.grimlocations.framework.ui.viewmodel.ViewModel
@@ -112,6 +115,12 @@ inline fun <reified S1 : State, reified S2 : State, reified S3 : State, reified 
 @Composable
 fun Spinner() {
     Surface(modifier = Modifier.fillMaxSize()) {
-        Text("Loading...")
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("LOADING...")
+        }
     }
 }

@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 
-suspend fun SqliteRepository.persistMetaInstallAndSavePathAsync(installPath: String, savePath: String): Deferred<Unit> =
+suspend fun SqliteRepository.persistMetaInstallAndSavePathAsync(installPath: String, savePath: String?): Deferred<Unit> =
     modifyDatabaseAsync {
         val meta = Meta.wrapRow(MetaTable.selectAll().single())
         meta.installLocation = installPath
@@ -23,7 +23,7 @@ suspend fun SqliteRepository.getMetaAsync(): Deferred<MetaDTO> = suspendedTransa
 
 suspend fun SqliteRepository.arePropertiesSetAsync(): Deferred<Boolean> = suspendedTransactionAsync(Dispatchers.IO) {
     val meta = Meta.wrapRow(MetaTable.selectAll().single())
-    meta.installLocation != null && meta.saveLocation != null
+    meta.installLocation != null
 }
 
 suspend fun SqliteRepository.persistActivePMDAsync(pmd: PMDContainer) =

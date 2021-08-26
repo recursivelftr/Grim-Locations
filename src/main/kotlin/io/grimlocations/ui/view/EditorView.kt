@@ -241,7 +241,6 @@ private fun HamburgerDropdownMenu(
             }
 
             DropdownMenuItem(
-                enabled = !state.profileMap.hasOnlyReservedProfiles(),
                 onClick = {
                     isMenuExpanded = false
                     vm.openPMDManagerView()

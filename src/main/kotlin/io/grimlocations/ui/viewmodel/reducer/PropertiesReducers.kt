@@ -36,10 +36,9 @@ suspend fun GLStateManager.loadPropertiesState() {
 suspend fun GLStateManager.persistPropertiesState() {
     val state: PropertiesState = getState()
 
-    guardLet(state.installPath, state.savePath) { ip, sp ->
-        repository.persistMetaInstallAndSavePathAsync(ip, sp)
-    } ?: kotlin.run { println("Install Path or Save Path was null.") }
-
+    state.installPath?.also {
+        repository.persistMetaInstallAndSavePathAsync(it, null).await()
+    } ?: kotlin.run { println("Install Path was null.") }
 }
 
 suspend fun GLStateManager.updatePropertiesInstallPath(path: String) {
