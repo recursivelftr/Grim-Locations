@@ -133,6 +133,9 @@ class SqliteRepository(val appDirs: AppDirs) : Repository {
         RESERVED_NO_MODS_INDICATOR = no_mods_mod
         RESERVED_NO_DIFFICULTIES_INDICATOR = no_difficulties_difficulty
 
+        NO_DIFFICULTIES_LIST = listOf(RESERVED_NO_DIFFICULTIES_INDICATOR)
+        NO_MODS_OR_DIFFICULTIES_MAP = mapOf(RESERVED_NO_MODS_INDICATOR to NO_DIFFICULTIES_LIST)
+
         if (dbDoesntExist) { //need to keep this check to support older versions
             createLocationsFromFile(
                 file = File("./external/new_character_locations.csv"),

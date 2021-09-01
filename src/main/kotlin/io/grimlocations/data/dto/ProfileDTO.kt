@@ -61,11 +61,24 @@ fun ProfileModDifficultyMap.containsProfile(profileDTO: ProfileDTO) =
     this.containsKey(profileDTO)
 
 fun ProfileModDifficultyMap.containsProfileMod(pmContainer: PMContainer) =
-    this.getOrElse(pmContainer.profile, { null })?.getOrElse(pmContainer.mod, { null }) != null
+    this.getOrElse(pmContainer.profile) {
+        if (pmContainer.mod == RESERVED_NO_MODS_INDICATOR)
+            NO_MODS_OR_DIFFICULTIES_MAP
+        else null
+    }?.getOrElse(pmContainer.mod) { null } != null
 
 fun ProfileModDifficultyMap.containsProfileModDifficulty(pmdContainer: PMDContainer): Boolean {
-    val difficultyList = this.getOrElse(pmdContainer.profile, { null })
-        ?.getOrElse(pmdContainer.mod, { null }) ?: return false
+    val modsMap = this.getOrElse(pmdContainer.profile) {
+        if (pmdContainer.mod == RESERVED_NO_MODS_INDICATOR)
+            NO_MODS_OR_DIFFICULTIES_MAP
+        else null
+    }
+
+    val difficultyList = modsMap?.getOrElse(pmdContainer.mod) {
+        if (pmdContainer.difficulty == RESERVED_NO_DIFFICULTIES_INDICATOR && modsMap.isEmpty())
+            NO_DIFFICULTIES_LIST
+        else null
+    } ?: return false
 
     return difficultyList.contains(pmdContainer.difficulty)
 }

@@ -14,3 +14,5 @@ data class DifficultyDTO(
     override val name: String,
     override val isUserCreated: Boolean,
 ) : UserCreatedNameDTO
+
+var NO_DIFFICULTIES_LIST: List<DifficultyDTO> by assignOnce()

@@ -15,5 +15,7 @@ data class ModDTO(
     override val isUserCreated: Boolean,
 ): UserCreatedNameDTO
 
+var NO_MODS_OR_DIFFICULTIES_MAP: ModDifficultyMap by assignOnce()
+
 typealias ModDifficultyMap = Map<ModDTO, List<DifficultyDTO>>
 typealias MutableModDifficultyMap = MutableMap<ModDTO, MutableList<DifficultyDTO>>

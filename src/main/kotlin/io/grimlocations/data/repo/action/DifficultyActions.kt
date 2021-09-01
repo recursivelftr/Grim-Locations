@@ -57,6 +57,15 @@ suspend fun SqliteRepository.findOrCreateDifficultyAsync(
                             this.difficulty = d
                             this.order = highestDifficultyOrder + 1
                         }
+
+                        if(highestDifficultyOrder == 0) {
+                            Location.find {
+                                (LocationTable.profile eq pmContainer.profile.id) and
+                                        (LocationTable.mod eq pmContainer.mod.id)
+                            }.forEach {
+                                it.difficulty = d
+                            }
+                        }
                     }
                 }
 

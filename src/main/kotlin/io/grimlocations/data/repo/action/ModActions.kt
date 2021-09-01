@@ -48,6 +48,14 @@ suspend fun SqliteRepository.findOrCreateModAsync(
                             this.mod = m
                             this.order = highestModOrder + 1
                         }
+
+                        if(highestModOrder == 0) {
+                            Location.find {
+                                (LocationTable.profile eq profileDTO.id)
+                            }.forEach {
+                                it.mod = m
+                            }
+                        }
                     }
                 }
 
