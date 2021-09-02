@@ -19,7 +19,11 @@ The Grim Internals teleport list is a set of locations the player can teleport t
 
 Grim Locations should be kept running alongside the game to take advantage of the auto-sync features.
 
-- Comes with Kortique's massive list of end-game teleport locations that are easily transferable to Grim Dawn even while in-game. (see 0.3.0 release below)
+<img src="https://i.imgur.com/PAIE2zr.png" width="672" height="378" />
+
+### Features
+
+- Comes with Kortique's massive list of end-game teleport locations that are easily transferable to Grim Dawn while in-game.
 
 - Provides a teleport list for every character profile, mod, and difficulty rather than sharing the same one across all characters.
 - Provides transfer, remove, reorder, and edit functionality for all your saved locations.
@@ -27,8 +31,6 @@ Grim Locations should be kept running alongside the game to take advantage of th
 - Auto-syncs any changes made in Grim Locations back to the game and visa versa.
 - Create, update, and delete custom character profile, mod, and difficulty categories.
 - Import any external locations list into Grim Locations.
-
-<img src="https://i.imgur.com/PAIE2zr.png" width="672" height="378" />
 
 ### Release 1.0
 
