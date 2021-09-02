@@ -116,12 +116,23 @@ suspend fun SqliteRepository.getProfilesModsDifficultiesAsync(
             val profile = profileOrder.profile
 
             if (includeReservedProfiles || !RESERVED_PROFILES.containsId(profile.id.value)) {
-                val mmap: MutableModDifficultyMap = mutableMapOf()
+                val mmap: MutableModDifficultyMap
 
-                profileOrder.modOrders.sortedBy { it.order }.forEach { m ->
-                    mmap[m.mod.toDTO()] = m.difficultyOrders.sortedBy { it.order }
-                        .map { d -> d.difficulty.toDTO() } as MutableList<DifficultyDTO>
+                if(profileOrder.modOrders.empty()) {
+                    mmap = NO_MODS_OR_DIFFICULTIES_MAP as MutableModDifficultyMap
+                } else {
+                    mmap = mutableMapOf()
+                    profileOrder.modOrders.sortedBy { it.order }.forEach { m ->
+                        if(m.difficultyOrders.empty()) {
+                            mmap[m.mod.toDTO()] = NO_DIFFICULTIES_LIST as MutableList<DifficultyDTO>
+                        } else {
+                            mmap[m.mod.toDTO()] = m.difficultyOrders.sortedBy { it.order }
+                                .map { d -> d.difficulty.toDTO() } as MutableList<DifficultyDTO>
+                        }
+                    }
                 }
+
+
                 map[profileOrder.profile.toDTO()] = mmap
             }
         }

@@ -1,9 +1,6 @@
 package io.grimlocations.ui.viewmodel.state
 
-import io.grimlocations.data.dto.DifficultyDTO
-import io.grimlocations.data.dto.ModDTO
-import io.grimlocations.data.dto.ProfileDTO
-import io.grimlocations.data.dto.ProfileModDifficultyMap
+import io.grimlocations.data.dto.*
 import io.grimlocations.framework.ui.State
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
 
@@ -28,13 +25,13 @@ data class PMDManagerState(
 
     val mods: Set<ModDTO>
         get() = selectedProfiles.singleOrNull()?.let {
-            profileMap[it]!!.keys
+            profileMap[it]!!.keys.filter { m -> m != RESERVED_NO_MODS_INDICATOR }.toSet()
         } ?: emptySet()
 
     val difficulties: Set<DifficultyDTO>
         get() = selectedMods.singleOrNull()?.let {
             val profile = selectedProfiles.single()
-            profileMap[profile]!![it]!!.toSet()
+            profileMap[profile]!![it]!!.filter { d -> d != RESERVED_NO_DIFFICULTIES_INDICATOR }.toSet()
         } ?: emptySet()
 
     override fun equals(other: Any?): Boolean {
