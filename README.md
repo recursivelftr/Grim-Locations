@@ -1,79 +1,61 @@
 ## Grim Locations
 
-##### Current Version: 0.2.0
+##### Current Version: 1.0
 
-Download: [Google Drive](https://drive.google.com/drive/folders/1xpsOa0gtNde1nMqunC3jxWIcMzT3qGoz)  
-Demo: [Link](https://imgur.com/R6XyOT3)
+[Download](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA)
 
 Grim Locations is a tool for Grim Dawn that accompanies and requires the mod [Grim Internals](https://forums.crateentertainment.com/t/tool-grim-internals).
-It is currently pre 1.0, but most features are present. The features that are not present are marked with 1.0.
 
-<img src="https://i.imgur.com/pvTrtxj.png" width="445" height="282" />
+GlockenGerda provided a v1.99f of Grim Internals which Grim Locations requires. It is not available from the Grim Internals forum page and can be downloaded with Grim Locations [here](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA).
+
+All versions of Grim Internals past v1.99f will also work and should be available from the Grim Internals forum page.
+
+<img src="https://i.imgur.com/vZVNNUR.png" width="672" height="378" />
+
+### How it works
+
+Grim Locations works by providing features for the Grim Internals teleport list seen in the screenshot below.
+The Grim Internals teleport list is a set of locations the player can teleport to in-game, or save their current location to teleport to later.
+
+Grim Locations should be kept running alongside the game to take advantage of the auto-sync features.
+
+- Comes with Kortique's massive list of end-game teleport locations that are easily transferable to Grim Dawn even while in-game. (see 0.3.0 release below)
+
+- Provides a teleport list for every character profile, mod, and difficulty rather than sharing the same one across all characters.
+- Provides transfer, remove, reorder, and edit functionality for all your saved locations.
+- Auto-detects your current character profile, mod, and difficulty in-game and creates a list if one doesn't exist.
+- Auto-syncs any changes made in Grim Locations back to the game and visa versa.
+- Create, update, and delete custom character profile, mod, and difficulty categories.
+- Import any external locations list into Grim Locations.
+
+<img src="https://i.imgur.com/PAIE2zr.png" width="672" height="378" />
+
+### Release 1.0
+
+- The top buttons have been removed as all active profile, mod, and difficulty features are automated now.
+
+- Added a new Editor screen where profile, mods, and difficulties can be created, removed, and edited.
+- GlockenGerda provided a [v1.99f](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA) of Grim Internals to help with the automation features.
+
+### Release 0.3.0
+
+- Grim Dawn folders are now autodetected when starting Grim Locations for the first time.
+
+- Moved **Load Locations to Profile** out of the **Select Active** screen and gave it its own screen.
+- Removed the **Sync Active** button. When making changes to your selected active Profile, Mod, and Difficulty they will now automatically sync to Grim Dawn.
+- Added the **Location Edit** screen which can be accessed by selecting a location and clicking the edit icon. Changes made to the Location will automatically sync to Grim Dawn if the location is in the active Profile, Mod, and Difficulty.
+- GlockenGerda, the creator of Grim Internals, was kind enough to provide a [v1.99e](https://drive.google.com/drive/u/4/folders/1-OJbOAZhdUjhuAOVJnHmgvPQZahabf7I) version of Grim Internals that loads locations every time the player opens the Grim Internals screen in-game. This means that any changes you make to your active Profile, Mod, and Difficulty using Grim Locations will immediately reflect in-game as you are playing. Also, as you save new locations in-game, those will immediately reflect in Grim Locations and can be edited.
 
 ### Release 0.2.0
 
 Added all of Kortique's locations and categorized them by act, totem, nemesis, and other.
 
-<img src="https://i.imgur.com/PF87vhK.png" width="88" height="170" />
-
 ### Upgrading
 
 To upgrade from one release to another, delete the old version's files and folders then unzip the new version and run the exe file. Do not delete the database located in C:\Users\\{user}\AppData\Local\Grim Locations. The database will be updated automatically when the new version is run.
 
-### Features
-- Provides transfer, remove, reorder, and edit functionality for all your Grim Internals locations.
-- Auto-create profiles for your Grim Dawn characters to easily manage their locations.
-- Categorize locations by profile and difficulty. (1.0 includes categorization by mod as well)
-- Detects new locations while playing Grim Dawn and saves them to the specified active profile.
-- Each location saved gets a date and time, this makes it easy to tell where you left off last.
-- Load any external location list into any profile.
-- Comes with a massive list of locations out of the box that are easily transferable to any profile.
-- (1.0) Create custom profile, mod, and difficulty categories.
-
-### Instructions and Videos
-See [this video demo](https://imgur.com/R6XyOT3) for general use. Other than the general use, it is also recommended to run Grim Locations alongside Grim Dawn. This allows syncing to and from Grim Locations in-game.
-
-##### Capture locations from Grim Dawn to Grim Locations while in-game [[Video]](https://imgur.com/5SvJJJd)
-
-1. Start Grim Locations and select an active profile, mod, and difficulty.
-    - Optional: Modify the active profile in the editor and click "Sync to Grim Dawn".
-2. Start Grim Dawn via the Grim Internals exe file.
-3. Choose your character, mod (if using one), and difficulty from the Grim Dawn main screen (this should match the active ones chosen in Grim Locations).
-4. Start the game, when you open Grim Internals you should see that your locations match that of the active profile in Grim Locations.
-5. Save a location via Grim Internals and alt-tab over to Grim Locations. You should see that the Grim Dawn status is "Running" and your new location was added to the locations of the active profile, mod, and difficulty.
-
-##### Sync locations from Grim Locations to Grim Dawn (Grim Locations to Grim Dawn) [[Video]](https://imgur.com/ibVso3R)
-
-- From out of game (Grim Dawn is closed):
-    1. Select the active profile, mod, and difficulty and make any changes to their locations.
-    2. Click "Sync to Grim Dawn".
-- From in-game:
-    1. Exit to the Grim Dawn main menu.
-    2. Alt-tab over to Grim Locations.
-    3. Make changes to the locations of the active profile, mod, and difficulty or select new actives.
-    4. Click "Sync Active to Grim Dawn".
-    5. Alt-tab back to Grim Dawn and start the game with your selected active character.
-
-##### Loading mod character profiles [[Video]](https://imgur.com/UCHyWWU)
-
-1. From in Grim Locations, click the settings or gear icon in the top right.
-2. Change the "GD Save Folder" to the folder containing your characters for the mod and click OK.
-3. On the main Grim Locations screen click "Load Character Profiles".
-    - Note that this button can be clicked multiple times without worry. Grim Locations does not allow duplicates and it will not override existing profiles.
-
-### Road to 1.0
-- [X] Import Kortique's location list and create corresponding internal profiles
-- [ ] Remove Sync Active to Grim Dawn button. If the active is changed it will auto sync.
-- [ ] Add Profile management screen.
-- [ ] Add Mod management screen.
-- [ ] Add Difficulty management screen.
-- [ ] Add edit screen for Locations. (Will show coordinates as display only)
-- [ ] Improve splash screen
-- [ ] Autodetect Grim Dawn folders
-
-### Post 1.0
-- Look at ways to improve the UI
-- Add "Saved Game Mode" that rearranges the last save to the top and provides an indicator that will show in Grim Internals
+### Moving to a new computer
+Copy the database.db file from C:\Users\\{user}\\AppData\Local\Grim Locations\database.
 
 ### Bug Reporting
 
