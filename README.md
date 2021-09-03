@@ -4,7 +4,7 @@
 
 [Download](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA)
 
-[Feature Video (YouTube)](https://youtu.be/EF83_pUdgZo)
+[Tutorial (YouTube)](https://youtu.be/EF83_pUdgZo)
 
 Grim Locations is a tool for Grim Dawn that accompanies and requires the mod [Grim Internals](https://forums.crateentertainment.com/t/tool-grim-internals).
 
