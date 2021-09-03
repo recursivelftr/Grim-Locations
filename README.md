@@ -10,7 +10,7 @@ Grim Locations is a tool for Grim Dawn that accompanies and requires the mod [Gr
 
 GlockenGerda, the creator of Grim Internals, provided a v1.99f of Grim Internals which Grim Locations requires. It is not available from the Grim Internals forum page and can be downloaded with Grim Locations [here](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA).
 
-All versions of Grim Internals past v1.99f will also work and should be available from the Grim Internals forum page.
+All versions of Grim Internals past v1.99f will also work and should be available from the Grim Internals forum page after Grim Dawn patch 1.1.9.2 has been released.
 
 <img src="https://i.imgur.com/vZVNNUR.png" width="672" height="378" />
 
