@@ -8,9 +8,9 @@
 
 Grim Locations is a tool for Grim Dawn that accompanies and requires the mod [Grim Internals](https://forums.crateentertainment.com/t/tool-grim-internals).
 
-GlockenGerda, the creator of Grim Internals, provided a v1.99f of Grim Internals which Grim Locations requires. It is not available from the Grim Internals forum page and can be downloaded with Grim Locations [here](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA).
+GlockenGerda, the creator of Grim Internals, provided a v1.99e of Grim Internals which Grim Locations requires. It is not available from the Grim Internals forum page and can be downloaded with Grim Locations [here](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA).
 
-All versions of Grim Internals past v1.99f will also work and should be available from the Grim Internals forum page after Grim Dawn patch 1.1.9.2 has been released.
+All versions of Grim Internals past v1.99e will also work and should be available from the Grim Internals forum page after Grim Dawn patch 1.1.9.2 has been released.
 
 <img src="https://i.imgur.com/vZVNNUR.png" width="672" height="378" />
 
@@ -39,7 +39,7 @@ Grim Locations should be kept running alongside the game to take advantage of th
 - The top buttons have been removed as all active profile, mod, and difficulty features are now automated.
 
 - Added a new Editor screen where profile, mods, and difficulties can be created, removed, and edited.
-- GlockenGerda provided a [v1.99f](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA) of Grim Internals to help with the automation features.
+- GlockenGerda provided a [v1.99e](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA) of Grim Internals to help with the automation features.
 
 ### Release 0.3.0
 
@@ -48,7 +48,7 @@ Grim Locations should be kept running alongside the game to take advantage of th
 - Moved **Load Locations to Profile** out of the **Select Active** screen and gave it its own screen.
 - Removed the **Sync Active** button. When making changes to your selected active Profile, Mod, and Difficulty they will now automatically sync to Grim Dawn.
 - Added the **Location Edit** screen which can be accessed by selecting a location and clicking the edit icon. Changes made to the Location will automatically sync to Grim Dawn if the location is in the active Profile, Mod, and Difficulty.
-- GlockenGerda was kind enough to provide a [v1.99e](https://drive.google.com/drive/u/4/folders/1-OJbOAZhdUjhuAOVJnHmgvPQZahabf7I) version of Grim Internals that loads locations every time the player opens the Grim Internals screen in-game. This means that any changes you make to your active Profile, Mod, and Difficulty using Grim Locations will immediately reflect in-game as you are playing. Also, as you save new locations in-game, those will immediately reflect in Grim Locations and can be edited.
+- GlockenGerda was kind enough to provide a [v1.99e](https://mega.nz/folder/eCZhVCbB#SiSgP5o_mnwQLmgP9C6EEA) version of Grim Internals that loads locations every time the player opens the Grim Internals screen in-game. This means that any changes you make to your active Profile, Mod, and Difficulty using Grim Locations will immediately reflect in-game as you are playing. Also, as you save new locations in-game, those will immediately reflect in Grim Locations and can be edited.
 
 ### Release 0.2.0
 
