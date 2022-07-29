@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
@@ -36,6 +37,7 @@ fun main(args: Array<String>) {
     application {
         val state = rememberWindowState(size = SPLASH_SCREEN_SIZE, position = WindowPosition.Aligned(Alignment.Center))
         var loadingState by remember { mutableStateOf(Pair<Startup, GLViewModelProvider?>(Startup.LOADING, null)) }
+        APP_ICON = painterResource("Location512PurpleBlack.png")
 
         when (loadingState.first) {
             Startup.LOADING -> {

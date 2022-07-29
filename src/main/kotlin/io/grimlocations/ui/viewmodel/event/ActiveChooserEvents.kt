@@ -1,11 +1,10 @@
 package io.grimlocations.ui.viewmodel.event
 
-import androidx.compose.desktop.AppWindow
 import io.grimlocations.framework.ui.viewmodel.stateFlow
 import io.grimlocations.ui.viewmodel.ActiveChooserViewModel
 import io.grimlocations.ui.viewmodel.reducer.*
 import io.grimlocations.ui.viewmodel.state.container.PMDContainer
-import io.grimlocations.util.extension.closeIfOpen
+//import io.grimlocations.util.extension.closeIfOpen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -22,13 +21,13 @@ fun ActiveChooserViewModel.selectPMD(selected: PMDContainer) {
     }
 }
 
-fun ActiveChooserViewModel.persistPMDAndWriteLocations(window: AppWindow) {
-    viewModelScope.launch {
-        stateManager.persistActivePMD()
-        stateManager.writeToLocationsFile()
-        withContext(Dispatchers.Main) {
-            window.closeIfOpen()
-            stateManager.reloadEditorState()
-        }
-    }
-}
+//fun ActiveChooserViewModel.persistPMDAndWriteLocations(window: AppWindow) {
+//    viewModelScope.launch {
+//        stateManager.persistActivePMD()
+//        stateManager.writeToLocationsFile()
+//        withContext(Dispatchers.Main) {
+//            window.closeIfOpen()
+//            stateManager.reloadEditorState()
+//        }
+//    }
+//}

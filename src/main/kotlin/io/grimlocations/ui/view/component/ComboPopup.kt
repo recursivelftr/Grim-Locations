@@ -1,6 +1,5 @@
 package io.grimlocations.ui.view.component
 
-import androidx.compose.desktop.LocalAppWindow
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn

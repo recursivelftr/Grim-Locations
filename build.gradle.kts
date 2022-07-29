@@ -4,8 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    kotlin("jvm") version "1.5.10"
-    id("org.jetbrains.compose") version "0.5.0-build245"
+    kotlin("jvm") version "1.6.10"
+    id("org.jetbrains.compose") version "1.1.0"
 }
 
 group = "io.grimlocations"
@@ -22,7 +22,7 @@ compileKotlin.kotlinOptions.jvmTarget = "15"
 
 dependencies {
     val exposedVersion = "0.31.1"
-    val coroutinesVersion = "1.5.0"
+    val coroutinesVersion = "1.6.4"
     val sqliteVersion = "3.34.0"
     val junitVersion = "5.6.0"
     val log4jVersion = "2.14.0"
